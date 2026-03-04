@@ -1,7 +1,7 @@
 import random
-from monsters import Zombie, Slime, Goblin, Skeleton, Dragon
+from monsters import Zombie, Slime, Goblin, Skeleton, Dragon, roll_rank
 from utils import clear_screen, print_header
-
+from loot_tables import roll_loot, apply_loot
 
 
 def generate_enemy_group(player):
@@ -10,6 +10,7 @@ def generate_enemy_group(player):
 
 
 def create_enemy(player):
+    """Wählt einen zufälligen Mob-Typ und würfelt seinen Rang."""
     if player.level < 3:
         classes = [Zombie, Slime, Goblin]
         weights = [15, 50, 20]
@@ -19,7 +20,10 @@ def create_enemy(player):
     else:
         classes = [Zombie, Slime, Goblin, Skeleton, Dragon]
         weights = [25, 13, 17, 25, 13]
-    return random.choices(classes, weights=weights, k=1)[0]()
+
+    mob_class = random.choices(classes, weights=weights, k=1)[0]
+    rank      = roll_rank(player.level)
+    return mob_class(rank=rank)
 
 
 def combat(player, enemy_list):
@@ -38,8 +42,9 @@ def combat(player, enemy_list):
         # Show all enemies
         print("GEGNER:")
         for i, e in enumerate(enemy_list):
+            rank_label = f"[Rang {e.rank}]" if hasattr(e, "rank") else ""
             status = f"HP: {e.hp}/{e.max_hp}" if e.is_alive() else "BESIEGT"
-            print(f"[{i+1}] {e.name:<10} {status}")
+            print(f"[{i+1}] {e.name:<22} {rank_label:<10} {status}")
 
         print("=" * 30)
         choice = input("\n[A] Angreifen, [S] Himmelsschlag 20 E, [R] Rundumschlag 15 E, [C] Cleave 10 E \n[H] Heilen, [F] Fliehen \n[Q] Beenden \nDeine Wahl: ").lower()
@@ -113,6 +118,23 @@ def combat(player, enemy_list):
     if not any(e.is_alive() for e in enemy_list):
         return "victory"
     return "defeat"
+
+
+def collect_loot(player, enemy_group) -> list:
+    """
+    Sammelt Loot von allen besiegten Gegnern über das zentrale Loot-System.
+    Gibt alle Loot-Zeilen als Liste von Strings zurück.
+    """
+    all_messages = []
+    for enemy in enemy_group:
+        rank       = getattr(enemy, "rank", 1)
+        rolls      = getattr(enemy, "loot_rolls", 1)
+        loot_items = roll_loot(rank=rank, rolls=rolls)
+        msgs       = apply_loot(player, loot_items)
+        if msgs:
+            all_messages.append(f"\n  [{enemy.name}]")
+            all_messages.extend(msgs)
+    return all_messages
 
 
 def heal(player):
