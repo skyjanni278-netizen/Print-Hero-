@@ -1,44 +1,55 @@
 import random
 
-# ============================================================
-#  ZENTRALE LOOT-TABELLE
-#  Jedes Item hat: name, type, rarity, min_qty, max_qty
-#  und optional: attack / armor (für Equipment)
-# ============================================================
+
+# Alle Consumables mit ihren Effekten
+CONSUMABLE_DEFS = {
+    "Healing Potion":       {"effect": "heal",    "value": 10,  "emoji": "🧪", "desc": "Heilt 10 HP"},
+    "Großes Heiltrank":     {"effect": "heal",    "value": 25,  "emoji": "🍶", "desc": "Heilt 25 HP"},
+    "Elixier":              {"effect": "heal",    "value": 40,  "emoji": "✨", "desc": "Heilt 40 HP"},
+    "Phönixfeder":          {"effect": "cleanse", "value": 15,  "emoji": "🪶", "desc": "Heilt 15 HP & entfernt Blutung"},
+    "Energie-Kristall":     {"effect": "energy",  "value": 15,  "emoji": "💎", "desc": "Stellt 15 Energie wieder her"},
+    "Stärketrank":          {"effect": "attack",  "value": 3,   "emoji": "💪", "desc": "+3 ATK für diesen Kampf"},
+    "Antidot":              {"effect": "cleanse",  "value": 0,   "emoji": "🌿", "desc": "Entfernt alle Blutungsstacks"},
+}
+
 
 LOOT_POOL = {
-    # ── COMMON ──────────────────────────────────────────────
+    # -- COMMON
     "common": [
-        {"name": "Healing Potion",    "type": "consumable", "key": "Healing Potions", "min": 1, "max": 1},
-        {"name": "Gold",              "type": "gold",        "key": "Gold",            "min": 2, "max": 8},
-        {"name": "Altes Seil",        "type": "junk",        "key": "Altes Seil",      "min": 1, "max": 1},
-        {"name": "Lumpen",            "type": "junk",        "key": "Lumpen",          "min": 1, "max": 2},
+        {"name": "Healing Potion",    "type": "consumable", "key": "Healing Potion",    "min": 1, "max": 1},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 2, "max": 8},
+        {"name": "Altes Seil",        "type": "junk",        "key": "Altes Seil",        "min": 1, "max": 1},
+        {"name": "Lumpen",            "type": "junk",        "key": "Lumpen",            "min": 1, "max": 2},
+        {"name": "Antidot",           "type": "consumable",  "key": "Antidot",           "min": 1, "max": 1},
     ],
-    # ── UNCOMMON ────────────────────────────────────────────
+    # -- UNCOMMON
     "uncommon": [
-        {"name": "Großes Heiltrank",  "type": "consumable", "key": "Healing Potions", "min": 2, "max": 3},
-        {"name": "Gold",              "type": "gold",        "key": "Gold",            "min": 8, "max": 20},
-        {"name": "Kurzschwert",       "type": "weapon",      "key": "Kurzschwert",     "attack": 3, "min": 1, "max": 1},
-        {"name": "Lederrüstung",      "type": "chest",       "key": "Lederrüstung",    "armor": 2,  "min": 1, "max": 1},
+        {"name": "Großes Heiltrank",  "type": "consumable",  "key": "Großes Heiltrank",  "min": 1, "max": 2},
+        {"name": "Gold",              "type": "gold",         "key": "Gold",              "min": 8, "max": 20},
+        {"name": "Kurzschwert",       "type": "weapon",       "key": "Kurzschwert",       "attack": 3, "min": 1, "max": 1},
+        {"name": "Lederrüstung",      "type": "chest",        "key": "Lederrüstung",      "armor": 2,  "min": 1, "max": 1},
+        {"name": "Energie-Kristall",  "type": "consumable",   "key": "Energie-Kristall",  "min": 1, "max": 1},
+        {"name": "Stärketrank",       "type": "consumable",   "key": "Stärketrank",       "min": 1, "max": 1},
     ],
-    # ── RARE ────────────────────────────────────────────────
+    # -- RARE
     "rare": [
-        {"name": "Gold",              "type": "gold",        "key": "Gold",            "min": 20, "max": 50},
-        {"name": "Langschwert",       "type": "weapon",      "key": "Langschwert",     "attack": 6, "min": 1, "max": 1},
-        {"name": "Kettenhemd",        "type": "chest",       "key": "Kettenhemd",      "armor": 4,  "min": 1, "max": 1},
-        {"name": "Elixier",           "type": "consumable",  "key": "Healing Potions", "min": 3, "max": 5},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 20, "max": 50},
+        {"name": "Langschwert",       "type": "weapon",      "key": "Langschwert",       "attack": 6, "min": 1, "max": 1},
+        {"name": "Kettenhemd",        "type": "chest",       "key": "Kettenhemd",        "armor": 4,  "min": 1, "max": 1},
+        {"name": "Elixier",           "type": "consumable",  "key": "Elixier",           "min": 1, "max": 2},
+        {"name": "Energie-Kristall",  "type": "consumable",  "key": "Energie-Kristall",  "min": 2, "max": 3},
     ],
-    # ── EPIC ────────────────────────────────────────────────
+    # -- EPIC
     "epic": [
-        {"name": "Gold",              "type": "gold",       "key": "Gold",            "min": 50, "max": 100},
-        {"name": "Drachenzahn",       "type": "weapon",     "key": "Drachenzahn",     "attack": 10, "min": 1, "max": 1},
-        {"name": "Drachenschuppen",   "type": "chest",      "key": "Drachenschuppen", "armor": 7,  "min": 1, "max": 1},
-        {"name": "Phönixfeder",       "type": "consumable", "key": "Healing Potions", "min": 5, "max": 8},
+        {"name": "Gold",              "type": "gold",       "key": "Gold",              "min": 50, "max": 100},
+        {"name": "Drachenzahn",       "type": "weapon",     "key": "Drachenzahn",       "attack": 10, "min": 1, "max": 1},
+        {"name": "Drachenschuppen",   "type": "chest",      "key": "Drachenschuppen",   "armor": 7,   "min": 1, "max": 1},
+        {"name": "Phönixfeder",       "type": "consumable", "key": "Phönixfeder",       "min": 1, "max": 2},
+        {"name": "Stärketrank",       "type": "consumable", "key": "Stärketrank",       "min": 2, "max": 3},
     ],
 }
 
-# Wahrscheinlichkeiten je nach Mob-Rang (muss 100 ergeben)
-# rank → {rarity: weight}
+# Wahrscheinlichkeiten je nach Mob-Rang
 RANK_LOOT_WEIGHTS = {
     1: {"common": 80, "uncommon": 18, "rare": 2,  "epic": 0},
     2: {"common": 65, "uncommon": 25, "rare": 9,  "epic": 1},
@@ -48,14 +59,10 @@ RANK_LOOT_WEIGHTS = {
 }
 
 
-def roll_loot(rank: int, rolls: int = 2) -> list[dict]:
-    """
-    Würfelt `rolls` Mal Loot für einen Mob des gegebenen Rangs.
-    Gibt eine Liste von Loot-Dicts zurück.
-    """
+def roll_loot(rank: int, rolls: int = 2) -> list:
     weights = RANK_LOOT_WEIGHTS.get(rank, RANK_LOOT_WEIGHTS[1])
-    rarities  = list(weights.keys())
-    chances   = list(weights.values())
+    rarities = list(weights.keys())
+    chances  = list(weights.values())
 
     dropped = []
     for _ in range(rolls):
@@ -66,11 +73,7 @@ def roll_loot(rank: int, rolls: int = 2) -> list[dict]:
     return dropped
 
 
-def apply_loot(player, loot_list: list[dict]) -> list[str]:
-    """
-    Wendet eine Liste von Loot-Items auf den Spieler an.
-    Gibt eine Liste von Nachrichten zurück.
-    """
+def apply_loot(player, loot_list: list) -> list:
     messages = []
     for item in loot_list:
         if item["type"] == "gold":
@@ -80,8 +83,13 @@ def apply_loot(player, loot_list: list[dict]) -> list[str]:
 
         elif item["type"] == "consumable":
             amount = random.randint(item["min"], item["max"])
-            player.inventory["Healing Potions"] = player.inventory.get("Healing Potions", 0) + amount
-            messages.append(f"  🧪 {amount}x {item['name']}")
+            key = item["key"]
+            if "Consumables" not in player.inventory:
+                player.inventory["Consumables"] = {}
+            player.inventory["Consumables"][key] = player.inventory["Consumables"].get(key, 0) + amount
+            cdef = CONSUMABLE_DEFS.get(key, {})
+            emoji = cdef.get("emoji", "🧪")
+            messages.append(f"  {emoji} {amount}x {item['name']}")
 
         elif item["type"] == "junk":
             amount = random.randint(item["min"], item["max"])
@@ -89,10 +97,7 @@ def apply_loot(player, loot_list: list[dict]) -> list[str]:
             messages.append(f"  🗑️  {amount}x {item['name']}")
 
         elif item["type"] in ("weapon", "chest"):
-            equip = {
-                "name": item["name"],
-                "type": item["type"],
-            }
+            equip = {"name": item["name"], "type": item["type"]}
             if item["type"] == "weapon":
                 equip["attack"] = item["attack"]
             else:

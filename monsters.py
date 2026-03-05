@@ -1,11 +1,6 @@
 import random
 from player import Character
 
-# ============================================================
-#  MOB-RANG SYSTEM
-#  Jeder Rang multipliziert HP und Attack des Basis-Mobs.
-#  Außerdem bekommt der Mob einen visuellen Titel.
-# ============================================================
 
 RANK_CONFIG = {
     1: {"title": "",            "hp_mult": 1.0,  "atk_mult": 1.0,  "loot_rolls": 1, "xp_mult": 1.0},
@@ -31,10 +26,6 @@ def _apply_rank(mob, base_hp, base_attack, base_xp, rank):
     mob.name = f"{title} {mob.name}".strip() if title else mob.name
 
 
-# ============================================================
-#  MONSTER-KLASSEN
-#  __init__ nimmt einen optionalen `rank`-Parameter (1–5).
-# ============================================================
 
 class Zombie(Character):
     BASE_HP     = 20
@@ -90,10 +81,6 @@ class Dragon(Character):
         self.armor = 7
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
-
-# ============================================================
-#  HILFSFUNKTION: zufälligen Rang basierend auf Player-Level
-# ============================================================
 
 def roll_rank(player_level: int) -> int:
     """
