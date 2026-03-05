@@ -1,5 +1,7 @@
 import random
 
+MAX_INVENTORY_SLOTS = 20  # Maximale Inventarplätze (Consumables + Equipment zusammen)
+
 
 class Character:
     def __init__(self, name, hp, attack):
@@ -33,6 +35,23 @@ class Character:
             "Equipment": []
         }
 
+    # ── Inventar-Slots ───────────────────────────────────────
+    def inventory_count(self) -> int:
+        """Zählt belegte Slots: jeder Consumable-Stapel = 1 Slot, jedes Equipment = 1 Slot."""
+        consumable_slots = len(self.inventory.get("Consumables", {}))
+        equipment_slots  = len(self.inventory.get("Equipment", []))
+        return consumable_slots + equipment_slots
+
+    def has_inventory_space(self) -> bool:
+        return self.inventory_count() < MAX_INVENTORY_SLOTS
+
+    def can_add_consumable(self, key: str) -> bool:
+        """Consumable passt rein, wenn Stapel schon existiert ODER noch Platz vorhanden."""
+        if key in self.inventory.get("Consumables", {}):
+            return True  # Stapel erhöhen kostet keinen neuen Slot
+        return self.has_inventory_space()
+
+    # ── Stats ────────────────────────────────────────────────
     def get_total_attack(self):
         weapon_bonus = self.equipment["weapon"]["attack"]
         return self.attack + weapon_bonus
@@ -110,7 +129,7 @@ class Character:
             return f"{self.name} erleidet {damage} Schaden durch Blutung!"
 
     def use_consumable(self, key: str) -> str:
-        """Benutzt ein Consumable aus dem Inventar. Gibt eine Ergebnis-Nachricht zurück."""
+        """Benutzt ein Consumable aus dem Inventar."""
         from loot_tables import CONSUMABLE_DEFS
         consumables = self.inventory.get("Consumables", {})
 
