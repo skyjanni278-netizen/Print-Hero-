@@ -14,11 +14,13 @@ def camp_menu(player):
         w = player.equipment['weapon']
         c = player.equipment['chest']
         h = player.equipment['head']
+        f = player.equipment['feet']
         print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙")
         print(f"ATK: {player.get_total_attack():<4} | DEF: {player.get_total_armor()}")
         print(f"Waffe:   {w['name']} (+{w['attack']} ATK)")
         print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")
         print(f"Helm:    {h['name']} (+{h['armor']} DEF)")
+        print(f"Schuhe:  {f['name']} (+{f['armor']} DEF)")
         print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}")
         print("-" * 30)
         print("[I] Inventar & Ausrüsten")
@@ -54,7 +56,7 @@ def _equip_line(item):
     rarity  = edef.get("rarity", "common")
     rlabel, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
     slot    = item.get("type", "?")
-    slot_labels = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm"}
+    slot_labels = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm", "feet": "Schuhe"}
     slot_label  = slot_labels.get(slot, slot)
     if slot == "weapon":
         stat = f"ATK +{item['attack']}"
@@ -73,7 +75,8 @@ def inventory_menu(player):
         w = player.equipment['weapon']
         c = player.equipment['chest']
         h = player.equipment['head']
-        print(f"Angelegt: {w['name']} | {c['name']} | {h['name']}")
+        f = player.equipment['feet']
+        print(f"Angelegt: {player.equipment['weapon']['name']} | {c['name']} | {h['name']} | {f['name']}")
         print()
 
         # --- Consumables ---
@@ -125,7 +128,7 @@ def inventory_menu(player):
                 slot     = new_item["type"]
                 old_item = player.equipment[slot]
                 # Starter-Items nicht zurück ins Inventar
-                if old_item["name"] not in ("Fäuste", "Lumpen", "Kein Helm"):
+                if old_item["name"] not in ("Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"):
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
                 print(f"\n✅ Du trägst nun {new_item['name']}!")
