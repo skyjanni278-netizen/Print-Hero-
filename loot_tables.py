@@ -35,7 +35,7 @@ LOOT_POOL = {
     # -- COMMON
     "common": [
         {"name": "Healing Potion",    "type": "consumable", "key": "Healing Potion",    "min": 1, "max": 1},
-        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 2, "max": 8},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 3, "max": 10},
         {"name": "Altes Seil",        "type": "junk",        "key": "Altes Seil",        "min": 1, "max": 2},
         {"name": "Lumpen",            "type": "junk",        "key": "Lumpen",            "min": 1, "max": 3},
         {"name": "Antidot",           "type": "consumable",  "key": "Antidot",           "min": 1, "max": 1},
@@ -44,7 +44,7 @@ LOOT_POOL = {
     # -- UNCOMMON
     "uncommon": [
         {"name": "Großes Heiltrank",  "type": "consumable",  "key": "Großes Heiltrank",  "min": 1, "max": 1},
-        {"name": "Gold",              "type": "gold",         "key": "Gold",              "min": 8, "max": 20},
+        {"name": "Gold",              "type": "gold",         "key": "Gold",              "min": 10, "max": 25},
         {"name": "Kurzschwert",       "type": "weapon",       "key": "Kurzschwert",       "attack": 3, "min": 1, "max": 1},
         {"name": "Lederrüstung",      "type": "chest",        "key": "Lederrüstung",      "armor": 2,  "min": 1, "max": 1},
         {"name": "Energie-Kristall",  "type": "consumable",   "key": "Energie-Kristall",  "min": 1, "max": 1},
@@ -54,7 +54,7 @@ LOOT_POOL = {
     ],
     # -- RARE
     "rare": [
-        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 20, "max": 50},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 25, "max": 60},
         {"name": "Langschwert",       "type": "weapon",      "key": "Langschwert",       "attack": 6, "min": 1, "max": 1},
         {"name": "Kettenhemd",        "type": "chest",       "key": "Kettenhemd",        "armor": 4,  "min": 1, "max": 1},
         {"name": "Elixier",           "type": "consumable",  "key": "Elixier",           "min": 1, "max": 1},
@@ -62,7 +62,7 @@ LOOT_POOL = {
     ],
     # -- EPIC
     "epic": [
-        {"name": "Gold",              "type": "gold",       "key": "Gold",              "min": 50, "max": 100},
+        {"name": "Gold",              "type": "gold",       "key": "Gold",              "min": 60, "max": 120},
         {"name": "Drachenzahn",       "type": "weapon",     "key": "Drachenzahn",       "attack": 10, "min": 1, "max": 1},
         {"name": "Drachenschuppen",   "type": "chest",      "key": "Drachenschuppen",   "armor": 7,   "min": 1, "max": 1},
         {"name": "Phönixfeder",       "type": "consumable", "key": "Phönixfeder",       "min": 1, "max": 1},
