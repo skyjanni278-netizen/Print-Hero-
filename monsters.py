@@ -30,7 +30,7 @@ def _apply_rank(mob, base_hp, base_attack, base_xp, rank):
 class Zombie(Character):
     BASE_HP     = 20
     BASE_ATTACK = 4
-    BASE_XP     = 60
+    BASE_XP     = 18   # war 60
 
     def __init__(self, rank: int = 1):
         super().__init__("Zombie", hp=self.BASE_HP, attack=self.BASE_ATTACK)
@@ -41,7 +41,7 @@ class Zombie(Character):
 class Skeleton(Character):
     BASE_HP     = 12
     BASE_ATTACK = 8
-    BASE_XP     = 80
+    BASE_XP     = 24   # war 80
 
     def __init__(self, rank: int = 1):
         super().__init__("Skelett", hp=self.BASE_HP, attack=self.BASE_ATTACK)
@@ -52,7 +52,7 @@ class Skeleton(Character):
 class Slime(Character):
     BASE_HP     = 8
     BASE_ATTACK = 3
-    BASE_XP     = 35
+    BASE_XP     = 10   # war 35
 
     def __init__(self, rank: int = 1):
         super().__init__("Schleim", hp=self.BASE_HP, attack=self.BASE_ATTACK)
@@ -63,7 +63,7 @@ class Slime(Character):
 class Goblin(Character):
     BASE_HP     = 10
     BASE_ATTACK = 5
-    BASE_XP     = 50
+    BASE_XP     = 15   # war 50
 
     def __init__(self, rank: int = 1):
         super().__init__("Goblin", hp=self.BASE_HP, attack=self.BASE_ATTACK)
@@ -74,7 +74,7 @@ class Goblin(Character):
 class Dragon(Character):
     BASE_HP     = 50
     BASE_ATTACK = 15
-    BASE_XP     = 200
+    BASE_XP     = 60   # war 200
 
     def __init__(self, rank: int = 1):
         super().__init__("Drache", hp=self.BASE_HP, attack=self.BASE_ATTACK)
@@ -84,16 +84,18 @@ class Dragon(Character):
 
 def roll_rank(player_level: int) -> int:
     """
-    Höhere Spieler-Level → höhere Chance auf starke Ränge.
+    Höhere Spieler-Level → höhere Chance auf starke Ränge (bis LVL 10).
     Gibt einen Rang 1–5 zurück.
     """
-    if player_level < 3:
-        weights = [70, 25, 5, 0, 0]
-    elif player_level < 5:
-        weights = [45, 35, 15, 5, 0]
-    elif player_level < 8:
-        weights = [25, 35, 25, 12, 3]
+    if player_level <= 2:
+        weights = [75, 22, 3,  0,  0]   # fast nur Rang 1
+    elif player_level <= 4:
+        weights = [50, 33, 14, 3,  0]   # Rang 2 häufiger
+    elif player_level <= 6:
+        weights = [30, 35, 25, 9,  1]   # Rang 3 sichtbar
+    elif player_level <= 8:
+        weights = [15, 30, 30, 20, 5]   # Rang 4 relevant
     else:
-        weights = [10, 25, 30, 25, 10]
+        weights = [5,  20, 30, 30, 15]  # LVL 9-10: auch Rang 5
 
     return random.choices([1, 2, 3, 4, 5], weights=weights, k=1)[0]

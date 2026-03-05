@@ -11,15 +11,26 @@ def generate_enemy_group(player):
 
 def create_enemy(player):
     """Wählt einen zufälligen Mob-Typ und würfelt seinen Rang."""
-    if player.level < 3:
-        classes = [Zombie, Slime, Goblin]
-        weights = [15, 50, 20]
-    elif player.level < 5:
-        classes = [Zombie, Slime, Goblin, Skeleton]
-        weights = [30, 25, 25, 20]
+    if player.level <= 2:
+        # Früh: nur schwache Mobs
+        classes = [Slime, Goblin, Zombie]
+        weights = [50,    30,     20]
+    elif player.level <= 4:
+        # Skelette tauchen auf
+        classes = [Slime, Goblin, Zombie, Skeleton]
+        weights = [25,    25,     30,     20]
+    elif player.level <= 6:
+        # Erste Drachen, Skelette häufiger
+        classes = [Zombie, Goblin, Skeleton, Dragon]
+        weights = [25,     20,     40,       15]
+    elif player.level <= 8:
+        # Drachen deutlich häufiger
+        classes = [Goblin, Zombie, Skeleton, Dragon]
+        weights = [15,     20,     35,       30]
     else:
-        classes = [Zombie, Slime, Goblin, Skeleton, Dragon]
-        weights = [25, 13, 17, 25, 13]
+        # LVL 9-10: Drachen und Skelette dominieren
+        classes = [Zombie, Skeleton, Dragon]
+        weights = [15,     40,       45]
 
     mob_class = random.choices(classes, weights=weights, k=1)[0]
     rank      = roll_rank(player.level)
