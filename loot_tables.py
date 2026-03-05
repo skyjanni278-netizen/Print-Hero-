@@ -1,18 +1,27 @@
 import random
 
 
-# Alle Consumables mit ihren Effekten und Verkaufspreisen
+# Alle Consumables: Effekt, Wert, Stack-Limit, Verkaufspreis
 CONSUMABLE_DEFS = {
-    "Healing Potion":   {"effect": "heal",    "value": 10, "emoji": "🧪", "desc": "Heilt 10 HP",                  "sell": 7},
-    "Großes Heiltrank": {"effect": "heal",    "value": 25, "emoji": "🍶", "desc": "Heilt 25 HP",                  "sell": 17},
-    "Elixier":          {"effect": "heal",    "value": 40, "emoji": "✨", "desc": "Heilt 40 HP",                  "sell": 30},
-    "Phönixfeder":      {"effect": "cleanse", "value": 15, "emoji": "🪶", "desc": "Heilt 15 HP & entfernt Blutung","sell": 40},
-    "Energie-Kristall": {"effect": "energy",  "value": 15, "emoji": "💎", "desc": "Stellt 15 Energie wieder her", "sell": 12},
-    "Stärketrank":      {"effect": "attack",  "value": 3,  "emoji": "💪", "desc": "+3 ATK für diesen Kampf",      "sell": 20},
-    "Antidot":          {"effect": "cleanse", "value": 0,  "emoji": "🌿", "desc": "Entfernt alle Blutungsstacks", "sell": 5},
+    "Healing Potion":   {"effect": "heal",    "value": 10, "emoji": "🧪", "desc": "Heilt 10 HP",                   "max_stack": 5,  "sell": 7},
+    "Großes Heiltrank": {"effect": "heal",    "value": 25, "emoji": "🍶", "desc": "Heilt 25 HP",                   "max_stack": 5,  "sell": 17},
+    "Elixier":          {"effect": "heal",    "value": 40, "emoji": "✨", "desc": "Heilt 40 HP",                   "max_stack": 3,  "sell": 30},
+    "Phönixfeder":      {"effect": "cleanse", "value": 15, "emoji": "🪶", "desc": "Heilt 15 HP & entfernt Blutung","max_stack": 3,  "sell": 40},
+    "Energie-Kristall": {"effect": "energy",  "value": 15, "emoji": "💎", "desc": "Stellt 15 Energie wieder her",  "max_stack": 5,  "sell": 12},
+    "Stärketrank":      {"effect": "attack",  "value": 3,  "emoji": "💪", "desc": "+3 ATK für diesen Kampf",       "max_stack": 3,  "sell": 20},
+    "Antidot":          {"effect": "cleanse", "value": 0,  "emoji": "🌿", "desc": "Entfernt alle Blutungsstacks",  "max_stack": 5,  "sell": 5},
 }
 
-# Verkaufspreise für Equipment (ca. 50% des Kaufpreises)
+# Junk-Items: nur zum Verkaufen
+JUNK_DEFS = {
+    "Altes Seil":    {"emoji": "🪢", "desc": "Wertloser Schrott", "sell": 3},
+    "Lumpen":        {"emoji": "🧣", "desc": "Zerfetzter Stoff",  "sell": 2},
+    "Knochen":       {"emoji": "🦴", "desc": "Ein morscher Knochen", "sell": 4},
+    "Schleimklumpen":{"emoji": "🟢", "desc": "Eklig, aber verkäuflich", "sell": 5},
+    "Goblinzahn":    {"emoji": "🦷", "desc": "Riecht furchtbar",  "sell": 6},
+}
+
+# Verkaufspreise für Equipment (ca. 50% Kaufpreis)
 EQUIPMENT_SELL_PRICES = {
     "Kurzschwert":    20,
     "Langschwert":    40,
@@ -25,36 +34,39 @@ EQUIPMENT_SELL_PRICES = {
 LOOT_POOL = {
     # -- COMMON
     "common": [
-        {"name": "Healing Potion",   "type": "consumable", "key": "Healing Potion",   "min": 1, "max": 1},
-        {"name": "Gold",             "type": "gold",        "key": "Gold",             "min": 2, "max": 8},
-        {"name": "Altes Seil",       "type": "junk",        "key": "Altes Seil",       "min": 1, "max": 1},
-        {"name": "Lumpen",           "type": "junk",        "key": "Lumpen",           "min": 1, "max": 2},
-        {"name": "Antidot",          "type": "consumable",  "key": "Antidot",          "min": 1, "max": 1},
+        {"name": "Healing Potion",    "type": "consumable", "key": "Healing Potion",    "min": 1, "max": 1},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 2, "max": 8},
+        {"name": "Altes Seil",        "type": "junk",        "key": "Altes Seil",        "min": 1, "max": 2},
+        {"name": "Lumpen",            "type": "junk",        "key": "Lumpen",            "min": 1, "max": 3},
+        {"name": "Antidot",           "type": "consumable",  "key": "Antidot",           "min": 1, "max": 1},
+        {"name": "Knochen",           "type": "junk",        "key": "Knochen",           "min": 1, "max": 2},
     ],
     # -- UNCOMMON
     "uncommon": [
-        {"name": "Großes Heiltrank", "type": "consumable",  "key": "Großes Heiltrank", "min": 1, "max": 2},
-        {"name": "Gold",             "type": "gold",         "key": "Gold",             "min": 8, "max": 20},
-        {"name": "Kurzschwert",      "type": "weapon",       "key": "Kurzschwert",      "attack": 3, "min": 1, "max": 1},
-        {"name": "Lederrüstung",     "type": "chest",        "key": "Lederrüstung",     "armor": 2,  "min": 1, "max": 1},
-        {"name": "Energie-Kristall", "type": "consumable",   "key": "Energie-Kristall", "min": 1, "max": 1},
-        {"name": "Stärketrank",      "type": "consumable",   "key": "Stärketrank",      "min": 1, "max": 1},
+        {"name": "Großes Heiltrank",  "type": "consumable",  "key": "Großes Heiltrank",  "min": 1, "max": 1},
+        {"name": "Gold",              "type": "gold",         "key": "Gold",              "min": 8, "max": 20},
+        {"name": "Kurzschwert",       "type": "weapon",       "key": "Kurzschwert",       "attack": 3, "min": 1, "max": 1},
+        {"name": "Lederrüstung",      "type": "chest",        "key": "Lederrüstung",      "armor": 2,  "min": 1, "max": 1},
+        {"name": "Energie-Kristall",  "type": "consumable",   "key": "Energie-Kristall",  "min": 1, "max": 1},
+        {"name": "Stärketrank",       "type": "consumable",   "key": "Stärketrank",       "min": 1, "max": 1},
+        {"name": "Schleimklumpen",    "type": "junk",         "key": "Schleimklumpen",    "min": 1, "max": 2},
+        {"name": "Goblinzahn",        "type": "junk",         "key": "Goblinzahn",        "min": 1, "max": 2},
     ],
     # -- RARE
     "rare": [
-        {"name": "Gold",             "type": "gold",        "key": "Gold",             "min": 20, "max": 50},
-        {"name": "Langschwert",      "type": "weapon",      "key": "Langschwert",      "attack": 6, "min": 1, "max": 1},
-        {"name": "Kettenhemd",       "type": "chest",       "key": "Kettenhemd",       "armor": 4,  "min": 1, "max": 1},
-        {"name": "Elixier",          "type": "consumable",  "key": "Elixier",          "min": 1, "max": 2},
-        {"name": "Energie-Kristall", "type": "consumable",  "key": "Energie-Kristall", "min": 2, "max": 3},
+        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 20, "max": 50},
+        {"name": "Langschwert",       "type": "weapon",      "key": "Langschwert",       "attack": 6, "min": 1, "max": 1},
+        {"name": "Kettenhemd",        "type": "chest",       "key": "Kettenhemd",        "armor": 4,  "min": 1, "max": 1},
+        {"name": "Elixier",           "type": "consumable",  "key": "Elixier",           "min": 1, "max": 1},
+        {"name": "Energie-Kristall",  "type": "consumable",  "key": "Energie-Kristall",  "min": 1, "max": 2},
     ],
     # -- EPIC
     "epic": [
-        {"name": "Gold",             "type": "gold",       "key": "Gold",             "min": 50, "max": 100},
-        {"name": "Drachenzahn",      "type": "weapon",     "key": "Drachenzahn",      "attack": 10, "min": 1, "max": 1},
-        {"name": "Drachenschuppen",  "type": "chest",      "key": "Drachenschuppen",  "armor": 7,   "min": 1, "max": 1},
-        {"name": "Phönixfeder",      "type": "consumable", "key": "Phönixfeder",      "min": 1, "max": 2},
-        {"name": "Stärketrank",      "type": "consumable", "key": "Stärketrank",      "min": 2, "max": 3},
+        {"name": "Gold",              "type": "gold",       "key": "Gold",              "min": 50, "max": 100},
+        {"name": "Drachenzahn",       "type": "weapon",     "key": "Drachenzahn",       "attack": 10, "min": 1, "max": 1},
+        {"name": "Drachenschuppen",   "type": "chest",      "key": "Drachenschuppen",   "armor": 7,   "min": 1, "max": 1},
+        {"name": "Phönixfeder",       "type": "consumable", "key": "Phönixfeder",       "min": 1, "max": 1},
+        {"name": "Stärketrank",       "type": "consumable", "key": "Stärketrank",       "min": 1, "max": 2},
     ],
 }
 
@@ -83,6 +95,7 @@ def roll_loot(rank: int, rolls: int = 2) -> list:
 def apply_loot(player, loot_list: list) -> list:
     from player import MAX_INVENTORY_SLOTS
     messages = []
+
     for item in loot_list:
         if item["type"] == "gold":
             amount = random.randint(item["min"], item["max"])
@@ -90,22 +103,28 @@ def apply_loot(player, loot_list: list) -> list:
             messages.append(f"  💰 {amount}x Gold")
 
         elif item["type"] == "consumable":
-            key = item["key"]
-            if not player.can_add_consumable(key):
-                messages.append(f"  ⚠️  Inventar voll! {item['name']} verloren.")
-                continue
+            key    = item["key"]
             amount = random.randint(item["min"], item["max"])
-            if "Consumables" not in player.inventory:
-                player.inventory["Consumables"] = {}
-            player.inventory["Consumables"][key] = player.inventory["Consumables"].get(key, 0) + amount
-            cdef  = CONSUMABLE_DEFS.get(key, {})
-            emoji = cdef.get("emoji", "🧪")
-            messages.append(f"  {emoji} {amount}x {item['name']}")
+            result = player.add_consumable(key, amount)
+            cdef   = CONSUMABLE_DEFS.get(key, {})
+            emoji  = cdef.get("emoji", "🧪")
+            if result > 0:
+                messages.append(f"  {emoji} {result}x {item['name']}")
+            if result < amount:
+                lost = amount - result
+                messages.append(f"  ⚠️  {lost}x {item['name']} nicht aufgenommen (Stapel voll / Inventar voll)")
 
         elif item["type"] == "junk":
+            key    = item["key"]
             amount = random.randint(item["min"], item["max"])
-            player.inventory[item["key"]] = player.inventory.get(item["key"], 0) + amount
-            messages.append(f"  🗑️  {amount}x {item['name']}")
+            result = player.add_junk(key, amount)
+            jdef   = JUNK_DEFS.get(key, {})
+            emoji  = jdef.get("emoji", "🗑️")
+            if result > 0:
+                messages.append(f"  {emoji} {result}x {item['name']}")
+            if result < amount:
+                lost = amount - result
+                messages.append(f"  ⚠️  {lost}x {item['name']} nicht aufgenommen (Inventar voll)")
 
         elif item["type"] in ("weapon", "chest"):
             if not player.has_inventory_space():
