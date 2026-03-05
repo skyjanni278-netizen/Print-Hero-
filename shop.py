@@ -14,29 +14,31 @@ SHOP_ITEMS = [
 ]
 
 def shop_menu(player):
+    from loot_tables import CONSUMABLE_DEFS
     while True:
         clear_screen()
         print_header("Händler")
         used_slots = player.inventory_count()
         print(f"Gold: {player.inventory['Gold']} 🪙  |  Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots")
-        print("-" * 48)
+        print("-" * 52)
 
         for i, item in enumerate(SHOP_ITEMS):
             affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
 
-            # Platz-Check für Anzeige
             if item["type"] == "consumable":
-                has_space = player.can_add_consumable(item["key"])
+                has_space  = player.can_add_consumable(item["key"])
+                cur        = player.inventory.get("Consumables", {}).get(item["key"], 0)
+                max_stack  = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
+                stack_info = f"({cur}/{max_stack})"
+                warn       = "" if has_space else " 🎒VOLL"
+                desc = f"{item['name']:<22} {stack_info:<8} {item['desc']:<20}  {item['price']:>3} Gold  {affordable}{warn}"
             else:
                 has_space = player.has_inventory_space()
-            space_warn = "" if has_space else " 🎒VOLL"
-
-            if item["type"] == "consumable":
-                desc = f"{item['name']:<22} ({item['desc']:<20})  {item['price']:>3} Gold  {affordable}{space_warn}"
-            elif item["type"] == "weapon":
-                desc = f"{item['name']:<22} (ATK: +{item['attack']:<2})              {item['price']:>3} Gold  {affordable}{space_warn}"
-            else:
-                desc = f"{item['name']:<22} (DEF: +{item['armor']:<2})              {item['price']:>3} Gold  {affordable}{space_warn}"
+                warn      = "" if has_space else " 🎒VOLL"
+                if item["type"] == "weapon":
+                    desc = f"{item['name']:<22}          ATK +{item['attack']:<2}              {item['price']:>3} Gold  {affordable}{warn}"
+                else:
+                    desc = f"{item['name']:<22}          DEF +{item['armor']:<2}              {item['price']:>3} Gold  {affordable}{warn}"
 
             print(f"[{i+1}] {desc}")
 
@@ -57,39 +59,34 @@ def shop_menu(player):
         item = SHOP_ITEMS[idx]
 
         if player.inventory["Gold"] < item["price"]:
-            print("Nicht genug Gold!")
+            print("❌ Nicht genug Gold!")
             input("ENTER...")
             continue
 
-        # Inventar-Platz prüfen
         if item["type"] == "consumable":
-            if not player.can_add_consumable(item["key"]):
-                print(f"🎒 Inventar voll! ({used_slots}/{MAX_INVENTORY_SLOTS} Slots belegt)")
+            added = player.add_consumable(item["key"], item["amount"])
+            if added == 0:
+                max_stack = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
+                cur = player.inventory.get("Consumables", {}).get(item["key"], 0)
+                if cur >= max_stack:
+                    print(f"❌ Stapel voll! ({cur}/{max_stack})")
+                else:
+                    print(f"🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)")
                 input("ENTER...")
                 continue
-        else:
+            player.inventory["Gold"] -= item["price"]
+            print(f"✅ Du kaufst {added}x {item['name']}!")
+
+        elif item["type"] in ("weapon", "chest"):
             if not player.has_inventory_space():
-                print(f"🎒 Inventar voll! ({used_slots}/{MAX_INVENTORY_SLOTS} Slots belegt)")
+                print(f"🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)")
                 input("ENTER...")
                 continue
-
-        player.inventory["Gold"] -= item["price"]
-
-        if item["type"] == "consumable":
-            if "Consumables" not in player.inventory:
-                player.inventory["Consumables"] = {}
-            key = item["key"]
-            player.inventory["Consumables"][key] = player.inventory["Consumables"].get(key, 0) + item["amount"]
-            print(f"✅ Du kaufst {item['amount']}x {item['name']}!")
-
-        elif item["type"] == "weapon":
-            equip_item = {"name": item["name"], "type": "weapon", "attack": item["attack"]}
-            player.inventory["Equipment"].append(equip_item)
-            print(f"✅ {item['name']} wurde deinem Inventar hinzugefügt!")
-
-        elif item["type"] == "chest":
-            equip_item = {"name": item["name"], "type": "chest", "armor": item["armor"]}
-            player.inventory["Equipment"].append(equip_item)
+            player.inventory["Gold"] -= item["price"]
+            if item["type"] == "weapon":
+                player.inventory["Equipment"].append({"name": item["name"], "type": "weapon", "attack": item["attack"]})
+            else:
+                player.inventory["Equipment"].append({"name": item["name"], "type": "chest",  "armor":  item["armor"]})
             print(f"✅ {item['name']} wurde deinem Inventar hinzugefügt!")
 
         input("ENTER...")
