@@ -38,8 +38,16 @@ def load_game():
     player.xp_to_level_up = data["xp_to_level_up"]
     player.energy = data["energy"]
     player.max_energy = data["max_energy"]
-    player.inventory = data["inventory"]
     player.equipment = data["equipment"]
+
+    # Inventar laden — Rückwärtskompatibilität mit alten Saves
+    inv = data["inventory"]
+    if "Consumables" not in inv:
+        # Alten Save migrieren: Healing Potions -> neues Format
+        old_potions = inv.pop("Healing Potions", 0)
+        inv["Consumables"] = {"Healing Potion": old_potions} if old_potions > 0 else {}
+    player.inventory = inv
+
     print("📂 Spielstand geladen!")
     return player
 

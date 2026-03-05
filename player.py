@@ -26,7 +26,9 @@ class Character:
             "chest": {"name": "Lumpen", "armor": 0}
         }
         self.inventory = {
-            "Healing Potions": 2,
+            "Consumables": {
+                "Healing Potion": 2,
+            },
             "Gold": 0,
             "Equipment": []
         }
@@ -106,6 +108,55 @@ class Character:
             self.hp = max(0, self.hp - damage)
             self.bleed_stacks -= 1
             return f"{self.name} erleidet {damage} Schaden durch Blutung!"
+
+    def use_consumable(self, key: str) -> str:
+        """Benutzt ein Consumable aus dem Inventar. Gibt eine Ergebnis-Nachricht zurück."""
+        from loot_tables import CONSUMABLE_DEFS
+        consumables = self.inventory.get("Consumables", {})
+
+        if consumables.get(key, 0) <= 0:
+            return f"Du hast kein(e) {key}!"
+
+        cdef = CONSUMABLE_DEFS.get(key)
+        if not cdef:
+            return f"Unbekanntes Item: {key}"
+
+        consumables[key] -= 1
+        if consumables[key] == 0:
+            del consumables[key]
+
+        effect = cdef["effect"]
+        value  = cdef.get("value", 0)
+        emoji  = cdef.get("emoji", "🧪")
+
+        if effect == "heal":
+            healed = min(value, self.max_hp - self.hp)
+            self.hp = min(self.max_hp, self.hp + value)
+            return f"{emoji} {self.name} benutzt {key} und heilt {healed} HP! (HP: {self.hp}/{self.max_hp})"
+
+        elif effect == "energy":
+            gained = min(value, self.max_energy - self.energy)
+            self.energy = min(self.max_energy, self.energy + value)
+            return f"{emoji} {self.name} benutzt {key} und erhält {gained} Energie! (Energie: {self.energy}/{self.max_energy})"
+
+        elif effect == "attack":
+            self.attack += value
+            return f"{emoji} {self.name} benutzt {key}! ATK +{value} für diesen Kampf. (ATK: {self.get_total_attack()})"
+
+        elif effect == "cleanse":
+            msgs = []
+            if value > 0:
+                healed = min(value, self.max_hp - self.hp)
+                self.hp = min(self.max_hp, self.hp + value)
+                msgs.append(f"heilt {healed} HP")
+            if self.bleed_stacks > 0:
+                self.bleed_stacks = 0
+                msgs.append("Blutung entfernt")
+            else:
+                msgs.append("keine Blutung vorhanden")
+            return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
+
+        return f"{emoji} {self.name} benutzt {key}."
 
     def add_loot(self, item_name, amount):
         if item_name in self.inventory:

@@ -6,9 +6,12 @@ def camp_menu(player):
     while True:
         clear_screen()
         print_header("Lagerfeuer - Pause")
+        consumables = player.inventory.get("Consumables", {})
+        total_consumables = sum(v for v in consumables.values())
         print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']}")
         print(f"Waffe: {player.equipment['weapon']['name']} (+{player.equipment['weapon']['attack']} DMG)")
         print(f"Rüstung: {player.equipment['chest']['name']} (+{player.equipment['chest']['armor']} DEF)")
+        print(f"💊 Gegenstände: {total_consumables}")
         print("-" * 30)
         print("[I] Inventar & Ausrüsten")
         print("[K] Händler besuchen")
@@ -33,35 +36,50 @@ def camp_menu(player):
 
 
 def inventory_menu(player):
-    clear_screen()
-    print_header("Dein Inventar")
-    items = player.inventory["Equipment"]
+    while True:
+        clear_screen()
+        print_header("Dein Inventar")
 
-    if not items:
-        print("Dein Rucksack ist leer.")
-        input("\nZurück... (ENTER)")
-        return
+        # --- Consumables anzeigen ---
+        consumables = player.inventory.get("Consumables", {})
+        from loot_tables import CONSUMABLE_DEFS
+        print("[ Verbrauchsgegenstände ]")
+        if consumables:
+            for key, count in consumables.items():
+                cdef = CONSUMABLE_DEFS.get(key, {})
+                emoji = cdef.get("emoji", "🧪")
+                desc  = cdef.get("desc", "")
+                print(f"  {emoji} {key:<22} x{count}  — {desc}")
+        else:
+            print("  (keine)")
 
-    for i, item in enumerate(items):
-        value = item['attack'] if item['type'] == 'weapon' else item['armor']
-        type_label = "ATK" if item['type'] == 'weapon' else "DEF"
-        print(f"[{i}] {item['name']} ({type_label}: +{value})")
+        print()
 
-    print(f"[{len(items)}] Zurück")
+        # --- Equipment anzeigen ---
+        equip_items = player.inventory["Equipment"]
+        print("[ Ausrüstung ]")
+        if equip_items:
+            for i, item in enumerate(equip_items):
+                value = item['attack'] if item['type'] == 'weapon' else item['armor']
+                type_label = "ATK" if item['type'] == 'weapon' else "DEF"
+                print(f"  [{i}] {item['name']} ({type_label}: +{value})")
+        else:
+            print("  (keine)")
 
-    choice = input("\nWas möchtest du anlegen? ")
-    if choice.isdigit():
-        idx = int(choice)
-        if idx < len(items):
-            new_item = items.pop(idx)
-            slot = new_item["type"]
+        print(f"\n[Nummer] Ausrüstung anlegen  |  [Z] Zurück")
+        choice = input("\nDeine Wahl: ").lower()
 
-            # Put old item back into inventory
-            old_item = player.equipment[slot]
-            if old_item["name"] not in ("Fäuste", "Lumpen"):
-                items.append(old_item)
+        if choice == 'z':
+            break
 
-            # Equip new item
-            player.equipment[slot] = new_item
-            print(f"\nDu trägst nun {new_item['name']}!")
-            input("(ENTER)")
+        if choice.isdigit():
+            idx = int(choice)
+            if idx < len(equip_items):
+                new_item = equip_items.pop(idx)
+                slot = new_item["type"]
+                old_item = player.equipment[slot]
+                if old_item["name"] not in ("Fäuste", "Lumpen"):
+                    equip_items.append(old_item)
+                player.equipment[slot] = new_item
+                print(f"\nDu trägst nun {new_item['name']}!")
+                input("(ENTER)")

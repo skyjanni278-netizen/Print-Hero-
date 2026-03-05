@@ -1,7 +1,7 @@
 import random
 from monsters import Zombie, Slime, Goblin, Skeleton, Dragon, roll_rank
 from utils import clear_screen, print_header
-from loot_tables import roll_loot, apply_loot
+from loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
 
 
 def generate_enemy_group(player):
@@ -26,6 +26,43 @@ def create_enemy(player):
     return mob_class(rank=rank)
 
 
+def consumable_menu(player) -> str:
+    """Öffnet das Consumable-Inventar während des Kampfes. Gibt Ergebnis-Nachricht zurück oder '' bei Abbruch."""
+    clear_screen()
+    print_header("Verbrauchsgegenstände")
+
+    consumables = player.inventory.get("Consumables", {})
+    available = {k: v for k, v in consumables.items() if v > 0}
+
+    if not available:
+        return "Keine Verbrauchsgegenstände vorhanden!"
+
+    items_list = list(available.items())
+    print(f"HP: {player.hp}/{player.max_hp}  |  Energie: {player.energy}/{player.max_energy}")
+    if player.bleed_stacks > 0:
+        print(f"⚠️  Blutung: {player.bleed_stacks} Stacks")
+    print("-" * 40)
+
+    for i, (key, count) in enumerate(items_list):
+        cdef = CONSUMABLE_DEFS.get(key, {})
+        emoji = cdef.get("emoji", "🧪")
+        desc  = cdef.get("desc", "")
+        print(f"[{i+1}] {emoji} {key:<22} x{count}  — {desc}")
+
+    print(f"\n[0] Zurück (kein Zug verbraucht)")
+
+    choice = input("\nWelches Item benutzen? ")
+    if choice == "0" or not choice.isdigit():
+        return ""
+
+    idx = int(choice) - 1
+    if not (0 <= idx < len(items_list)):
+        return "Ungültige Auswahl."
+
+    key = items_list[idx][0]
+    return player.use_consumable(key)
+
+
 def combat(player, enemy_list):
     while player.is_alive() and any(e.is_alive() for e in enemy_list):
         clear_screen()
@@ -34,9 +71,14 @@ def combat(player, enemy_list):
         # Player stats
         print(f"{player.name:<4} HP: {player.hp}/{player.max_hp} | Energie: {player.energy}/{player.max_energy}")
         print(f"     LVL: {player.level}    | XP: {player.xp}/{player.xp_to_level_up}")
+        if player.bleed_stacks > 0:
+            print(f"     ⚠️  Blutung: {player.bleed_stacks} Stacks")
         print("-" * 30)
-        print("Inventar: ")
-        print(f" Heilflaschen: {player.inventory.get('Healing Potions', 0)} | Gold: {player.inventory.get('Gold', 0)}")
+
+        # Consumables Kurzübersicht
+        consumables = player.inventory.get("Consumables", {})
+        total_consumables = sum(v for v in consumables.values())
+        print(f"Inventar:  💊 Gegenstände: {total_consumables} | 💰 Gold: {player.inventory.get('Gold', 0)}")
         print("-" * 30)
 
         # Show all enemies
@@ -47,9 +89,9 @@ def combat(player, enemy_list):
             print(f"[{i+1}] {e.name:<22} {rank_label:<10} {status}")
 
         print("=" * 30)
-        choice = input("\n[A] Angreifen, [S] Himmelsschlag 20 E, [R] Rundumschlag 15 E, [C] Cleave 10 E \n[H] Heilen, [F] Fliehen \n[Q] Beenden \nDeine Wahl: ").lower()
+        choice = input("\n[A] Angreifen, [S] Himmelsschlag 20 E, [R] Rundumschlag 15 E, [C] Cleave 10 E \n[U] Verbrauchsgegenstände, [F] Fliehen \n[Q] Beenden \nDeine Wahl: ").lower()
 
-        if choice not in ['a', 's', 'r', 'c', 'h', 'f', 'q']:
+        if choice not in ['a', 's', 'r', 'c', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
             input("ENTER...")
             continue
@@ -83,10 +125,14 @@ def combat(player, enemy_list):
             living_enemies = [e for e in enemy_list if e.is_alive()]
             print(player.whirlwind(living_enemies))
 
-        elif choice == 'h':
+        elif choice == 'u':
+            result = consumable_menu(player)
+            if result == "":
+                # Kein Zug verbraucht — zurück ohne Gegnerangriff
+                continue
             clear_screen()
             print_header("Kampf-Ergebnis")
-            heal(player)
+            print(result)
 
         elif choice == 'f':
             clear_screen()
@@ -123,7 +169,6 @@ def combat(player, enemy_list):
 def collect_loot(player, enemy_group) -> list:
     """
     Sammelt Loot von allen besiegten Gegnern über das zentrale Loot-System.
-    Gibt alle Loot-Zeilen als Liste von Strings zurück.
     """
     all_messages = []
     for enemy in enemy_group:
@@ -135,13 +180,3 @@ def collect_loot(player, enemy_group) -> list:
             all_messages.append(f"\n  [{enemy.name}]")
             all_messages.extend(msgs)
     return all_messages
-
-
-def heal(player):
-    if player.inventory.get("Healing Potions", 0) > 0:
-        heal_amount = 10
-        print(f"{player.name} benutzt eine Heilflasche und heilt sich um {heal_amount} HP!")
-        player.hp = min(player.max_hp, player.hp + heal_amount)
-        player.inventory["Healing Potions"] -= 1
-    else:
-        print("Keine Heilflaschen mehr!")
