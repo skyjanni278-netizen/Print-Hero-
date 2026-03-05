@@ -24,9 +24,10 @@ class Character:
         self.energy_regen = 3
 
         self.equipment = {
-            "weapon": {"name": "Fäuste",   "attack": 0},
-            "chest":  {"name": "Lumpen",   "armor": 0},
-            "head":   {"name": "Kein Helm","armor": 0},
+            "weapon": {"name": "Fäuste",       "attack": 0},
+            "chest":  {"name": "Lumpen",       "armor": 0},
+            "head":   {"name": "Kein Helm",    "armor": 0},
+            "feet":   {"name": "Keine Schuhe", "armor": 0},
         }
         self.inventory = {
             "Consumables": {"Healing Potion": 2},
@@ -102,7 +103,7 @@ class Character:
         return self.attack + self.equipment["weapon"]["attack"]
 
     def get_total_armor(self):
-        return self.armor + self.equipment["chest"]["armor"] + self.equipment["head"]["armor"]
+        return self.armor + self.equipment["chest"]["armor"] + self.equipment["head"]["armor"] + self.equipment["feet"]["armor"]
 
     def check_level_up(self):
         while self.xp >= self.xp_to_level_up:

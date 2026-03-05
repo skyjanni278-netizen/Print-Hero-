@@ -24,6 +24,11 @@ SHOP_ITEMS = [
     {"name": "Eisenhelm",        "type": "equipment",  "key": "Eisenhelm",        "price":  45},
     {"name": "Stahlhelm",        "type": "equipment",  "key": "Stahlhelm",        "price":  90},
     {"name": "Runenhelm",        "type": "equipment",  "key": "Runenhelm",        "price": 180},
+    # Schuhe (Common→Rare)
+    {"name": "Lederstiefel",          "type": "equipment",  "key": "Lederstiefel",          "price":  20},
+    {"name": "Eisenstiefel",          "type": "equipment",  "key": "Eisenstiefel",          "price":  40},
+    {"name": "Schnellläuferstiefel",  "type": "equipment",  "key": "Schnellläuferstiefel",  "price":  85},
+    {"name": "Runenstiefel",          "type": "equipment",  "key": "Runenstiefel",          "price": 170},
 ]
 
 SLOT_LABEL = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm"}
@@ -37,6 +42,7 @@ def shop_menu(player):
         ("🗡️  Waffen",               [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "weapon"]),
         ("🛡️  Rüstungen",             [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "chest"]),
         ("🪖 Helme",                  [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "head"]),
+        ("👟 Schuhe",                 [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "feet"]),
     ]
     # Globaler Index-Map
     indexed = [(item, i) for i, item in enumerate(SHOP_ITEMS)]

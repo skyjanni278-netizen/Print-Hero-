@@ -42,6 +42,9 @@ def load_game():
     # Migration: fehlender head-Slot in alten Saves
     if "head" not in player.equipment:
         player.equipment["head"] = {"name": "Kein Helm", "armor": 0}
+    # Migration: fehlender feet-Slot in alten Saves
+    if "feet" not in player.equipment:
+        player.equipment["feet"] = {"name": "Keine Schuhe", "armor": 0}
 
     inv = data["inventory"]
 

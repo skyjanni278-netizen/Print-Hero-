@@ -23,7 +23,7 @@ JUNK_DEFS = {
 
 # ── Equipment-Definitionen ────────────────────────────────────────────────────
 # rarity: common / uncommon / rare / epic / legendary
-# slot:   weapon / chest / head
+# slot:   weapon / chest / head / feet
 EQUIPMENT_DEFS = {
     # ── WAFFEN ───────────────────────────────────────────────
     "Kurzschwert":          {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Ein einfaches Schwert"},
@@ -46,6 +46,13 @@ EQUIPMENT_DEFS = {
     "Runenhelm":            {"slot": "head",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 90,  "desc": "Runen leuchten schwach"},
     "Drachenkrone":         {"slot": "head",   "armor": 9,   "rarity": "epic",      "emoji": "👑",  "sell": 140, "desc": "Krone eines Drachenfürsten"},
     "Krone des Ewigen":     {"slot": "head",   "armor": 13,  "rarity": "legendary", "emoji": "🌟",  "sell": 300, "desc": "Trägt, wer Ewigkeit verdient"},
+    # ── SCHUHE ───────────────────────────────────────────────
+    "Lederstiefel":         {"slot": "feet",   "armor": 1,   "rarity": "common",    "emoji": "👞",  "sell": 10,  "desc": "Einfache Lederschuhe"},
+    "Eisenstiefel":         {"slot": "feet",   "armor": 2,   "rarity": "common",    "emoji": "🥾",  "sell": 20,  "desc": "Schwere Eisensohlen"},
+    "Schnellläuferstiefel": {"slot": "feet",   "armor": 4,   "rarity": "uncommon",  "emoji": "💨",  "sell": 42,  "desc": "Leicht und wendig"},
+    "Runenstiefel":         {"slot": "feet",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 85,  "desc": "Mit Schutzrunen versehen"},
+    "Drachenklauen":        {"slot": "feet",   "armor": 9,   "rarity": "epic",      "emoji": "🐉",  "sell": 130, "desc": "Krallen eines Drachen"},
+    "Stiefel der Ewigkeit": {"slot": "feet",   "armor": 12,  "rarity": "legendary", "emoji": "⚡",  "sell": 280, "desc": "Kein Weg ist zu weit"},
 }
 
 # Rarity-Label und Farb-Emoji für Anzeige
@@ -69,6 +76,8 @@ LOOT_POOL = {
         {"name": "Lederkappe",      "type": "equipment",   "key": "Lederkappe"},
         {"name": "Kurzschwert",     "type": "equipment",   "key": "Kurzschwert"},
         {"name": "Lederrüstung",    "type": "equipment",   "key": "Lederrüstung"},
+        {"name": "Lederstiefel",    "type": "equipment",   "key": "Lederstiefel"},
+        {"name": "Eisenstiefel",    "type": "equipment",   "key": "Eisenstiefel"},
     ],
     # -- UNCOMMON
     "uncommon": [
@@ -83,6 +92,7 @@ LOOT_POOL = {
         {"name": "Kriegshammer",    "type": "equipment",   "key": "Kriegshammer"},
         {"name": "Kettenhemd",      "type": "equipment",   "key": "Kettenhemd"},
         {"name": "Plattenpanzer",   "type": "equipment",   "key": "Plattenpanzer"},
+        {"name": "Schnellläuferstiefel", "type": "equipment", "key": "Schnellläuferstiefel"},
     ],
     # -- RARE
     "rare": [
@@ -93,6 +103,7 @@ LOOT_POOL = {
         {"name": "Runenschwert",    "type": "equipment",   "key": "Runenschwert"},
         {"name": "Runenrüstung",    "type": "equipment",   "key": "Runenrüstung"},
         {"name": "Runenhelm",       "type": "equipment",   "key": "Runenhelm"},
+        {"name": "Runenstiefel",    "type": "equipment",   "key": "Runenstiefel"},
     ],
     # -- EPIC
     "epic": [
@@ -102,13 +113,15 @@ LOOT_POOL = {
         {"name": "Drachenzahn",     "type": "equipment",  "key": "Drachenzahn"},
         {"name": "Drachenschuppen", "type": "equipment",  "key": "Drachenschuppen"},
         {"name": "Drachenkrone",    "type": "equipment",  "key": "Drachenkrone"},
+        {"name": "Drachenklauen",   "type": "equipment",  "key": "Drachenklauen"},
     ],
     # -- LEGENDARY  (sehr seltener Pool)
     "legendary": [
-        {"name": "Gold",            "type": "gold",       "key": "Gold",            "min": 150, "max": 300},
-        {"name": "Göttliche Klinge","type": "equipment",  "key": "Göttliche Klinge"},
-        {"name": "Rüstung des Lichts","type": "equipment","key": "Rüstung des Lichts"},
-        {"name": "Krone des Ewigen","type": "equipment",  "key": "Krone des Ewigen"},
+        {"name": "Gold",                  "type": "gold",       "key": "Gold",                  "min": 150, "max": 300},
+        {"name": "Göttliche Klinge",      "type": "equipment",  "key": "Göttliche Klinge"},
+        {"name": "Rüstung des Lichts",    "type": "equipment",  "key": "Rüstung des Lichts"},
+        {"name": "Krone des Ewigen",      "type": "equipment",  "key": "Krone des Ewigen"},
+        {"name": "Stiefel der Ewigkeit",  "type": "equipment",  "key": "Stiefel der Ewigkeit"},
     ],
 }
 
