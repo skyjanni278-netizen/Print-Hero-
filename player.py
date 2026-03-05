@@ -17,15 +17,16 @@ class Character:
 
         self.level = 1
         self.xp = 0
-        self.xp_to_level_up = 80
+        self.xp_to_level_up = 100
 
         self.max_energy = 30
         self.energy = 15
         self.energy_regen = 3
 
         self.equipment = {
-            "weapon": {"name": "Fäuste", "attack": 0},
-            "chest":  {"name": "Lumpen", "armor": 0}
+            "weapon": {"name": "Fäuste",   "attack": 0},
+            "chest":  {"name": "Lumpen",   "armor": 0},
+            "head":   {"name": "Kein Helm","armor": 0},
         }
         self.inventory = {
             "Consumables": {"Healing Potion": 2},
@@ -101,16 +102,16 @@ class Character:
         return self.attack + self.equipment["weapon"]["attack"]
 
     def get_total_armor(self):
-        return self.armor + self.equipment["chest"]["armor"]
+        return self.armor + self.equipment["chest"]["armor"] + self.equipment["head"]["armor"]
 
     def check_level_up(self):
         while self.xp >= self.xp_to_level_up:
             self.level += 1
             self.xp -= self.xp_to_level_up
-            self.xp_to_level_up = int(self.xp_to_level_up * 1.3)  # flachere Kurve (war 1.5)
-            self.max_hp  += 4   # war 5
+            self.xp_to_level_up = int(self.xp_to_level_up * 1.5)
+            self.max_hp  += 5
             self.hp       = self.max_hp
-            self.attack  += 1   # war 2
+            self.attack  += 2
             self.min_attack += 1
             print(f"✨ {self.name} ist nun Level {self.level}!")
 

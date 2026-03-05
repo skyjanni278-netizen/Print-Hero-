@@ -14,68 +14,110 @@ CONSUMABLE_DEFS = {
 
 # Junk-Items: nur zum Verkaufen
 JUNK_DEFS = {
-    "Altes Seil":    {"emoji": "🪢", "desc": "Wertloser Schrott", "sell": 3},
-    "Lumpen":        {"emoji": "🧣", "desc": "Zerfetzter Stoff",  "sell": 2},
-    "Knochen":       {"emoji": "🦴", "desc": "Ein morscher Knochen", "sell": 4},
-    "Schleimklumpen":{"emoji": "🟢", "desc": "Eklig, aber verkäuflich", "sell": 5},
-    "Goblinzahn":    {"emoji": "🦷", "desc": "Riecht furchtbar",  "sell": 6},
+    "Altes Seil":     {"emoji": "🪢", "desc": "Wertloser Schrott",      "sell": 3},
+    "Lumpen":         {"emoji": "🧣", "desc": "Zerfetzter Stoff",        "sell": 2},
+    "Knochen":        {"emoji": "🦴", "desc": "Ein morscher Knochen",    "sell": 4},
+    "Schleimklumpen": {"emoji": "🟢", "desc": "Eklig, aber verkäuflich", "sell": 5},
+    "Goblinzahn":     {"emoji": "🦷", "desc": "Riecht furchtbar",        "sell": 6},
 }
 
-# Verkaufspreise für Equipment (ca. 50% Kaufpreis)
-EQUIPMENT_SELL_PRICES = {
-    "Kurzschwert":    20,
-    "Langschwert":    40,
-    "Drachenzahn":    80,
-    "Lederrüstung":   17,
-    "Kettenhemd":     35,
-    "Drachenschuppen":70,
+# ── Equipment-Definitionen ────────────────────────────────────────────────────
+# rarity: common / uncommon / rare / epic / legendary
+# slot:   weapon / chest / head
+EQUIPMENT_DEFS = {
+    # ── WAFFEN ───────────────────────────────────────────────
+    "Kurzschwert":          {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Ein einfaches Schwert"},
+    "Langschwert":          {"slot": "weapon", "attack": 6,  "rarity": "uncommon",  "emoji": "⚔️",  "sell": 40,  "desc": "Ausgewogene Klinge"},
+    "Kriegshammer":         {"slot": "weapon", "attack": 9,  "rarity": "uncommon",  "emoji": "🔨",  "sell": 60,  "desc": "Wuchtig und langsam"},
+    "Runenschwert":         {"slot": "weapon", "attack": 13, "rarity": "rare",      "emoji": "🌀",  "sell": 100, "desc": "Mit Magie durchzogen"},
+    "Drachenzahn":          {"slot": "weapon", "attack": 17, "rarity": "epic",      "emoji": "🐉",  "sell": 160, "desc": "Geschmiedet aus Drachenzahn"},
+    "Göttliche Klinge":     {"slot": "weapon", "attack": 25, "rarity": "legendary", "emoji": "✨",  "sell": 350, "desc": "Waffe der Götter"},
+    # ── RÜSTUNGEN ────────────────────────────────────────────
+    "Lederrüstung":         {"slot": "chest",  "armor": 2,   "rarity": "common",    "emoji": "🥋",  "sell": 17,  "desc": "Leichter Schutz"},
+    "Kettenhemd":           {"slot": "chest",  "armor": 4,   "rarity": "uncommon",  "emoji": "🔗",  "sell": 35,  "desc": "Gute Balance"},
+    "Plattenpanzer":        {"slot": "chest",  "armor": 7,   "rarity": "uncommon",  "emoji": "🛡️",  "sell": 60,  "desc": "Schwerer Stahl"},
+    "Runenrüstung":         {"slot": "chest",  "armor": 10,  "rarity": "rare",      "emoji": "🌀",  "sell": 100, "desc": "Magisch verstärkt"},
+    "Drachenschuppen":      {"slot": "chest",  "armor": 14,  "rarity": "epic",      "emoji": "🐉",  "sell": 160, "desc": "Schuppen eines Drachen"},
+    "Rüstung des Lichts":   {"slot": "chest",  "armor": 20,  "rarity": "legendary", "emoji": "⚡",  "sell": 350, "desc": "Von Göttern gesegnet"},
+    # ── HELME ────────────────────────────────────────────────
+    "Lederkappe":           {"slot": "head",   "armor": 1,   "rarity": "common",    "emoji": "🪖",  "sell": 12,  "desc": "Einfacher Kopfschutz"},
+    "Eisenhelm":            {"slot": "head",   "armor": 2,   "rarity": "common",    "emoji": "⛑️",  "sell": 22,  "desc": "Solider Schutz"},
+    "Stahlhelm":            {"slot": "head",   "armor": 4,   "rarity": "uncommon",  "emoji": "🪖",  "sell": 45,  "desc": "Gehärteter Stahl"},
+    "Runenhelm":            {"slot": "head",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 90,  "desc": "Runen leuchten schwach"},
+    "Drachenkrone":         {"slot": "head",   "armor": 9,   "rarity": "epic",      "emoji": "👑",  "sell": 140, "desc": "Krone eines Drachenfürsten"},
+    "Krone des Ewigen":     {"slot": "head",   "armor": 13,  "rarity": "legendary", "emoji": "🌟",  "sell": 300, "desc": "Trägt, wer Ewigkeit verdient"},
+}
+
+# Rarity-Label und Farb-Emoji für Anzeige
+RARITY_LABEL = {
+    "common":    ("Gewöhnlich",  "⬜"),
+    "uncommon":  ("Ungewöhnlich","🟩"),
+    "rare":      ("Selten",      "🟦"),
+    "epic":      ("Episch",      "🟪"),
+    "legendary": ("Legendär",    "🟨"),
 }
 
 LOOT_POOL = {
     # -- COMMON
     "common": [
-        {"name": "Healing Potion",    "type": "consumable", "key": "Healing Potion",    "min": 1, "max": 1},
-        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 3, "max": 10},
-        {"name": "Altes Seil",        "type": "junk",        "key": "Altes Seil",        "min": 1, "max": 2},
-        {"name": "Lumpen",            "type": "junk",        "key": "Lumpen",            "min": 1, "max": 3},
-        {"name": "Antidot",           "type": "consumable",  "key": "Antidot",           "min": 1, "max": 1},
-        {"name": "Knochen",           "type": "junk",        "key": "Knochen",           "min": 1, "max": 2},
+        {"name": "Healing Potion",  "type": "consumable", "key": "Healing Potion",  "min": 1, "max": 1},
+        {"name": "Gold",            "type": "gold",        "key": "Gold",            "min": 3, "max": 10},
+        {"name": "Altes Seil",      "type": "junk",        "key": "Altes Seil",      "min": 1, "max": 2},
+        {"name": "Lumpen",          "type": "junk",        "key": "Lumpen",          "min": 1, "max": 3},
+        {"name": "Antidot",         "type": "consumable",  "key": "Antidot",         "min": 1, "max": 1},
+        {"name": "Knochen",         "type": "junk",        "key": "Knochen",         "min": 1, "max": 2},
+        {"name": "Lederkappe",      "type": "equipment",   "key": "Lederkappe"},
+        {"name": "Kurzschwert",     "type": "equipment",   "key": "Kurzschwert"},
+        {"name": "Lederrüstung",    "type": "equipment",   "key": "Lederrüstung"},
     ],
     # -- UNCOMMON
     "uncommon": [
-        {"name": "Großes Heiltrank",  "type": "consumable",  "key": "Großes Heiltrank",  "min": 1, "max": 1},
-        {"name": "Gold",              "type": "gold",         "key": "Gold",              "min": 10, "max": 25},
-        {"name": "Kurzschwert",       "type": "weapon",       "key": "Kurzschwert",       "attack": 3, "min": 1, "max": 1},
-        {"name": "Lederrüstung",      "type": "chest",        "key": "Lederrüstung",      "armor": 2,  "min": 1, "max": 1},
-        {"name": "Energie-Kristall",  "type": "consumable",   "key": "Energie-Kristall",  "min": 1, "max": 1},
-        {"name": "Stärketrank",       "type": "consumable",   "key": "Stärketrank",       "min": 1, "max": 1},
-        {"name": "Schleimklumpen",    "type": "junk",         "key": "Schleimklumpen",    "min": 1, "max": 2},
-        {"name": "Goblinzahn",        "type": "junk",         "key": "Goblinzahn",        "min": 1, "max": 2},
+        {"name": "Großes Heiltrank","type": "consumable",  "key": "Großes Heiltrank","min": 1, "max": 1},
+        {"name": "Gold",            "type": "gold",         "key": "Gold",            "min": 10, "max": 25},
+        {"name": "Energie-Kristall","type": "consumable",   "key": "Energie-Kristall","min": 1, "max": 1},
+        {"name": "Stärketrank",     "type": "consumable",   "key": "Stärketrank",     "min": 1, "max": 1},
+        {"name": "Schleimklumpen",  "type": "junk",         "key": "Schleimklumpen",  "min": 1, "max": 2},
+        {"name": "Goblinzahn",      "type": "junk",         "key": "Goblinzahn",      "min": 1, "max": 2},
+        {"name": "Eisenhelm",       "type": "equipment",   "key": "Eisenhelm"},
+        {"name": "Langschwert",     "type": "equipment",   "key": "Langschwert"},
+        {"name": "Kriegshammer",    "type": "equipment",   "key": "Kriegshammer"},
+        {"name": "Kettenhemd",      "type": "equipment",   "key": "Kettenhemd"},
+        {"name": "Plattenpanzer",   "type": "equipment",   "key": "Plattenpanzer"},
     ],
     # -- RARE
     "rare": [
-        {"name": "Gold",              "type": "gold",        "key": "Gold",              "min": 25, "max": 60},
-        {"name": "Langschwert",       "type": "weapon",      "key": "Langschwert",       "attack": 6, "min": 1, "max": 1},
-        {"name": "Kettenhemd",        "type": "chest",       "key": "Kettenhemd",        "armor": 4,  "min": 1, "max": 1},
-        {"name": "Elixier",           "type": "consumable",  "key": "Elixier",           "min": 1, "max": 1},
-        {"name": "Energie-Kristall",  "type": "consumable",  "key": "Energie-Kristall",  "min": 1, "max": 2},
+        {"name": "Gold",            "type": "gold",        "key": "Gold",            "min": 25, "max": 60},
+        {"name": "Elixier",         "type": "consumable",  "key": "Elixier",         "min": 1, "max": 1},
+        {"name": "Energie-Kristall","type": "consumable",  "key": "Energie-Kristall","min": 1, "max": 2},
+        {"name": "Stahlhelm",       "type": "equipment",   "key": "Stahlhelm"},
+        {"name": "Runenschwert",    "type": "equipment",   "key": "Runenschwert"},
+        {"name": "Runenrüstung",    "type": "equipment",   "key": "Runenrüstung"},
+        {"name": "Runenhelm",       "type": "equipment",   "key": "Runenhelm"},
     ],
     # -- EPIC
     "epic": [
-        {"name": "Gold",              "type": "gold",       "key": "Gold",              "min": 60, "max": 120},
-        {"name": "Drachenzahn",       "type": "weapon",     "key": "Drachenzahn",       "attack": 10, "min": 1, "max": 1},
-        {"name": "Drachenschuppen",   "type": "chest",      "key": "Drachenschuppen",   "armor": 7,   "min": 1, "max": 1},
-        {"name": "Phönixfeder",       "type": "consumable", "key": "Phönixfeder",       "min": 1, "max": 1},
-        {"name": "Stärketrank",       "type": "consumable", "key": "Stärketrank",       "min": 1, "max": 2},
+        {"name": "Gold",            "type": "gold",       "key": "Gold",            "min": 60, "max": 120},
+        {"name": "Phönixfeder",     "type": "consumable", "key": "Phönixfeder",     "min": 1, "max": 1},
+        {"name": "Stärketrank",     "type": "consumable", "key": "Stärketrank",     "min": 1, "max": 2},
+        {"name": "Drachenzahn",     "type": "equipment",  "key": "Drachenzahn"},
+        {"name": "Drachenschuppen", "type": "equipment",  "key": "Drachenschuppen"},
+        {"name": "Drachenkrone",    "type": "equipment",  "key": "Drachenkrone"},
+    ],
+    # -- LEGENDARY  (sehr seltener Pool)
+    "legendary": [
+        {"name": "Gold",            "type": "gold",       "key": "Gold",            "min": 150, "max": 300},
+        {"name": "Göttliche Klinge","type": "equipment",  "key": "Göttliche Klinge"},
+        {"name": "Rüstung des Lichts","type": "equipment","key": "Rüstung des Lichts"},
+        {"name": "Krone des Ewigen","type": "equipment",  "key": "Krone des Ewigen"},
     ],
 }
 
 RANK_LOOT_WEIGHTS = {
-    1: {"common": 80, "uncommon": 18, "rare": 2,  "epic": 0},
-    2: {"common": 65, "uncommon": 25, "rare": 9,  "epic": 1},
-    3: {"common": 45, "uncommon": 30, "rare": 20, "epic": 5},
-    4: {"common": 25, "uncommon": 30, "rare": 30, "epic": 15},
-    5: {"common": 10, "uncommon": 25, "rare": 35, "epic": 30},
+    1: {"common": 80, "uncommon": 18, "rare": 2,   "epic": 0,  "legendary": 0},
+    2: {"common": 62, "uncommon": 28, "rare": 9,   "epic": 1,  "legendary": 0},
+    3: {"common": 42, "uncommon": 32, "rare": 20,  "epic": 5,  "legendary": 1},
+    4: {"common": 22, "uncommon": 30, "rare": 30,  "epic": 15, "legendary": 3},
+    5: {"common": 8,  "uncommon": 20, "rare": 32,  "epic": 30, "legendary": 10},
 }
 
 
@@ -93,7 +135,6 @@ def roll_loot(rank: int, rolls: int = 2) -> list:
 
 
 def apply_loot(player, loot_list: list) -> list:
-    from player import MAX_INVENTORY_SLOTS
     messages = []
 
     for item in loot_list:
@@ -126,17 +167,25 @@ def apply_loot(player, loot_list: list) -> list:
                 lost = amount - result
                 messages.append(f"  ⚠️  {lost}x {item['name']} nicht aufgenommen (Inventar voll)")
 
-        elif item["type"] in ("weapon", "chest"):
+        elif item["type"] == "equipment":
             if not player.has_inventory_space():
                 messages.append(f"  ⚠️  Inventar voll! {item['name']} verloren.")
                 continue
-            equip = {"name": item["name"], "type": item["type"]}
-            if item["type"] == "weapon":
-                equip["attack"] = item["attack"]
+            edef   = EQUIPMENT_DEFS.get(item["key"], {})
+            slot   = edef.get("slot", "weapon")
+            emoji  = edef.get("emoji", "⚔️")
+            rarity = edef.get("rarity", "common")
+            rlabel, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
+
+            equip = {"name": item["name"], "type": slot}
+            if slot == "weapon":
+                equip["attack"] = edef["attack"]
+                stat = f"ATK +{edef['attack']}"
             else:
-                equip["armor"] = item["armor"]
+                equip["armor"] = edef["armor"]
+                stat = f"DEF +{edef['armor']}"
+
             player.inventory["Equipment"].append(equip)
-            stat = f"ATK +{item['attack']}" if item["type"] == "weapon" else f"DEF +{item['armor']}"
-            messages.append(f"  ✨ {item['name']} ({stat})")
+            messages.append(f"  {rbadge}{emoji} {item['name']} [{rlabel}] ({stat})")
 
     return messages

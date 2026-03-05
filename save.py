@@ -39,6 +39,9 @@ def load_game():
     player.energy       = data["energy"]
     player.max_energy   = data["max_energy"]
     player.equipment    = data["equipment"]
+    # Migration: fehlender head-Slot in alten Saves
+    if "head" not in player.equipment:
+        player.equipment["head"] = {"name": "Kein Helm", "armor": 0}
 
     inv = data["inventory"]
 

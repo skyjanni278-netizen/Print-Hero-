@@ -11,9 +11,14 @@ def camp_menu(player):
         used_slots = player.inventory_count()
         consumables = player.inventory.get("Consumables", {})
         total_consumables = sum(consumables.values())
+        w = player.equipment['weapon']
+        c = player.equipment['chest']
+        h = player.equipment['head']
         print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙")
-        print(f"Waffe:   {player.equipment['weapon']['name']} (+{player.equipment['weapon']['attack']} DMG)")
-        print(f"Rüstung: {player.equipment['chest']['name']} (+{player.equipment['chest']['armor']} DEF)")
+        print(f"ATK: {player.get_total_attack():<4} | DEF: {player.get_total_armor()}")
+        print(f"Waffe:   {w['name']} (+{w['attack']} ATK)")
+        print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")
+        print(f"Helm:    {h['name']} (+{h['armor']} DEF)")
         print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}")
         print("-" * 30)
         print("[I] Inventar & Ausrüsten")
@@ -41,13 +46,34 @@ def camp_menu(player):
             break
 
 
+def _equip_line(item):
+    """Formatiert eine Equipment-Zeile mit Rarity-Badge."""
+    from loot_tables import EQUIPMENT_DEFS, RARITY_LABEL
+    edef    = EQUIPMENT_DEFS.get(item["name"], {})
+    emoji   = edef.get("emoji", "⚔️")
+    rarity  = edef.get("rarity", "common")
+    rlabel, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
+    slot    = item.get("type", "?")
+    slot_labels = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm"}
+    slot_label  = slot_labels.get(slot, slot)
+    if slot == "weapon":
+        stat = f"ATK +{item['attack']}"
+    else:
+        stat = f"DEF +{item['armor']}"
+    return f"{rbadge}{emoji} {item['name']:<24} {stat:<10} [{rlabel}] ({slot_label})"
+
+
 def inventory_menu(player):
-    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS
+    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
     while True:
         clear_screen()
         print_header("Dein Inventar")
         used_slots = player.inventory_count()
         print(f"🎒 Slots: {used_slots}/{MAX_INVENTORY_SLOTS}")
+        w = player.equipment['weapon']
+        c = player.equipment['chest']
+        h = player.equipment['head']
+        print(f"Angelegt: {w['name']} | {c['name']} | {h['name']}")
         print()
 
         # --- Consumables ---
@@ -62,12 +88,11 @@ def inventory_menu(player):
                 print(f"  {emoji} {key:<22} {count}/{max_stack:<3}  — {desc}")
         else:
             print("  (keine)")
-
         print()
 
         # --- Junk ---
         junk = player.inventory.get("Junk", {})
-        print("[ Schrott (nur zum Verkaufen) ]")
+        print("[ Schrott ]")
         if junk:
             for key, count in junk.items():
                 jdef  = JUNK_DEFS.get(key, {})
@@ -76,17 +101,14 @@ def inventory_menu(player):
                 print(f"  {emoji} {key:<22} x{count}  — {sell} Gold/Stk")
         else:
             print("  (keine)")
-
         print()
 
-        # --- Equipment ---
+        # --- Equipment nach Slot gruppiert ---
         equip_items = player.inventory["Equipment"]
         print("[ Ausrüstung (Nummer zum Anlegen) ]")
         if equip_items:
             for i, item in enumerate(equip_items):
-                value      = item['attack'] if item['type'] == 'weapon' else item['armor']
-                type_label = "ATK" if item['type'] == 'weapon' else "DEF"
-                print(f"  [{i}] {item['name']} ({type_label}: +{value})")
+                print(f"  [{i}] {_equip_line(item)}")
         else:
             print("  (keine)")
 
@@ -98,27 +120,28 @@ def inventory_menu(player):
 
         if choice.isdigit():
             idx = int(choice)
-            if idx < len(equip_items):
+            if 0 <= idx < len(equip_items):
                 new_item = equip_items.pop(idx)
                 slot     = new_item["type"]
                 old_item = player.equipment[slot]
-                if old_item["name"] not in ("Fäuste", "Lumpen"):
+                # Starter-Items nicht zurück ins Inventar
+                if old_item["name"] not in ("Fäuste", "Lumpen", "Kein Helm"):
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
-                print(f"\nDu trägst nun {new_item['name']}!")
+                print(f"\n✅ Du trägst nun {new_item['name']}!")
                 input("(ENTER)")
 
 
 def sell_menu(player):
-    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_SELL_PRICES
+    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
 
     while True:
         clear_screen()
         print_header("Inventar verkaufen")
         print(f"Gold: {player.inventory['Gold']} 🪙  |  Slots: {player.inventory_count()}/{MAX_INVENTORY_SLOTS}")
-        print("-" * 52)
+        print("-" * 56)
 
-        sell_list = []  # (category, key_or_idx, price_per_unit, current_count, display_name)
+        sell_list = []
 
         # Consumables
         consumables = player.inventory.get("Consumables", {})
@@ -128,9 +151,9 @@ def sell_menu(player):
             cdef  = CONSUMABLE_DEFS.get(key, {})
             emoji = cdef.get("emoji", "🧪")
             price = cdef.get("sell", 1)
-            idx   = len(sell_list)
             total = price * count
-            print(f"  [{idx}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold gesamt)")
+            idx   = len(sell_list)
+            print(f"  [{idx:>2}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold)")
             sell_list.append(("consumable", key, price, count))
 
         # Junk
@@ -141,9 +164,9 @@ def sell_menu(player):
             jdef  = JUNK_DEFS.get(key, {})
             emoji = jdef.get("emoji", "🗑️")
             price = jdef.get("sell", 1)
-            idx   = len(sell_list)
             total = price * count
-            print(f"  [{idx}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold gesamt)")
+            idx   = len(sell_list)
+            print(f"  [{idx:>2}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold)")
             sell_list.append(("junk", key, price, count))
 
         # Equipment
@@ -151,24 +174,18 @@ def sell_menu(player):
         if equip_items:
             print("\n[ Ausrüstung ]")
         for i, item in enumerate(equip_items):
-            value      = item['attack'] if item['type'] == 'weapon' else item['armor']
-            type_label = "ATK" if item['type'] == 'weapon' else "DEF"
-            price      = EQUIPMENT_SELL_PRICES.get(item['name'], 5)
-            idx        = len(sell_list)
-            print(f"  [{idx}] {item['name']:<22} ({type_label}: +{value})  →  {price} Gold")
-            sell_list.append(("equipment", item['name'], price, 1))
+            edef  = EQUIPMENT_DEFS.get(item["name"], {})
+            price = edef.get("sell", 5)
+            idx   = len(sell_list)
+            print(f"  [{idx:>2}] {_equip_line(item)}  →  {price} Gold")
+            sell_list.append(("equipment", item["name"], price, 1))
 
         if not sell_list:
             print("  Nichts zu verkaufen.")
             input("\n(ENTER)")
             return
 
-        # Gesamtwert berechnen
-        total_value = 0
-        for entry in sell_list:
-            cat, key, price, count = entry
-            total_value += price * count
-
+        total_value = sum(p * c for _, _, p, c in sell_list)
         print(f"\n[A] Alles verkaufen ({total_value} Gold)  |  [Z] Zurück")
         choice = input("\nWas verkaufen? ").lower()
 
@@ -184,7 +201,7 @@ def sell_menu(player):
                 earned += JUNK_DEFS.get(key, {}).get("sell", 1) * count
             junk.clear()
             for item in list(equip_items):
-                earned += EQUIPMENT_SELL_PRICES.get(item['name'], 5)
+                earned += EQUIPMENT_DEFS.get(item["name"], {}).get("sell", 5)
             equip_items.clear()
             player.inventory["Gold"] += earned
             print(f"\n✅ Alles verkauft! +{earned} Gold.")
@@ -207,7 +224,6 @@ def sell_menu(player):
                 if cur == 0:
                     input("Nicht mehr vorhanden. ENTER...")
                     continue
-
                 if cur > 1:
                     print(f"\nWie viele {key} verkaufen? (1–{cur}, ENTER = alle)")
                     amt_in = input("> ").strip()
@@ -221,7 +237,6 @@ def sell_menu(player):
                         continue
                 else:
                     amount = 1
-
                 earned = price * amount
                 store[key] -= amount
                 if store[key] <= 0:
@@ -230,7 +245,7 @@ def sell_menu(player):
                 print(f"\n✅ {amount}x {key} verkauft für {earned} Gold.")
 
             elif cat == "equipment":
-                real_idx = next((i for i, e in enumerate(equip_items) if e['name'] == key), None)
+                real_idx = next((i for i, e in enumerate(equip_items) if e["name"] == key), None)
                 if real_idx is None:
                     input("Item nicht mehr vorhanden. ENTER...")
                     continue
