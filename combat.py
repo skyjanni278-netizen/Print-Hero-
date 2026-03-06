@@ -1,35 +1,48 @@
 import random
-from monsters import Zombie, Slime, Goblin, Skeleton, Dragon, roll_rank
+from monsters import Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf, roll_rank
 from utils import clear_screen, print_header
 from loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
 
 
 def generate_enemy_group(player):
-    count = random.randint(1, 3)
+    lvl = player.level
+    # Frühe Level: nur 1–2 Gegner; ab LVL 5: bis 3; ab LVL 8: bis 4
+    if lvl <= 4:
+        count = random.randint(1, 2)
+    elif lvl <= 7:
+        count = random.randint(1, 3)
+    else:
+        count = random.randint(2, 4)
     return [create_enemy(player) for _ in range(count)]
 
 
 def create_enemy(player):
-    if player.level <= 2:
-        # Früh: nur schwache Mobs
-        classes = [Slime, Goblin, Zombie]
-        weights = [50,    30,     20]
-    elif player.level <= 4:
-        # Skelette tauchen auf
-        classes = [Slime, Goblin, Zombie, Skeleton]
-        weights = [25,    25,     30,     20]
-    elif player.level <= 6:
-        # Erste Drachen, Skelette häufiger
-        classes = [Zombie, Goblin, Skeleton, Dragon]
-        weights = [25,     20,     40,       15]
-    elif player.level <= 8:
-        # Drachen deutlich häufiger
-        classes = [Goblin, Zombie, Skeleton, Dragon]
-        weights = [15,     20,     35,       30]
+    lvl = player.level
+
+    if lvl <= 2:
+        # Nur die einfachsten Gegner
+        classes = [Slime,  ShadowWolf, Goblin]
+        weights = [45,     35,         20]
+
+    elif lvl <= 4:
+        # Schleime werden seltener, Banditen & Zombies kommen dazu
+        classes = [Slime,  ShadowWolf, Goblin, Bandit, Zombie]
+        weights = [20,     30,         20,     15,     15]
+
+    elif lvl <= 6:
+        # Schleime verschwinden, Waldtroll und Skelett tauchen auf
+        classes = [ShadowWolf, Goblin, Bandit, Zombie, WoodTroll, Skeleton]
+        weights = [20,         15,     20,     20,     15,        10]
+
+    elif lvl <= 8:
+        # Schattenwölfe verschwinden, Drachen tauchen auf
+        classes = [Goblin, Bandit, Zombie, WoodTroll, Skeleton, Dragon]
+        weights = [10,     20,     15,     20,        25,       10]
+
     else:
-        # LVL 9-10: Drachen und Skelette dominieren
-        classes = [Zombie, Skeleton, Dragon]
-        weights = [15,     40,       45]
+        # LVL 9–10: Nur starke Gegner, keine schwachen mehr
+        classes = [Bandit, WoodTroll, Skeleton, Dragon]
+        weights = [10,     25,        35,       30]
 
     mob_class = random.choices(classes, weights=weights, k=1)[0]
     rank      = roll_rank(player.level)
