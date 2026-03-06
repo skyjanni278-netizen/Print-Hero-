@@ -17,7 +17,7 @@ class Character:
 
         self.level = 1
         self.xp = 0
-        self.xp_to_level_up = 100
+        self.xp_to_level_up = 30  # Lvl 1→2: ~1 Kampf
 
         self.max_energy = 30
         self.energy = 15
@@ -109,16 +109,31 @@ class Character:
         mitigated = int(raw_damage * reduction)
         return max(1, raw_damage - mitigated)
 
+    # Welche Fähigkeiten bei welchem Level freigeschaltet werden
+    SKILL_UNLOCKS = {
+        2: ("Cleave (C)",       "10 Energie – Angriff + 3 Blutungsstacks"),
+        3: ("Rundumschlag (R)", "15 Energie – Trifft alle Gegner"),
+        5: ("Himmelsschlag (S)","20 Energie – Starker Einzelangriff +5 Schaden"),
+    }
+
     def check_level_up(self):
+        # Dynamischer XP-Multiplikator: frühe Level schnell, spätere langsamer
+        # Lvl 1→2: 30 XP (~1 Kampf), 2→3: ~60, 3→4: ~110, danach ×1.7 pro Stufe
+        XP_MULTIPLIERS = {1: 2.0, 2: 1.85, 3: 1.75, 4: 1.7, 5: 1.65, 6: 1.6, 7: 1.55, 8: 1.5, 9: 1.5}
         while self.xp >= self.xp_to_level_up:
             self.level += 1
             self.xp -= self.xp_to_level_up
-            self.xp_to_level_up = int(self.xp_to_level_up * 1.5)
-            self.max_hp  += 5
+            mult = XP_MULTIPLIERS.get(self.level - 1, 1.6)
+            self.xp_to_level_up = int(self.xp_to_level_up * mult)
+            self.max_hp  += 4
             self.hp       = self.max_hp
-            self.attack  += 2
+            self.attack  += 1
             self.min_attack += 1
             print(f"✨ {self.name} ist nun Level {self.level}!")
+            if self.level in self.SKILL_UNLOCKS:
+                skill_name, skill_desc = self.SKILL_UNLOCKS[self.level]
+                print(f"🔓 Neue Fähigkeit freigeschaltet: {skill_name}")
+                print(f"   → {skill_desc}")
 
     def is_alive(self):
         return self.hp > 0

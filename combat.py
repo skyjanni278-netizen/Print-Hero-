@@ -10,7 +10,6 @@ def generate_enemy_group(player):
 
 
 def create_enemy(player):
-    """Wählt einen zufälligen Mob-Typ und würfelt seinen Rang."""
     if player.level <= 2:
         # Früh: nur schwache Mobs
         classes = [Slime, Goblin, Zombie]
@@ -38,7 +37,6 @@ def create_enemy(player):
 
 
 def consumable_menu(player) -> str:
-    """Öffnet das Consumable-Inventar während des Kampfes. Gibt Ergebnis-Nachricht zurück oder '' bei Abbruch."""
     clear_screen()
     print_header("Verbrauchsgegenstände")
 
@@ -100,7 +98,28 @@ def combat(player, enemy_list):
             print(f"[{i+1}] {e.name:<22} {rank_label:<10} {status}")
 
         print("=" * 30)
-        choice = input("\n[A] Angreifen, [S] Himmelsschlag 20 E, [R] Rundumschlag 15 E, [C] Cleave 10 E \n[U] Verbrauchsgegenstände, [F] Fliehen \n[Q] Beenden \nDeine Wahl: ").lower()
+        # Verfügbare Fähigkeiten abhängig vom Level
+        has_cleave      = player.level >= 2
+        has_whirlwind   = player.level >= 3
+        has_heavenstrike= player.level >= 5
+
+        # Aktionsmenü dynamisch aufbauen
+        action_lines = ["[A] Angreifen"]
+        if has_heavenstrike:
+            action_lines.append("[S] Himmelsschlag 20 E")
+        else:
+            action_lines.append(f"[S] Himmelsschlag — 🔒 ab LVL 5")
+        if has_whirlwind:
+            action_lines.append("[R] Rundumschlag 15 E")
+        else:
+            action_lines.append(f"[R] Rundumschlag  — 🔒 ab LVL 3")
+        if has_cleave:
+            action_lines.append("[C] Cleave 10 E")
+        else:
+            action_lines.append(f"[C] Cleave        — 🔒 ab LVL 2")
+        action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
+
+        choice = input("\n" + " | ".join(action_lines[:4]) + "\n" + " | ".join(action_lines[4:]) + "\nDeine Wahl: ").lower()
 
         if choice not in ['a', 's', 'r', 'c', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
@@ -109,6 +128,15 @@ def combat(player, enemy_list):
 
         # Target selection for single-target attacks
         if choice in ['a', 's', 'c']:
+            # Gesperrte Fähigkeiten prüfen
+            if choice == 's' and not has_heavenstrike:
+                print("🔒 Himmelsschlag wird bei Level 5 freigeschaltet!")
+                input("ENTER...")
+                continue
+            if choice == 'c' and not has_cleave:
+                print("🔒 Cleave wird bei Level 2 freigeschaltet!")
+                input("ENTER...")
+                continue
             try:
                 target_index = int(input("Welchen Gegner angreifen? (Nummer): ")) - 1
                 clear_screen()
@@ -131,6 +159,10 @@ def combat(player, enemy_list):
                 continue
 
         elif choice == 'r':
+            if not has_whirlwind:
+                print("🔒 Rundumschlag wird bei Level 3 freigeschaltet!")
+                input("ENTER...")
+                continue
             clear_screen()
             print_header("Kampf-Ergebnis")
             living_enemies = [e for e in enemy_list if e.is_alive()]
@@ -178,9 +210,6 @@ def combat(player, enemy_list):
 
 
 def collect_loot(player, enemy_group) -> list:
-    """
-    Sammelt Loot von allen besiegten Gegnern über das zentrale Loot-System.
-    """
     all_messages = []
     for enemy in enemy_group:
         rank       = getattr(enemy, "rank", 1)
