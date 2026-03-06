@@ -25,6 +25,11 @@ JUNK_DEFS = {
 }
 
 EQUIPMENT_DEFS = {
+    # ── STARTER (nicht verkaufbar, nur für KeyError-Schutz) ──
+    "Fäuste":        {"slot": "weapon", "attack": 0,  "rarity": "common",    "emoji": "👊",  "sell": 0,   "desc": "Bloße Hände"},
+    "Lumpen":        {"slot": "chest",  "armor": 0,   "rarity": "common",    "emoji": "🧣",  "sell": 0,   "desc": "Zerfetzte Lumpen"},
+    "Kein Helm":     {"slot": "head",   "armor": 0,   "rarity": "common",    "emoji": "❌",  "sell": 0,   "desc": "Kein Kopfschutz"},
+    "Keine Schuhe":  {"slot": "feet",   "armor": 0,   "rarity": "common",    "emoji": "🦶",  "sell": 0,   "desc": "Barfuß"},
     # ── WAFFEN ───────────────────────────────────────────────
     "Kurzschwert":          {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Ein einfaches Schwert"},
     "Langschwert":          {"slot": "weapon", "attack": 6,  "rarity": "uncommon",  "emoji": "⚔️",  "sell": 40,  "desc": "Ausgewogene Klinge"},

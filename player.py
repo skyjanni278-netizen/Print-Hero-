@@ -23,6 +23,9 @@ class Character:
         self.energy = 15
         self.energy_regen = 3
 
+        # Temporäre Kampf-Boni – werden nach dem Kampf zurückgesetzt
+        self.combat_modifiers = {"attack": 0}
+
         self.equipment = {
             "weapon": {"name": "Fäuste",       "attack": 0},
             "chest":  {"name": "Lumpen",       "armor": 0},
@@ -89,7 +92,11 @@ class Character:
 
     # ── Stats ────────────────────────────────────────────────
     def get_total_attack(self):
-        return self.attack + self.equipment["weapon"]["attack"]
+        return self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0)
+
+    def reset_combat_modifiers(self):
+        """Setzt alle temporären Kampfboni zurück. Nach jedem Kampf aufrufen."""
+        self.combat_modifiers = {"attack": 0}
 
     def get_total_armor(self):
         return (self.armor
@@ -185,12 +192,13 @@ class Character:
             return f"{self.name} führt einen Cleave aus und macht {real_damage} Schaden! {target.name} erhält {target.bleed_stacks} Blutungsstacks!"
         return "Nicht genug Energie!"
 
-    def check_bleed(self):
+    def check_bleed(self) -> str:
         if self.bleed_stacks > 0:
             damage = 3
             self.hp = max(0, self.hp - damage)
             self.bleed_stacks -= 1
-            return f"{self.name} erleidet {damage} Schaden durch Blutung!"
+            return f"{self.name} erleidet {damage} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
+        return ""
 
     def use_consumable(self, key: str) -> str:
         from loot_tables import CONSUMABLE_DEFS
@@ -218,7 +226,7 @@ class Character:
             self.energy = min(self.max_energy, self.energy + value)
             return f"{emoji} {self.name} benutzt {key} und erhält {gained} Energie! (Energie: {self.energy}/{self.max_energy})"
         elif effect == "attack":
-            self.attack += value
+            self.combat_modifiers["attack"] = self.combat_modifiers.get("attack", 0) + value
             return f"{emoji} {self.name} benutzt {key}! ATK +{value} für diesen Kampf. (ATK: {self.get_total_attack()})"
         elif effect == "cleanse":
             msgs = []

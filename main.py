@@ -24,6 +24,7 @@ def main():
         input("Bereit machen... (ENTER)")
 
         result = combat(player, enemy_group)
+        player.reset_combat_modifiers()  # Temporäre Kampfboni zurücksetzen
 
         if result == "victory":
             clear_screen()
