@@ -16,10 +16,12 @@ def _apply_rank(mob, base_hp, base_attack, base_xp, rank):
     mob.rank       = rank
     mob.loot_rolls = cfg["loot_rolls"]
 
-    mob.max_hp  = max(1, int(base_hp     * cfg["hp_mult"]))
-    mob.hp      = mob.max_hp
-    mob.attack  = max(1, int(base_attack * cfg["atk_mult"]))
-    mob.xp_value = int(base_xp * cfg["xp_mult"])
+    mob.max_hp   = max(1, int(base_hp     * cfg["hp_mult"]))
+    mob.hp       = mob.max_hp
+    mob.attack   = max(1, int(base_attack * cfg["atk_mult"]))
+    # min_attack für Gegner: ~50% des max-Angriffs, mindestens 1
+    mob.min_attack = max(1, int(mob.attack * 0.5))
+    mob.xp_value  = int(base_xp * cfg["xp_mult"])
 
     title = cfg["title"]
     mob.name = f"{title} {mob.name}".strip() if title else mob.name
