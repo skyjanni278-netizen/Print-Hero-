@@ -30,37 +30,16 @@ def load_game():
     with open(SAVE_FILE, "r") as f:
         data = json.load(f)
     player = Character(data["name"], data["max_hp"], data["attack"])
-    player.hp           = data["hp"]
-    player.min_attack   = data["min_attack"]
-    player.armor        = data["armor"]
-    player.level        = data["level"]
-    player.xp           = data["xp"]
+    player.hp             = data["hp"]
+    player.min_attack     = data["min_attack"]
+    player.armor          = data["armor"]
+    player.level          = data["level"]
+    player.xp             = data["xp"]
     player.xp_to_level_up = data["xp_to_level_up"]
-    player.energy       = data["energy"]
-    player.max_energy   = data["max_energy"]
-    player.equipment    = data["equipment"]
-    # Migration: fehlender head-Slot in alten Saves
-    if "head" not in player.equipment:
-        player.equipment["head"] = {"name": "Kein Helm", "armor": 0}
-    # Migration: fehlender feet-Slot in alten Saves
-    if "feet" not in player.equipment:
-        player.equipment["feet"] = {"name": "Keine Schuhe", "armor": 0}
-
-    inv = data["inventory"]
-
-    # Migration: altes "Healing Potions" -> neues Format
-    if "Consumables" not in inv:
-        old = inv.pop("Healing Potions", 0)
-        inv["Consumables"] = {"Healing Potion": old} if old > 0 else {}
-
-    # Migration: altes loses Junk (Altes Seil / Lumpen direkt im inv) -> Junk-Dict
-    if "Junk" not in inv:
-        inv["Junk"] = {}
-    for junk_key in ("Altes Seil", "Lumpen", "Knochen", "Schleimklumpen", "Goblinzahn"):
-        if junk_key in inv:
-            inv["Junk"][junk_key] = inv["Junk"].get(junk_key, 0) + inv.pop(junk_key)
-
-    player.inventory = inv
+    player.energy         = data["energy"]
+    player.max_energy     = data["max_energy"]
+    player.equipment      = data["equipment"]
+    player.inventory      = data["inventory"]
     print("📂 Spielstand geladen!")
     return player
 

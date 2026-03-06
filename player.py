@@ -38,7 +38,6 @@ class Character:
 
     # ── Inventar-Slot-Verwaltung ─────────────────────────────
     def inventory_count(self) -> int:
-        """Belegte Slots: jeder einzigartige Consumable/Junk-Stapel + jedes Equipment-Stück."""
         c = len(self.inventory.get("Consumables", {}))
         j = len(self.inventory.get("Junk", {}))
         e = len(self.inventory.get("Equipment", []))
@@ -48,11 +47,6 @@ class Character:
         return self.inventory_count() < MAX_INVENTORY_SLOTS
 
     def add_consumable(self, key: str, amount: int) -> int:
-        """
-        Fügt `amount` Einheiten eines Consumables hinzu.
-        Berücksichtigt Stack-Limit und freie Slots.
-        Gibt die tatsächlich hinzugefügte Menge zurück.
-        """
         from loot_tables import CONSUMABLE_DEFS
         cdef      = CONSUMABLE_DEFS.get(key, {})
         max_stack = cdef.get("max_stack", 99)
@@ -73,7 +67,6 @@ class Character:
         return added
 
     def can_add_consumable(self, key: str) -> bool:
-        """True wenn mindestens 1 Einheit hinzugefügt werden kann."""
         from loot_tables import CONSUMABLE_DEFS
         cdef      = CONSUMABLE_DEFS.get(key, {})
         max_stack = cdef.get("max_stack", 99)
@@ -85,10 +78,6 @@ class Character:
         return True
 
     def add_junk(self, key: str, amount: int) -> int:
-        """
-        Junk hat kein Stack-Limit, aber braucht einen freien Slot für neue Typen.
-        Gibt die tatsächlich hinzugefügte Menge zurück.
-        """
         junk    = self.inventory.setdefault("Junk", {})
         current = junk.get(key, 0)
 
@@ -103,7 +92,22 @@ class Character:
         return self.attack + self.equipment["weapon"]["attack"]
 
     def get_total_armor(self):
-        return self.armor + self.equipment["chest"]["armor"] + self.equipment["head"]["armor"] + self.equipment["feet"]["armor"]
+        return (self.armor
+                + self.equipment["chest"]["armor"]
+                + self.equipment["head"]["armor"]
+                + self.equipment["feet"]["armor"])
+
+    def get_effective_min_attack(self) -> int:
+        weapon_bonus = self.equipment["weapon"]["attack"] // 2
+        return max(1, self.min_attack + weapon_bonus)
+
+    @staticmethod
+    def apply_armor_reduction(raw_damage: int, armor: int) -> int:
+        if armor <= 0:
+            return raw_damage
+        reduction = armor / (armor + 25)
+        mitigated = int(raw_damage * reduction)
+        return max(1, raw_damage - mitigated)
 
     def check_level_up(self):
         while self.xp >= self.xp_to_level_up:
@@ -120,8 +124,8 @@ class Character:
         return self.hp > 0
 
     def attack_target(self, target):
-        base_damage = random.randint(self.min_attack, self.get_total_attack())
-        real_damage = max(0, base_damage - target.get_total_armor())
+        raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+        real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
         target.hp   = max(0, target.hp - real_damage)
         return f"{self.name} macht {real_damage} Schaden!"
 
@@ -135,10 +139,11 @@ class Character:
     def heavenstrike(self, target):
         cost = 20
         if self.energy >= cost:
-            damage = random.randint(self.min_attack, self.attack) + 5
-            target.hp = max(0, target.hp - damage)
+            raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack()) + 5
+            real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
+            target.hp = max(0, target.hp - real_damage)
             self.energy -= cost
-            return f"{self.name} führt einen Himmelsschlag aus und macht {damage} Schaden!"
+            return f"{self.name} führt einen Himmelsschlag aus und macht {real_damage} Schaden!"
         return f"{self.name} hat nicht genug Energie für einen Himmelsschlag!"
 
     def whirlwind(self, enemy_list):
@@ -147,9 +152,10 @@ class Character:
             self.energy -= cost
             results = []
             for enemy in enemy_list:
-                damage = max(1, random.randint(self.min_attack, self.attack) - 2)
-                enemy.hp = max(0, enemy.hp - damage)
-                results.append(f"{enemy.name} (-{damage} HP)")
+                raw_damage  = max(1, random.randint(self.get_effective_min_attack(), self.get_total_attack()) - 2)
+                real_damage = self.apply_armor_reduction(raw_damage, enemy.get_total_armor())
+                enemy.hp = max(0, enemy.hp - real_damage)
+                results.append(f"{enemy.name} (-{real_damage} HP)")
             return f"🌪️ {self.name} wirbelt herum!\n" + ", ".join(results)
         return "Nicht genug Energie!"
 
@@ -157,10 +163,11 @@ class Character:
         cost = 10
         if self.energy >= cost:
             self.energy -= cost
-            damage = random.randint(self.min_attack, self.attack)
-            target.hp = max(0, target.hp - damage)
+            raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+            real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
+            target.hp = max(0, target.hp - real_damage)
             target.bleed_stacks = max(target.bleed_stacks, 3)
-            return f"{self.name} führt einen Cleave aus und macht {damage} Schaden! {target.name} erhält {target.bleed_stacks} Blutungsstacks!"
+            return f"{self.name} führt einen Cleave aus und macht {real_damage} Schaden! {target.name} erhält {target.bleed_stacks} Blutungsstacks!"
         return "Nicht genug Energie!"
 
     def check_bleed(self):
