@@ -200,12 +200,17 @@ def combat(player, enemy_list):
             print("Du verlässt das Spiel. Auf Wiedersehen!")
             exit()
 
-        # Bleed tick
+        # Bleed tick (Gegner)
         for e in enemy_list:
             if e.is_alive():
                 bleed_msg = e.check_bleed()
                 if bleed_msg:
                     print(bleed_msg)
+
+        # Bleed tick (Spieler)
+        player_bleed_msg = player.check_bleed()
+        if player_bleed_msg:
+            print(player_bleed_msg)
 
         # Enemy attacks
         for e in enemy_list:

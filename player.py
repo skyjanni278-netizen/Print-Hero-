@@ -234,9 +234,3 @@ class Character:
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
 
-    def add_loot(self, item_name, amount):
-        if item_name in self.inventory:
-            self.inventory[item_name] += amount
-        else:
-            self.inventory[item_name] = amount
-        print(f"{self.name} erhält {amount}x {item_name}!")

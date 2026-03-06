@@ -46,17 +46,17 @@ Pro Level-Up: **+4 max. HP**, **+1 ATK**, **+1 min. ATK**. HP wird vollständig 
 
 | Level  | XP für dieses Level | Gesamt-XP |
 |--------|--------------------:|----------:|
-| 1 → 2  |   80 XP |    80 XP |
-| 2 → 3  |  104 XP |   184 XP |
-| 3 → 4  |  135 XP |   319 XP |
-| 4 → 5  |  175 XP |   494 XP |
-| 5 → 6  |  227 XP |   721 XP |
-| 6 → 7  |  295 XP | 1.016 XP |
-| 7 → 8  |  383 XP | 1.399 XP |
-| 8 → 9  |  497 XP | 1.896 XP |
-| 9 → 10 |  646 XP | 2.542 XP |
+| 1 → 2  |    30 XP |     30 XP |
+| 2 → 3  |    60 XP |     90 XP |
+| 3 → 4  |   111 XP |    201 XP |
+| 4 → 5  |   194 XP |    395 XP |
+| 5 → 6  |   329 XP |    724 XP |
+| 6 → 7  |   542 XP |  1.266 XP |
+| 7 → 8  |   867 XP |  2.133 XP |
+| 8 → 9  | 1.343 XP |  3.476 XP |
+| 9 → 10 | 2.014 XP |  5.490 XP |
 
-> **Ø ~5 Kämpfe pro Level** bei einer Gruppe von 1–3 Gegnern.
+> **Ø ~2–3 Kämpfe** für frühe Level, deutlich mehr für hohe Level.
 
 ### Spieler-Basiswerte nach Level
 
@@ -85,8 +85,8 @@ Pro Level-Up: **+4 max. HP**, **+1 ATK**, **+1 min. ATK**. HP wird vollständig 
 |--------------|----|-----|-----|----------|-------------|-----------------|
 | Schleim      |  8 |   3 |   0 |  10 XP   | Level 1     | Level 5         |
 | Schattenwolf | 11 |   6 |   0 |  16 XP   | Level 1     | Level 7         |
-| Goblin       | 10 |   5 |   1 |  15 XP   | Level 1     | Level 9         |
-| Zombie       | 20 |   4 |   2 |  18 XP   | Level 1     | Level 9         |
+| Goblin       | 10 |   5 |   1 |  15 XP   | Level 1     | Level 8         |
+| Zombie       | 20 |   4 |   2 |  18 XP   | Level 1     | Level 8         |
 | Bandit       | 14 |   7 |   0 |  20 XP   | Level 2     | —               |
 | Waldtroll    | 35 |   6 |   4 |  30 XP   | Level 3     | —               |
 | Skelett      | 12 |   8 |   1 |  24 XP   | Level 5     | —               |
@@ -99,7 +99,7 @@ Pro Level-Up: **+4 max. HP**, **+1 ATK**, **+1 min. ATK**. HP wird vollständig 
 | 1 – 2         | Schleim (45%), Schattenwolf (35%), Goblin (20%)                                        | 1–2          |
 | 3 – 4         | Schleim (20%), Schattenwolf (30%), Goblin (20%), Bandit (15%), Zombie (15%)            | 1–2          |
 | 5 – 6         | Schattenwolf (20%), Goblin (15%), Bandit (20%), Zombie (20%), Waldtroll (15%), Skelett (10%) | 1–3     |
-| 7 – 8         | Goblin (10%), Bandit (20%), Zombie (15%), Waldtroll (20%), Skelett (25%), Drache (10%) | 1–3 / 2–4   |
+| 7 – 8         | Goblin (10%), Bandit (20%), Zombie (15%), Waldtroll (20%), Skelett (25%), Drache (10%) | 2–4          |
 | 9 – 10        | Bandit (10%), Waldtroll (25%), Skelett (35%), Drache (30%)                             | 2–4          |
 
 ---
@@ -307,7 +307,7 @@ Schrott hat keinen Effekt — ausschließlich zum Verkaufen.
 ## 💾 Speichern & Laden
 
 Das Spiel speichert in `savegame.json` im Spielverzeichnis.  
-Alte Saves werden automatisch migriert — fehlende Slots (Helm, Schuhe) werden mit Starter-Items ergänzt.
+Alle Spielerwerte, Inventar und Ausrüstung werden vollständig gespeichert und geladen.
 
 ---
 
