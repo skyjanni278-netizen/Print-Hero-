@@ -49,7 +49,6 @@ def camp_menu(player):
 
 
 def _equip_line(item):
-    """Formatiert eine Equipment-Zeile mit Rarity-Badge."""
     from loot_tables import EQUIPMENT_DEFS, RARITY_LABEL
     edef    = EQUIPMENT_DEFS.get(item["name"], {})
     emoji   = edef.get("emoji", "⚔️")
@@ -174,9 +173,12 @@ def sell_menu(player):
 
         # Equipment
         equip_items = player.inventory["Equipment"]
+        STARTER_ITEMS = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
         if equip_items:
             print("\n[ Ausrüstung ]")
         for i, item in enumerate(equip_items):
+            if item["name"] in STARTER_ITEMS:
+                continue
             edef  = EQUIPMENT_DEFS.get(item["name"], {})
             price = edef.get("sell", 5)
             idx   = len(sell_list)

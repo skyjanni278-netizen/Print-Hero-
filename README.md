@@ -46,17 +46,17 @@ Pro Level-Up: **+4 max. HP**, **+1 ATK**, **+1 min. ATK**. HP wird vollständig 
 
 | Level  | XP für dieses Level | Gesamt-XP |
 |--------|--------------------:|----------:|
-| 1 → 2  |   80 XP |    80 XP |
-| 2 → 3  |  104 XP |   184 XP |
-| 3 → 4  |  135 XP |   319 XP |
-| 4 → 5  |  175 XP |   494 XP |
-| 5 → 6  |  227 XP |   721 XP |
-| 6 → 7  |  295 XP | 1.016 XP |
-| 7 → 8  |  383 XP | 1.399 XP |
-| 8 → 9  |  497 XP | 1.896 XP |
-| 9 → 10 |  646 XP | 2.542 XP |
+| 1 → 2  |    30 XP |     30 XP |
+| 2 → 3  |    60 XP |     90 XP |
+| 3 → 4  |   111 XP |    201 XP |
+| 4 → 5  |   194 XP |    395 XP |
+| 5 → 6  |   329 XP |    724 XP |
+| 6 → 7  |   542 XP |  1.266 XP |
+| 7 → 8  |   867 XP |  2.133 XP |
+| 8 → 9  | 1.343 XP |  3.476 XP |
+| 9 → 10 | 2.014 XP |  5.490 XP |
 
-> **Ø ~5 Kämpfe pro Level** bei einer Gruppe von 1–3 Gegnern.
+> **Ø ~2–3 Kämpfe** für frühe Level, deutlich mehr für hohe Level.
 
 ### Spieler-Basiswerte nach Level
 
@@ -81,25 +81,26 @@ Pro Level-Up: **+4 max. HP**, **+1 ATK**, **+1 min. ATK**. HP wird vollständig 
 
 ### Basis-Werte (Rang 1)
 
-| Gegner  | HP | ATK | DEF | Basis-XP | Erscheint ab |
-|---------|----|-----|-----|----------|-------------|
-| Schleim |  8 |   3 |   0 |  10 XP   | Level 1     |
-| Goblin  | 10 |   5 |   1 |  15 XP   | Level 1     |
-| Zombie  | 20 |   4 |   2 |  18 XP   | Level 1     |
-| Skelett | 12 |   8 |   1 |  24 XP   | Level 3     |
-| Drache  | 50 |  15 |   7 |  60 XP   | Level 5     |
+| Gegner       | HP | ATK | DEF | Basis-XP | Erscheint ab | Verschwindet ab |
+|--------------|----|-----|-----|----------|-------------|-----------------|
+| Schleim      |  8 |   3 |   0 |  10 XP   | Level 1     | Level 5         |
+| Schattenwolf | 11 |   6 |   0 |  16 XP   | Level 1     | Level 7         |
+| Goblin       | 10 |   5 |   1 |  15 XP   | Level 1     | Level 8         |
+| Zombie       | 20 |   4 |   2 |  18 XP   | Level 1     | Level 8         |
+| Bandit       | 14 |   7 |   0 |  20 XP   | Level 2     | —               |
+| Waldtroll    | 35 |   6 |   4 |  30 XP   | Level 3     | —               |
+| Skelett      | 12 |   8 |   1 |  24 XP   | Level 5     | —               |
+| Drache       | 50 |  15 |   7 |  60 XP   | Level 7     | —               |
 
 ### Mob-Pool nach Spieler-Level
 
-| Spieler-Level | Mögliche Gegner                                             |
-|---------------|-------------------------------------------------------------|
-| 1 – 2         | Schleim (50%), Goblin (30%), Zombie (20%)                   |
-| 3 – 4         | Schleim (25%), Goblin (25%), Zombie (30%), Skelett (20%)    |
-| 5 – 6         | Zombie (25%), Goblin (20%), Skelett (40%), Drache (15%)     |
-| 7 – 8         | Goblin (15%), Zombie (20%), Skelett (35%), Drache (30%)     |
-| 9 – 10        | Zombie (15%), Skelett (40%), Drache (45%)                   |
-
-Gruppen bestehen aus **1–3 Gegnern** pro Kampf.
+| Spieler-Level | Mögliche Gegner                                                                        | Gruppengröße |
+|---------------|----------------------------------------------------------------------------------------|:------------:|
+| 1 – 2         | Schleim (45%), Schattenwolf (35%), Goblin (20%)                                        | 1–2          |
+| 3 – 4         | Schleim (20%), Schattenwolf (30%), Goblin (20%), Bandit (15%), Zombie (15%)            | 1–2          |
+| 5 – 6         | Schattenwolf (20%), Goblin (15%), Bandit (20%), Zombie (20%), Waldtroll (15%), Skelett (10%) | 1–3     |
+| 7 – 8         | Goblin (10%), Bandit (20%), Zombie (15%), Waldtroll (20%), Skelett (25%), Drache (10%) | 2–4          |
+| 9 – 10        | Bandit (10%), Waldtroll (25%), Skelett (35%), Drache (30%)                             | 2–4          |
 
 ---
 
@@ -280,13 +281,16 @@ Epic & Legendär sind nur durch Loot erhältlich — nicht im Shop.
 
 Schrott hat keinen Effekt — ausschließlich zum Verkaufen.
 
-| Item           | Emoji | Verkauf |
-|----------------|-------|--------:|
-| Altes Seil     | 🪢    |  3 Gold |
-| Lumpen         | 🧣    |  2 Gold |
-| Knochen        | 🦴    |  4 Gold |
-| Schleimklumpen | 🟢    |  5 Gold |
-| Goblinzahn     | 🦷    |  6 Gold |
+| Item                | Emoji | Verkauf |
+|---------------------|-------|--------:|
+| Altes Seil          | 🪢    |  3 Gold |
+| Lumpen              | 🧣    |  2 Gold |
+| Knochen             | 🦴    |  4 Gold |
+| Schleimklumpen      | 🟢    |  5 Gold |
+| Goblinzahn          | 🦷    |  6 Gold |
+| Wolfspelz           | 🐺    |  7 Gold |
+| Trollfell           | 🐾    |  8 Gold |
+| Banditen-Abzeichen  | 🏴    |  9 Gold |
 
 ---
 
@@ -303,7 +307,7 @@ Schrott hat keinen Effekt — ausschließlich zum Verkaufen.
 ## 💾 Speichern & Laden
 
 Das Spiel speichert in `savegame.json` im Spielverzeichnis.  
-Alte Saves werden automatisch migriert — fehlende Slots (Helm, Schuhe) werden mit Starter-Items ergänzt.
+Alle Spielerwerte, Inventar und Ausrüstung werden vollständig gespeichert und geladen.
 
 ---
 
