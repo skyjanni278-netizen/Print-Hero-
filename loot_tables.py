@@ -14,16 +14,16 @@ CONSUMABLE_DEFS = {
 
 # Junk-Items: nur zum Verkaufen
 JUNK_DEFS = {
-    "Altes Seil":     {"emoji": "🪢", "desc": "Wertloser Schrott",      "sell": 3},
-    "Lumpen":         {"emoji": "🧣", "desc": "Zerfetzter Stoff",        "sell": 2},
-    "Knochen":        {"emoji": "🦴", "desc": "Ein morscher Knochen",    "sell": 4},
-    "Schleimklumpen": {"emoji": "🟢", "desc": "Eklig, aber verkäuflich", "sell": 5},
-    "Goblinzahn":     {"emoji": "🦷", "desc": "Riecht furchtbar",        "sell": 6},
+    "Altes Seil":     {"emoji": "🪢", "desc": "Wertloser Schrott",        "sell": 3},
+    "Lumpen":         {"emoji": "🧣", "desc": "Zerfetzter Stoff",          "sell": 2},
+    "Knochen":        {"emoji": "🦴", "desc": "Ein morscher Knochen",      "sell": 4},
+    "Schleimklumpen": {"emoji": "🟢", "desc": "Eklig, aber verkäuflich",   "sell": 5},
+    "Goblinzahn":     {"emoji": "🦷", "desc": "Riecht furchtbar",          "sell": 6},
+    "Trollfell":      {"emoji": "🐾", "desc": "Dickes, zähes Fell",        "sell": 8},
+    "Wolfspelz":      {"emoji": "🐺", "desc": "Dunkler Schattenwolfpelz",  "sell": 7},
+    "Banditen-Abzeichen": {"emoji": "🏴", "desc": "Zeichen einer Diebesgilde", "sell": 9},
 }
 
-# ── Equipment-Definitionen ────────────────────────────────────────────────────
-# rarity: common / uncommon / rare / epic / legendary
-# slot:   weapon / chest / head / feet
 EQUIPMENT_DEFS = {
     # ── WAFFEN ───────────────────────────────────────────────
     "Kurzschwert":          {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Ein einfaches Schwert"},
@@ -87,6 +87,9 @@ LOOT_POOL = {
         {"name": "Stärketrank",     "type": "consumable",   "key": "Stärketrank",     "min": 1, "max": 1},
         {"name": "Schleimklumpen",  "type": "junk",         "key": "Schleimklumpen",  "min": 1, "max": 2},
         {"name": "Goblinzahn",      "type": "junk",         "key": "Goblinzahn",      "min": 1, "max": 2},
+        {"name": "Wolfspelz",       "type": "junk",         "key": "Wolfspelz",       "min": 1, "max": 2},
+        {"name": "Trollfell",       "type": "junk",         "key": "Trollfell",       "min": 1, "max": 1},
+        {"name": "Banditen-Abzeichen", "type": "junk",      "key": "Banditen-Abzeichen", "min": 1, "max": 1},
         {"name": "Eisenhelm",       "type": "equipment",   "key": "Eisenhelm"},
         {"name": "Langschwert",     "type": "equipment",   "key": "Langschwert"},
         {"name": "Kriegshammer",    "type": "equipment",   "key": "Kriegshammer"},
