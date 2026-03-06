@@ -33,15 +33,6 @@ SHOP_CATALOGUE = [
     {"name": "Runenstiefel",           "type": "equipment",  "key": "Runenstiefel",           "price": 170, "min_level": 5},
 ]
 
-# Nächster Item-Unlock pro Slot – für 🔒 Vorschau
-UPCOMING_UNLOCKS = {
-    "weapon":  [("Langschwert", 3), ("Runenschwert", 5)],
-    "chest":   [("Kettenhemd", 3),  ("Runenrüstung", 5)],
-    "head":    [("Stahlhelm", 3),   ("Runenhelm", 5)],
-    "feet":    [("Schnellläuferstiefel", 3), ("Runenstiefel", 5)],
-    "consumable": [("Großes Heiltrank", 3), ("Elixier", 5)],
-}
-
 
 def get_shop_items(player_level: int) -> list:
     result = []
