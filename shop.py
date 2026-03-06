@@ -1,66 +1,132 @@
 from utils import clear_screen, print_header
 from player import MAX_INVENTORY_SLOTS
 
-# Shop verkauft Equipment bis Rare — Epic/Legendary nur durch Loot
-SHOP_ITEMS = [
-    # Consumables
-    {"name": "Healing Potion",   "type": "consumable", "key": "Healing Potion",   "amount": 1, "price": 15,  "desc": "Heilt 10 HP"},
-    {"name": "Großes Heiltrank", "type": "consumable", "key": "Großes Heiltrank", "amount": 1, "price": 35,  "desc": "Heilt 25 HP"},
-    {"name": "Energie-Kristall", "type": "consumable", "key": "Energie-Kristall", "amount": 1, "price": 25,  "desc": "+15 Energie"},
-    {"name": "Stärketrank",      "type": "consumable", "key": "Stärketrank",      "amount": 1, "price": 40,  "desc": "+3 ATK (Kampf)"},
-    {"name": "Antidot",          "type": "consumable", "key": "Antidot",          "amount": 1, "price": 12,  "desc": "Entfernt Blutung"},
-    # Waffen (Common→Rare)
-    {"name": "Kurzschwert",      "type": "equipment",  "key": "Kurzschwert",      "price":  40},
-    {"name": "Langschwert",      "type": "equipment",  "key": "Langschwert",      "price":  80},
-    {"name": "Kriegshammer",     "type": "equipment",  "key": "Kriegshammer",     "price": 120},
-    {"name": "Runenschwert",     "type": "equipment",  "key": "Runenschwert",     "price": 200},
-    # Rüstungen (Common→Rare)
-    {"name": "Lederrüstung",     "type": "equipment",  "key": "Lederrüstung",     "price":  35},
-    {"name": "Kettenhemd",       "type": "equipment",  "key": "Kettenhemd",       "price":  70},
-    {"name": "Plattenpanzer",    "type": "equipment",  "key": "Plattenpanzer",    "price": 120},
-    {"name": "Runenrüstung",     "type": "equipment",  "key": "Runenrüstung",     "price": 200},
-    # Helme (Common→Rare)
-    {"name": "Lederkappe",       "type": "equipment",  "key": "Lederkappe",       "price":  25},
-    {"name": "Eisenhelm",        "type": "equipment",  "key": "Eisenhelm",        "price":  45},
-    {"name": "Stahlhelm",        "type": "equipment",  "key": "Stahlhelm",        "price":  90},
-    {"name": "Runenhelm",        "type": "equipment",  "key": "Runenhelm",        "price": 180},
-    # Schuhe (Common→Rare)
-    {"name": "Lederstiefel",          "type": "equipment",  "key": "Lederstiefel",          "price":  20},
-    {"name": "Eisenstiefel",          "type": "equipment",  "key": "Eisenstiefel",          "price":  40},
-    {"name": "Schnellläuferstiefel",  "type": "equipment",  "key": "Schnellläuferstiefel",  "price":  85},
-    {"name": "Runenstiefel",          "type": "equipment",  "key": "Runenstiefel",          "price": 170},
+
+SHOP_CATALOGUE = [
+    # ── Consumables ───────────────────────────────────────────
+    {"name": "Healing Potion",   "type": "consumable", "key": "Healing Potion",   "amount": 1, "price":  15, "desc": "Heilt 10 HP",         "min_level": 1},
+    {"name": "Antidot",          "type": "consumable", "key": "Antidot",          "amount": 1, "price":  12, "desc": "Entfernt Blutung",     "min_level": 1},
+    {"name": "Energie-Kristall", "type": "consumable", "key": "Energie-Kristall", "amount": 1, "price":  25, "desc": "+15 Energie",          "min_level": 1},
+    {"name": "Großes Heiltrank", "type": "consumable", "key": "Großes Heiltrank", "amount": 1, "price":  35, "desc": "Heilt 25 HP",          "min_level": 3},
+    {"name": "Stärketrank",      "type": "consumable", "key": "Stärketrank",      "amount": 1, "price":  40, "desc": "+3 ATK (Kampf)",       "min_level": 3},
+    {"name": "Elixier",          "type": "consumable", "key": "Elixier",          "amount": 1, "price":  75, "desc": "Heilt 40 HP",          "min_level": 5},
+    {"name": "Phönixfeder",      "type": "consumable", "key": "Phönixfeder",      "amount": 1, "price":  90, "desc": "15 HP + Blutung weg",  "min_level": 5},
+    # ── Waffen ────────────────────────────────────────────────
+    {"name": "Kurzschwert",      "type": "equipment",  "key": "Kurzschwert",      "price":  40, "min_level": 1, "max_level": 4},
+    {"name": "Langschwert",      "type": "equipment",  "key": "Langschwert",      "price":  80, "min_level": 3, "max_level": 6},
+    {"name": "Kriegshammer",     "type": "equipment",  "key": "Kriegshammer",     "price": 120, "min_level": 3, "max_level": 8},
+    {"name": "Runenschwert",     "type": "equipment",  "key": "Runenschwert",     "price": 200, "min_level": 5},
+    # ── Rüstungen ─────────────────────────────────────────────
+    {"name": "Lederrüstung",     "type": "equipment",  "key": "Lederrüstung",     "price":  35, "min_level": 1, "max_level": 4},
+    {"name": "Kettenhemd",       "type": "equipment",  "key": "Kettenhemd",       "price":  70, "min_level": 3, "max_level": 6},
+    {"name": "Plattenpanzer",    "type": "equipment",  "key": "Plattenpanzer",    "price": 120, "min_level": 3, "max_level": 8},
+    {"name": "Runenrüstung",     "type": "equipment",  "key": "Runenrüstung",     "price": 200, "min_level": 5},
+    # ── Helme ─────────────────────────────────────────────────
+    {"name": "Lederkappe",       "type": "equipment",  "key": "Lederkappe",       "price":  25, "min_level": 1, "max_level": 4},
+    {"name": "Eisenhelm",        "type": "equipment",  "key": "Eisenhelm",        "price":  45, "min_level": 1, "max_level": 5},
+    {"name": "Stahlhelm",        "type": "equipment",  "key": "Stahlhelm",        "price":  90, "min_level": 3, "max_level": 8},
+    {"name": "Runenhelm",        "type": "equipment",  "key": "Runenhelm",        "price": 180, "min_level": 5},
+    # ── Schuhe ────────────────────────────────────────────────
+    {"name": "Lederstiefel",           "type": "equipment",  "key": "Lederstiefel",           "price":  20, "min_level": 1, "max_level": 4},
+    {"name": "Eisenstiefel",           "type": "equipment",  "key": "Eisenstiefel",           "price":  40, "min_level": 1, "max_level": 5},
+    {"name": "Schnellläuferstiefel",   "type": "equipment",  "key": "Schnellläuferstiefel",   "price":  85, "min_level": 3, "max_level": 8},
+    {"name": "Runenstiefel",           "type": "equipment",  "key": "Runenstiefel",           "price": 170, "min_level": 5},
 ]
 
-SLOT_LABEL = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm"}
+
+def get_shop_items(player_level: int) -> list:
+    result = []
+    for item in SHOP_CATALOGUE:
+        min_lvl = item.get("min_level", 1)
+        max_lvl = item.get("max_level", 99)
+        if min_lvl <= player_level <= max_lvl:
+            result.append(item)
+    return result
+
+
+def get_next_unlock(player_level: int) -> dict:
+    from loot_tables import EQUIPMENT_DEFS
+    unlocks = {}
+    for item in SHOP_CATALOGUE:
+        min_lvl = item.get("min_level", 1)
+        if min_lvl <= player_level:
+            continue  # bereits freigeschaltet
+        # Bestimme Slot-Gruppe
+        if item["type"] == "consumable":
+            group = "consumable"
+        else:
+            edef  = EQUIPMENT_DEFS.get(item["key"], {})
+            group = edef.get("slot", "unknown")
+        # Nur das nächste (kleinste min_level) pro Gruppe merken
+        if group not in unlocks or min_lvl < unlocks[group][1]:
+            unlocks[group] = (item["name"], min_lvl)
+    return unlocks
+
 
 def shop_menu(player):
     from loot_tables import CONSUMABLE_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
 
-    # Sortiere nach Slot für übersichtliche Anzeige
-    sections = [
-        ("💊 Verbrauchsgegenstände", [i for i in SHOP_ITEMS if i["type"] == "consumable"]),
-        ("🗡️  Waffen",               [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "weapon"]),
-        ("🛡️  Rüstungen",             [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "chest"]),
-        ("🪖 Helme",                  [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "head"]),
-        ("👟 Schuhe",                 [i for i in SHOP_ITEMS if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "feet"]),
+    SECTION_ORDER = [
+        ("💊 Verbrauchsgegenstände", "consumable", None),
+        ("🗡️  Waffen",               "equipment",  "weapon"),
+        ("🛡️  Rüstungen",             "equipment",  "chest"),
+        ("🪖 Helme",                  "equipment",  "head"),
+        ("👟 Schuhe",                 "equipment",  "feet"),
     ]
-    # Globaler Index-Map
-    indexed = [(item, i) for i, item in enumerate(SHOP_ITEMS)]
 
     while True:
         clear_screen()
         print_header("Händler")
-        used_slots = player.inventory_count()
-        print(f"Gold: {player.inventory['Gold']} 🪙  |  Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots")
-        print(f"Ausrüstet: {player.equipment['weapon']['name']} / {player.equipment['chest']['name']} / {player.equipment['head']['name']}")
-        print("-" * 56)
 
-        global_idx = 0
-        for section_name, items in sections:
-            if not items:
+        lvl        = player.level
+        used_slots = player.inventory_count()
+        w = player.equipment['weapon']
+        c = player.equipment['chest']
+        h = player.equipment['head']
+        f = player.equipment['feet']
+
+        print(f"Gold: {player.inventory['Gold']} 🪙  |  Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  LVL {lvl}")
+        print(f"Ausrüstet: {w['name']} / {c['name']} / {h['name']} / {f['name']}")
+        print("-" * 62)
+
+        active_items = get_shop_items(lvl)
+        next_unlocks = get_next_unlock(lvl)
+
+        # Baue flache Liste für Indexierung (in Sections-Reihenfolge)
+        flat = []
+        for _, item_type, slot_filter in SECTION_ORDER:
+            for item in active_items:
+                if item["type"] != item_type:
+                    continue
+                if slot_filter is not None:
+                    edef = EQUIPMENT_DEFS.get(item["key"], {})
+                    if edef.get("slot") != slot_filter:
+                        continue
+                flat.append(item)
+
+        # Anzeige
+        for sec_name, item_type, slot_filter in SECTION_ORDER:
+            section_items = []
+            for item in flat:
+                if item["type"] != item_type:
+                    continue
+                if slot_filter is not None:
+                    edef = EQUIPMENT_DEFS.get(item["key"], {})
+                    if edef.get("slot") != slot_filter:
+                        continue
+                section_items.append(item)
+
+            # Unlock-Vorschau für diese Sektion
+            group_key = "consumable" if item_type == "consumable" else slot_filter
+            upcoming  = next_unlocks.get(group_key)
+
+            if not section_items and not upcoming:
                 continue
-            print(f"\n{section_name}")
-            for item in items:
+
+            print(f"\n{sec_name}")
+
+            for item in section_items:
+                idx        = flat.index(item) + 1  # 1-basiert, damit [0] = Verlassen frei bleibt
                 affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
 
                 if item["type"] == "consumable":
@@ -69,21 +135,25 @@ def shop_menu(player):
                     has_space  = player.can_add_consumable(item["key"])
                     warn       = "" if has_space else " 🎒VOLL"
                     stack_info = f"({cur}/{max_stack})"
-                    line = f"  [{global_idx:>2}] {item['name']:<22} {stack_info:<8} {item['desc']:<18} {item['price']:>4} Gold  {affordable}{warn}"
+                    line = f"  [{idx:>2}] {item['name']:<24} {stack_info:<8} {item['desc']:<20} {item['price']:>4} Gold  {affordable}{warn}"
                 else:
-                    edef    = EQUIPMENT_DEFS.get(item["key"], {})
-                    emoji   = edef.get("emoji", "⚔️")
-                    rarity  = edef.get("rarity", "common")
+                    edef     = EQUIPMENT_DEFS.get(item["key"], {})
+                    emoji    = edef.get("emoji", "⚔️")
+                    rarity   = edef.get("rarity", "common")
                     _, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
                     has_space = player.has_inventory_space()
-                    warn    = "" if has_space else " 🎒VOLL"
-                    if edef.get("slot") == "weapon":
-                        stat = f"ATK +{edef['attack']}"
-                    else:
-                        stat = f"DEF +{edef['armor']}"
-                    line = f"  [{global_idx:>2}] {rbadge}{emoji} {item['name']:<22} {stat:<10} {edef.get('desc',''):<22} {item['price']:>4} Gold  {affordable}{warn}"
+                    warn     = "" if has_space else " 🎒VOLL"
+                    stat     = f"ATK +{edef['attack']}" if edef.get("slot") == "weapon" else f"DEF +{edef['armor']}"
+                    line = f"  [{idx:>2}] {rbadge}{emoji} {item['name']:<24} {stat:<10} {edef.get('desc',''):<22} {item['price']:>4} Gold  {affordable}{warn}"
                 print(line)
-                global_idx += 1
+
+            # 🔒 Vorschau nächster Unlock
+            if upcoming:
+                unlock_name, unlock_lvl = upcoming
+                print(f"  🔒 {unlock_name:<24} (freigeschalten ab LVL {unlock_lvl})")
+
+        if not flat:
+            print("\n  (Keine Items verfügbar)")
 
         print(f"\n[0] Verlassen")
         choice = input("\nWas möchtest du kaufen? ")
@@ -93,29 +163,13 @@ def shop_menu(player):
         if not choice.isdigit():
             continue
 
-        idx = int(choice)
-        if not (1 <= idx <= len(SHOP_ITEMS)):
-            # idx is 0-based in SHOP_ITEMS, but display starts at 0 which is Verlassen
-            # Rebuild: display indices start at 0 for first item
+        display_idx = int(choice)
+        if not (1 <= display_idx <= len(flat)):
             print("Ungültige Auswahl.")
             input("ENTER...")
             continue
 
-        # Map display index (0-based for items) to SHOP_ITEMS
-        item = SHOP_ITEMS[idx - 1] if idx >= 1 else None
-        # Actually display indices are 0-based for items (global_idx starts at 0)
-        # Let's just use the input directly as 0-based index into SHOP_ITEMS
-        item = None
-        display_idx = int(choice)
-        flat = []
-        for _, items in sections:
-            flat.extend(items)
-        if 0 <= display_idx < len(flat):
-            item = flat[display_idx]
-        else:
-            print("Ungültige Auswahl.")
-            input("ENTER...")
-            continue
+        item = flat[display_idx - 1]  # zurück auf 0-basiert
 
         if player.inventory["Gold"] < item["price"]:
             print("❌ Nicht genug Gold!")
