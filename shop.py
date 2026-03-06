@@ -44,7 +44,6 @@ UPCOMING_UNLOCKS = {
 
 
 def get_shop_items(player_level: int) -> list:
-    """Gibt die für dieses Level aktiven Shop-Items zurück."""
     result = []
     for item in SHOP_CATALOGUE:
         min_lvl = item.get("min_level", 1)
@@ -55,10 +54,6 @@ def get_shop_items(player_level: int) -> list:
 
 
 def get_next_unlock(player_level: int) -> dict:
-    """
-    Gibt pro Slot das nächste noch nicht freigeschaltete Item zurück.
-    Ergebnis: {group: (name, level)}
-    """
     from loot_tables import EQUIPMENT_DEFS
     unlocks = {}
     for item in SHOP_CATALOGUE:
@@ -140,7 +135,7 @@ def shop_menu(player):
             print(f"\n{sec_name}")
 
             for item in section_items:
-                idx        = flat.index(item)
+                idx        = flat.index(item) + 1  # 1-basiert, damit [0] = Verlassen frei bleibt
                 affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
 
                 if item["type"] == "consumable":
@@ -178,12 +173,12 @@ def shop_menu(player):
             continue
 
         display_idx = int(choice)
-        if not (0 <= display_idx < len(flat)):
+        if not (1 <= display_idx <= len(flat)):
             print("Ungültige Auswahl.")
             input("ENTER...")
             continue
 
-        item = flat[display_idx]
+        item = flat[display_idx - 1]  # zurück auf 0-basiert
 
         if player.inventory["Gold"] < item["price"]:
             print("❌ Nicht genug Gold!")
