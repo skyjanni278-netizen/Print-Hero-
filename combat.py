@@ -122,35 +122,56 @@ def combat(player, enemy_list):
 
         print("=" * 30)
         # Verfügbare Fähigkeiten abhängig vom Level
-        has_cleave      = player.level >= 2
-        has_whirlwind   = player.level >= 3
-        has_heavenstrike= player.level >= 5
+        has_cleave       = player.level >= 2
+        has_whirlwind    = player.level >= 3
+        has_heavenstrike = player.level >= 5
+        has_shield       = getattr(player, "shield_ready", False)
+
+        # Fokus-Skill: Spezialfähigkeiten kosten -5 Energie
+        fokus_red = 5 if "Fokus" in getattr(player, "skills", set()) else 0
+        cost_s = max(5, 20 - fokus_red)
+        cost_r = max(5, 15 - fokus_red)
+        cost_c = max(5, 10 - fokus_red)
 
         # Aktionsmenü dynamisch aufbauen
         action_lines = ["[A] Angreifen"]
         if has_heavenstrike:
-            action_lines.append("[S] Himmelsschlag 20 E")
+            action_lines.append(f"[S] Himmelsschlag {cost_s} E")
         else:
             action_lines.append(f"[S] Himmelsschlag — 🔒 ab LVL 5")
         if has_whirlwind:
-            action_lines.append("[R] Rundumschlag 15 E")
+            action_lines.append(f"[R] Rundumschlag {cost_r} E")
         else:
             action_lines.append(f"[R] Rundumschlag  — 🔒 ab LVL 3")
         if has_cleave:
-            action_lines.append("[C] Cleave 10 E")
+            action_lines.append(f"[C] Cleave {cost_c} E")
         else:
             action_lines.append(f"[C] Cleave        — 🔒 ab LVL 2")
+        if has_shield:
+            action_lines.append("[M] Magieschild (Block)")
         action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
 
         choice = input("\n" + " | ".join(action_lines[:4]) + "\n" + " | ".join(action_lines[4:]) + "\nDeine Wahl: ").lower()
 
-        if choice not in ['a', 's', 'r', 'c', 'u', 'f', 'q']:
+        if choice not in ['a', 's', 'r', 'c', 'm', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
             input("ENTER...")
             continue
 
+        # Magieschild aktivieren
+        if choice == 'm':
+            if not has_shield:
+                print("Magieschild nicht verfuegbar!")
+                input("ENTER...")
+                continue
+            player.shield_ready  = False
+            player.shield_active = True
+            clear_screen()
+            print_header("Kampf-Ergebnis")
+            print("🔵 Magieschild aktiviert! Der naechste Angriff wird geblockt.")
+
         # Target selection for single-target attacks
-        if choice in ['a', 's', 'c']:
+        elif choice in ['a', 's', 'c']:
             # Gesperrte Fähigkeiten prüfen
             if choice == 's' and not has_heavenstrike:
                 print("🔒 Himmelsschlag wird bei Level 5 freigeschaltet!")
@@ -229,9 +250,13 @@ def combat(player, enemy_list):
             if not player.is_alive():
                 break
             if e.is_alive():
-                msg, dmg = e.attack_target(player)
-                player.stats["damage_taken"] += dmg
-                print(msg)
+                if getattr(player, "shield_active", False):
+                    player.shield_active = False
+                    print(f"🔵 Magieschild blockt den Angriff von {e.name}!")
+                else:
+                    msg, dmg = e.attack_target(player)
+                    player.stats["damage_taken"] += dmg
+                    print(msg)
 
         player.regenerate()
         input("\nNächste Runde (ENTER)...")

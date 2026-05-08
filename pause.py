@@ -28,6 +28,7 @@ def camp_menu(player):
         print("[I] Inventar & Ausrüsten")
         print("[V] Inventar verkaufen")
         print("[K] Händler besuchen")
+        print(f"[F] Fertigkeiten ({player.skill_points} Punkte verfügbar)")
         print("[T] Statistiken")
         print("[S] Speichern")
         print("[W] Weiter zum nächsten Kampf")
@@ -40,6 +41,9 @@ def camp_menu(player):
             sell_menu(player)
         elif choice == 'k':
             shop_menu(player)
+        elif choice == 'f':
+            from skilltree import skill_menu
+            skill_menu(player)
         elif choice == 't':
             stats_menu(player)
         elif choice == 's':
