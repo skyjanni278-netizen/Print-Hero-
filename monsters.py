@@ -1,6 +1,11 @@
 import random
 from player import Character
 
+# Neue Status-Typen fuer Boss-Faehigkeiten
+# player.stunned        → Spieler ueberspringt naechste Runde
+# player.armor_debuff   → Temporaere DEF-Reduktion diesen Kampf
+# player.poison_stacks  → Schaden pro Runde wie Blutung
+
 
 RANK_CONFIG = {
     1: {"title": "",            "hp_mult": 1.0,  "atk_mult": 1.0,  "loot_rolls": 1, "xp_mult": 1.0},
@@ -31,56 +36,80 @@ def _apply_rank(mob, base_hp, base_attack, base_xp, rank):
 class Zombie(Character):
     BASE_HP     = 20
     BASE_ATTACK = 4
-    BASE_XP     = 18   
+    BASE_XP     = 18
 
     def __init__(self, rank: int = 1):
         super().__init__("Zombie", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 2
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        stacks = 3
+        target.poison_stacks = getattr(target, "poison_stacks", 0) + stacks
+        return f"☠️  {self.name}: Fauliger Biss! {target.name} erhält {stacks} Giftstacks!"
+
 
 class Skeleton(Character):
     BASE_HP     = 12
     BASE_ATTACK = 8
-    BASE_XP     = 24   
+    BASE_XP     = 24
 
     def __init__(self, rank: int = 1):
         super().__init__("Skelett", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 1
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        target.bleed_stacks = max(getattr(target, "bleed_stacks", 0), 3)
+        return f"🦴 {self.name}: Knochenregen! {target.name} erhält 3 Blutungsstacks!"
+
 
 class Slime(Character):
     BASE_HP     = 8
     BASE_ATTACK = 3
-    BASE_XP     = 10   
+    BASE_XP     = 10
 
     def __init__(self, rank: int = 1):
         super().__init__("Schleim", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 0
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        debuff = 3
+        target.armor_debuff = getattr(target, "armor_debuff", 0) + debuff
+        return f"🟢 {self.name}: Säurewelle! {target.name} verliert {debuff} DEF für diesen Kampf."
+
 
 class Goblin(Character):
     BASE_HP     = 10
     BASE_ATTACK = 5
-    BASE_XP     = 15   
+    BASE_XP     = 15
 
     def __init__(self, rank: int = 1):
         super().__init__("Goblin", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 1
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        stolen = min(random.randint(15, 30), target.inventory.get("Gold", 0))
+        target.inventory["Gold"] = target.inventory.get("Gold", 0) - stolen
+        return f"💰 {self.name}: Räuberische Hände! Stiehlt {stolen} Gold von {target.name}."
+
 
 class Dragon(Character):
     BASE_HP     = 50
     BASE_ATTACK = 15
-    BASE_XP     = 60   
+    BASE_XP     = 60
 
     def __init__(self, rank: int = 1):
         super().__init__("Drache", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 7
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def boss_ability(self, target) -> str:
+        dmg = random.randint(15, 25)
+        target.hp = max(0, target.hp - dmg)
+        return f"🔥 {self.name}: Feueratem! {dmg} Schaden (ignoriert DEF) an {target.name}! (HP: {target.hp}/{target.max_hp})"
 
 
 class Bandit(Character):
@@ -94,6 +123,10 @@ class Bandit(Character):
         self.armor = 0
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        msg1, dmg1 = self.attack_target(target)
+        return f"⚡ {self.name}: Doppelschlag!\n  {msg1}"
+
 
 class WoodTroll(Character):
     """Tanky Nahkämpfer – erscheint LVL 3–9, hohe HP, mittlerer Angriff"""
@@ -106,6 +139,10 @@ class WoodTroll(Character):
         self.armor = 4
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
+    def boss_ability(self, target) -> str:
+        target.stunned = True
+        return f"🪨 {self.name}: Erdschlag! {target.name} ist betäubt und überspringt die nächste Runde!"
+
 
 class ShadowWolf(Character):
     """Rudeltier – erscheint LVL 1–6, niedrige HP, schnelle Angriffe"""
@@ -117,6 +154,11 @@ class ShadowWolf(Character):
         super().__init__("Schattenwolf", hp=self.BASE_HP, attack=self.BASE_ATTACK)
         self.armor = 0
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def boss_ability(self, target) -> str:
+        heal = random.randint(10, 20)
+        self.hp = min(self.max_hp, self.hp + heal)
+        return f"🐺 {self.name}: Rudel-Heul! Heilt sich selbst um {heal} HP. (HP: {self.hp}/{self.max_hp})"
 
 
 def roll_rank(player_level: int) -> int:

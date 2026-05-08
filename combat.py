@@ -112,6 +112,12 @@ def combat(player, enemy_list):
         print(f"     LVL: {player.level}    | XP: {player.xp}/{player.xp_to_level_up}")
         if player.bleed_stacks > 0:
             print(f"     ⚠️  Blutung: {player.bleed_stacks} Stacks")
+        if getattr(player, "poison_stacks", 0) > 0:
+            print(f"     ☠️  Gift: {player.poison_stacks} Stacks")
+        if getattr(player, "armor_debuff", 0) > 0:
+            print(f"     🟢 Säure-Debuff: -{player.armor_debuff} DEF")
+        if getattr(player, "stunned", False):
+            print(f"     🪨 BETÄUBT — überspringt diese Runde!")
         print("-" * 30)
 
         # Consumables Kurzübersicht
@@ -158,9 +164,18 @@ def combat(player, enemy_list):
             action_lines.append("[M] Magieschild (Block)")
         action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
 
-        choice = input("\n" + " | ".join(action_lines[:4]) + "\n" + " | ".join(action_lines[4:]) + "\nDeine Wahl: ").lower()
+        # Betäubung: Spielerzug überspringen
+        if getattr(player, "stunned", False):
+            player.stunned = False
+            print("\n🪨 Du bist betäubt und kannst nicht handeln!")
+            input("ENTER...")
+            choice = "__stunned__"
+        else:
+            choice = input("\n" + " | ".join(action_lines[:4]) + "\n" + " | ".join(action_lines[4:]) + "\nDeine Wahl: ").lower()
 
-        if choice not in ['a', 's', 'r', 'c', 'm', 'u', 'f', 'q']:
+        if choice == "__stunned__":
+            pass  # Direkt zu Gegner-Angriffen
+        elif choice not in ['a', 's', 'r', 'c', 'm', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
             input("ENTER...")
             continue
@@ -247,12 +262,15 @@ def combat(player, enemy_list):
                 if bleed_msg:
                     print(bleed_msg)
 
-        # Bleed tick (Spieler)
+        # Bleed + Gift tick (Spieler)
         player_bleed_msg = player.check_bleed()
         if player_bleed_msg:
             print(player_bleed_msg)
+        player_poison_msg = player.check_poison()
+        if player_poison_msg:
+            print(player_poison_msg)
 
-        # Enemy attacks
+        # Enemy attacks + Boss-Abilities
         for e in enemy_list:
             if not player.is_alive():
                 break
@@ -264,6 +282,9 @@ def combat(player, enemy_list):
                     msg, dmg = e.attack_target(player)
                     player.stats["damage_taken"] += dmg
                     print(msg)
+                # Boss-Fähigkeit: Rang 5, 30% Chance
+                if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < 0.30:
+                    print(e.boss_ability(player))
 
         player.regenerate()
         input("\nNächste Runde (ENTER)...")
