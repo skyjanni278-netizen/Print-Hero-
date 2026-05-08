@@ -26,6 +26,7 @@ def camp_menu(player):
         print("[I] Inventar & Ausrüsten")
         print("[V] Inventar verkaufen")
         print("[K] Händler besuchen")
+        print("[T] Statistiken")
         print("[S] Speichern")
         print("[W] Weiter zum nächsten Kampf")
         print("[Q] Beenden")
@@ -37,6 +38,8 @@ def camp_menu(player):
             sell_menu(player)
         elif choice == 'k':
             shop_menu(player)
+        elif choice == 't':
+            stats_menu(player)
         elif choice == 's':
             save_game(player)
             input("(ENTER)")
@@ -46,6 +49,20 @@ def camp_menu(player):
             exit()
         elif choice == 'w':
             break
+
+
+def stats_menu(player):
+    clear_screen()
+    print_header("Statistiken")
+    s = player.stats
+    kd = f"{s['kills']}/{s['deaths']}" if s['deaths'] > 0 else str(s['kills'])
+    print(f"  ⚔️  Kämpfe gewonnen    : {s['fights']}")
+    print(f"  💀  Kills / Tode       : {kd}")
+    print(f"  🗡️  Schaden ausgeteilt : {s['damage_dealt']}")
+    print(f"  🛡️  Schaden erhalten   : {s['damage_taken']}")
+    print(f"  💰  Gold verdient      : {s['gold_earned']}")
+    print(f"  🧪  Tränke benutzt     : {s['potions_used']}")
+    input("\n(ENTER)")
 
 
 def _equip_line(item):
