@@ -4,6 +4,7 @@ from utils import clear_screen, print_header
 from combat import generate_enemy_group, combat, collect_loot
 from pause import camp_menu
 from save import load_game, save_exists
+from events import trigger_event
 
 DIFFICULTY_SETTINGS = {
     "easy":   {"hp_mult": 0.80, "atk_mult": 0.85, "start_hp": 35, "label": "Einfach  🟢"},
@@ -71,11 +72,17 @@ def main():
             else:
                 print("\n- Keine Beute gefunden -")
 
-            total_xp = sum(e.xp_value for e in enemy_group)
+            total_xp = int(sum(e.xp_value for e in enemy_group) * player.next_fight_xp_mult)
+            player.next_fight_xp_mult = 1.0
             print(f"\nGruppe besiegt! Du erhältst {total_xp} XP!")
             player.xp += total_xp
             player.check_level_up()
             input("\nDu ziehst weiter... (ENTER)")
+
+            player.fights_until_event -= 1
+            if player.fights_until_event <= 0:
+                trigger_event(player)
+                player.fights_until_event = random.randint(2, 3)
 
         elif result == "defeat":
             player.stats["deaths"] += 1
