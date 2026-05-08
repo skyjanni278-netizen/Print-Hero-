@@ -26,6 +26,7 @@ def camp_menu(player):
         print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}")
         print("-" * 30)
         print("[I] Inventar & Ausrüsten")
+        print("[U] Equipment aufwerten")
         print("[V] Inventar verkaufen")
         print("[K] Händler besuchen")
         print(f"[F] Fertigkeiten ({player.skill_points} Punkte verfügbar)")
@@ -37,6 +38,8 @@ def camp_menu(player):
         choice = input("\nDeine Wahl: ").lower()
         if choice == 'i':
             inventory_menu(player)
+        elif choice == 'u':
+            upgrade_menu(player)
         elif choice == 'v':
             sell_menu(player)
         elif choice == 'k':
@@ -69,6 +72,74 @@ def stats_menu(player):
     print(f"  💰  Gold verdient      : {s['gold_earned']}")
     print(f"  🧪  Tränke benutzt     : {s['potions_used']}")
     input("\n(ENTER)")
+
+
+_UPGRADE_COSTS   = [50, 120, 250]   # Kosten für Stufe 1, 2, 3
+_STARTER_ITEMS   = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
+_SLOT_LABELS     = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm", "feet": "Schuhe"}
+_MAX_UPGRADE_LVL = 3
+
+
+def upgrade_menu(player):
+    while True:
+        clear_screen()
+        print_header("Equipment aufwerten")
+        print(f"Gold: {player.inventory['Gold']} 🪙\n")
+        print(f"{'Slot':<10} {'Item':<24} {'Stufe':<8} {'Bonus':<12} {'Kosten'}")
+        print("-" * 62)
+
+        upgradeable = []
+        for slot, label in _SLOT_LABELS.items():
+            item     = player.equipment[slot]
+            lvl      = player.equipment_upgrades.get(slot, 0)
+            is_start = item["name"] in _STARTER_ITEMS
+
+            if is_start:
+                print(f"  {label:<10} {item['name']:<24} —        (Starter-Item, nicht aufwertbar)")
+                continue
+
+            if slot == "weapon":
+                bonus_str = f"+{lvl * 2} ATK"
+                next_bonus = f"+{(lvl + 1) * 2} ATK"
+            else:
+                bonus_str = f"+{lvl} DEF"
+                next_bonus = f"+{lvl + 1} DEF"
+
+            if lvl >= _MAX_UPGRADE_LVL:
+                print(f"  [{len(upgradeable)}] {label:<10} {item['name']:<24} MAX      {bonus_str:<12} —")
+            else:
+                cost = _UPGRADE_COSTS[lvl]
+                affordable = "✅" if player.inventory["Gold"] >= cost else "❌"
+                print(f"  [{len(upgradeable)}] {label:<10} {item['name']:<24} Stufe {lvl}  {bonus_str:<12} {cost} Gold {affordable}")
+                upgradeable.append((slot, lvl, cost))
+
+        if not upgradeable:
+            print("\nKein Item mehr aufwertbar.")
+            input("\n(ENTER)")
+            break
+
+        print("\n[Z] Zurück")
+        choice = input("\nWelches Item aufwerten? ").strip().lower()
+
+        if choice == "z":
+            break
+        if choice.isdigit() and 0 <= int(choice) < len(upgradeable):
+            slot, lvl, cost = upgradeable[int(choice)]
+            if player.inventory["Gold"] < cost:
+                print("Zu wenig Gold!")
+                input("(ENTER)")
+                continue
+            player.inventory["Gold"]        -= cost
+            player.equipment_upgrades[slot] += 1
+            new_lvl = player.equipment_upgrades[slot]
+            item    = player.equipment[slot]
+            if slot == "weapon":
+                bonus_desc = f"+{new_lvl * 2} ATK gesamt"
+            else:
+                bonus_desc = f"+{new_lvl} DEF gesamt"
+            print(f"\n⬆️  {item['name']} auf Stufe {new_lvl} aufgewertet! ({bonus_desc})")
+            print(f"   Gold verbleibend: {player.inventory['Gold']} 🪙")
+            input("(ENTER)")
 
 
 def _equip_line(item):
@@ -153,6 +224,7 @@ def inventory_menu(player):
                 if old_item["name"] not in ("Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"):
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
+                player.equipment_upgrades[slot] = 0
                 print(f"\n✅ Du trägst nun {new_item['name']}!")
                 input("(ENTER)")
 
