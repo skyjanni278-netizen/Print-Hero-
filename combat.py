@@ -140,11 +140,20 @@ def combat(player, enemy_list):
         has_heavenstrike = player.level >= 5
         has_shield       = getattr(player, "shield_ready", False)
 
-        # Fokus-Skill: Spezialfähigkeiten kosten -5 Energie
-        fokus_red = 5 if "Fokus" in getattr(player, "skills", set()) else 0
-        cost_s = max(5, 20 - fokus_red)
-        cost_r = max(5, 15 - fokus_red)
-        cost_c = max(5, 10 - fokus_red)
+        # Fokus-Skill + Magier-Klasse: Spezialfähigkeiten kosten weniger Energie
+        fokus_red  = 5 if "Fokus" in getattr(player, "skills", set()) else 0
+        mage_red   = 5 if getattr(player, "player_class", "") == "mage" else 0
+        total_red  = fokus_red + mage_red
+        cost_s = max(5, 20 - total_red)
+        cost_r = max(5, 15 - total_red)
+        cost_c = max(5, 10 - total_red)
+
+        # Klassen-Fähigkeit
+        from classes import CLASS_DEFS
+        pclass      = getattr(player, "player_class", "warrior")
+        cdef        = CLASS_DEFS.get(pclass, {})
+        ability_used = getattr(player, "class_ability_used", False)
+        ability_label = f"[X] {cdef.get('ability_name','?')} (einmal/Kampf)"
 
         # Aktionsmenü dynamisch aufbauen
         action_lines = ["[A] Angreifen"]
@@ -162,6 +171,8 @@ def combat(player, enemy_list):
             action_lines.append(f"[C] Cleave        — 🔒 ab LVL 2")
         if has_shield:
             action_lines.append("[M] Magieschild (Block)")
+        if not ability_used:
+            action_lines.append(ability_label)
         action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
 
         # Betäubung: Spielerzug überspringen
@@ -175,13 +186,37 @@ def combat(player, enemy_list):
 
         if choice == "__stunned__":
             pass  # Direkt zu Gegner-Angriffen
-        elif choice not in ['a', 's', 'r', 'c', 'm', 'u', 'f', 'q']:
+        elif choice not in ['a', 's', 'r', 'c', 'm', 'x', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
             input("ENTER...")
             continue
 
+        # Klassen-Fähigkeit
+        if choice == 'x':
+            if ability_used:
+                print("Klassenfähigkeit bereits benutzt!")
+                input("ENTER...")
+                continue
+            player.class_ability_used = True
+            clear_screen()
+            print_header("Klassenfähigkeit")
+            if pclass == "warrior":
+                player.block_next = True
+                print(f"🛡️  Schildwall! Nächster Angriff wird vollständig geblockt.")
+            elif pclass == "mage":
+                living = [e for e in enemy_list if e.is_alive()]
+                dmg    = random.randint(25, 40)
+                for e in living:
+                    e.hp = max(0, e.hp - dmg)
+                names = ", ".join(e.name for e in living)
+                print(f"✨ Arkane Entladung! {dmg} Schaden (ignoriert DEF) an: {names}")
+                player.stats["damage_dealt"] += dmg * len(living)
+            elif pclass == "rogue":
+                player.shadow_strike_ready = True
+                print(f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.")
+
         # Magieschild aktivieren
-        if choice == 'm':
+        elif choice == 'm':
             if not has_shield:
                 print("Magieschild nicht verfuegbar!")
                 input("ENTER...")
@@ -275,7 +310,10 @@ def combat(player, enemy_list):
             if not player.is_alive():
                 break
             if e.is_alive():
-                if getattr(player, "shield_active", False):
+                if getattr(player, "block_next", False):
+                    player.block_next = False
+                    print(f"🛡️  Schildwall blockt den Angriff von {e.name}!")
+                elif getattr(player, "shield_active", False):
                     player.shield_active = False
                     print(f"🔵 Magieschild blockt den Angriff von {e.name}!")
                 else:

@@ -26,6 +26,18 @@ def _choose_difficulty():
             return mapping[c]
 
 
+def _new_game():
+    from classes import choose_class, apply_class
+    diff     = _choose_difficulty()
+    class_id = choose_class()
+    from classes import CLASS_DEFS
+    cdef     = CLASS_DEFS[class_id]
+    player   = Character("Hero", hp=cdef["start_hp"], attack=cdef["start_atk"])
+    player.difficulty = diff
+    apply_class(player, class_id)
+    return player
+
+
 def _offer_ng_plus(player):
     from utils import clear_screen, print_header
     from loot_tables import EQUIPMENT_DEFS
@@ -68,15 +80,9 @@ def main():
         if choice == 'l':
             player = load_game()
         else:
-            diff   = _choose_difficulty()
-            start_hp = DIFFICULTY_SETTINGS[diff]["start_hp"]
-            player = Character("Hero", hp=start_hp, attack=10)
-            player.difficulty = diff
+            player = _new_game()
     else:
-        diff   = _choose_difficulty()
-        start_hp = DIFFICULTY_SETTINGS[diff]["start_hp"]
-        player = Character("Hero", hp=start_hp, attack=10)
-        player.difficulty = diff
+        player = _new_game()
 
     while player.is_alive():
         camp_menu(player)

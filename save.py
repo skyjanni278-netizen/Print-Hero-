@@ -29,6 +29,7 @@ def save_game(player):
         "next_fight_xp_mult": player.next_fight_xp_mult,
         "ng_plus": player.ng_plus,
         "achievements": list(getattr(player, "achievements", set())),
+        "player_class": getattr(player, "player_class", "warrior"),
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -65,6 +66,10 @@ def load_game():
     player.equipment_upgrades  = {**default_upgrades, **data.get("equipment_upgrades", {})}
     player.ng_plus             = data.get("ng_plus", 0)
     player.achievements        = set(data.get("achievements", []))
+    player.player_class        = data.get("player_class", "warrior")
+    player.class_ability_used  = False
+    player.block_next          = False
+    player.shadow_strike_ready = False
     print("📂 Spielstand geladen!")
     return player
 

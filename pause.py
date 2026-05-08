@@ -16,10 +16,14 @@ def camp_menu(player):
         h = player.equipment['head']
         f = player.equipment['feet']
         from main import DIFFICULTY_SETTINGS
-        diff_label = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
-        ng         = getattr(player, "ng_plus", 0)
-        ng_tag     = f" | ⭐ NG+{ng}" if ng > 0 else ""
-        print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙 | {diff_label}{ng_tag}")
+        from classes import CLASS_DEFS
+        diff_label  = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
+        ng          = getattr(player, "ng_plus", 0)
+        ng_tag      = f" | ⭐ NG+{ng}" if ng > 0 else ""
+        pclass      = getattr(player, "player_class", "warrior")
+        class_emoji = CLASS_DEFS.get(pclass, {}).get("emoji", "")
+        class_name  = CLASS_DEFS.get(pclass, {}).get("name", "")
+        print(f"Spieler: {player.name} {class_emoji} {class_name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙 | {diff_label}{ng_tag}")
         print(f"ATK: {player.get_total_attack():<4} | DEF: {player.get_total_armor()}")
         print(f"Waffe:   {w['name']} (+{w['attack']} ATK)")
         print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")
