@@ -26,6 +26,11 @@ class Character:
         # Temporäre Kampf-Boni – werden nach dem Kampf zurückgesetzt
         self.combat_modifiers = {"attack": 0}
 
+        # Boss-Status-Effekte (nur während Kampf aktiv)
+        self.stunned       = False
+        self.poison_stacks = 0
+        self.armor_debuff  = 0
+
         self.difficulty          = "normal"
         self.next_fight_xp_mult  = 1.0
         self.fights_until_event  = random.randint(2, 3)
@@ -122,17 +127,23 @@ class Character:
     def reset_combat_modifiers(self):
         """Setzt alle temporären Kampfboni zurück. Nach jedem Kampf aufrufen."""
         self.combat_modifiers = {"attack": 0}
+        self.stunned          = False
+        self.poison_stacks    = 0
+        self.armor_debuff     = 0
+        self.shield_active    = False
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in getattr(self, "skills", set()) else 0
         upgrades    = getattr(self, "equipment_upgrades", {})
         upgrade_def = upgrades.get("chest", 0) + upgrades.get("head", 0) + upgrades.get("feet", 0)
-        return (self.armor
-                + self.equipment["chest"]["armor"]
-                + self.equipment["head"]["armor"]
-                + self.equipment["feet"]["armor"]
-                + skill_bonus
-                + upgrade_def)
+        debuff      = getattr(self, "armor_debuff", 0)
+        return max(0, self.armor
+                   + self.equipment["chest"]["armor"]
+                   + self.equipment["head"]["armor"]
+                   + self.equipment["feet"]["armor"]
+                   + skill_bonus
+                   + upgrade_def
+                   - debuff)
 
     def get_effective_min_attack(self) -> int:
         weapon_bonus = self.equipment["weapon"]["attack"] // 2
@@ -255,6 +266,15 @@ class Character:
             self.hp = max(0, self.hp - damage)
             self.bleed_stacks -= 1
             return f"{self.name} erleidet {damage} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
+        return ""
+
+    def check_poison(self) -> str:
+        stacks = getattr(self, "poison_stacks", 0)
+        if stacks > 0:
+            damage = 5
+            self.hp = max(0, self.hp - damage)
+            self.poison_stacks -= 1
+            return f"☠️  {self.name} erleidet {damage} Giftschaden! ({self.poison_stacks} Stacks verbleibend)"
         return ""
 
     def use_consumable(self, key: str) -> str:
