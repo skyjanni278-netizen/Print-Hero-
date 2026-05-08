@@ -20,6 +20,7 @@ def save_game(player):
         "inventory": player.inventory,
         "equipment": player.equipment,
         "stats": player.stats,
+        "difficulty": player.difficulty,
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -44,7 +45,8 @@ def load_game():
     default_stats = {"fights": 0, "kills": 0, "deaths": 0,
                      "damage_dealt": 0, "damage_taken": 0,
                      "gold_earned": 0, "potions_used": 0}
-    player.stats = {**default_stats, **data.get("stats", {})}
+    player.stats      = {**default_stats, **data.get("stats", {})}
+    player.difficulty = data.get("difficulty", "normal")
     print("📂 Spielstand geladen!")
     return player
 

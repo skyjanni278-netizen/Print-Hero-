@@ -15,7 +15,9 @@ def camp_menu(player):
         c = player.equipment['chest']
         h = player.equipment['head']
         f = player.equipment['feet']
-        print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙")
+        from main import DIFFICULTY_SETTINGS
+        diff_label = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
+        print(f"Spieler: {player.name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙 | {diff_label}")
         print(f"ATK: {player.get_total_attack():<4} | DEF: {player.get_total_armor()}")
         print(f"Waffe:   {w['name']} (+{w['attack']} ATK)")
         print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")

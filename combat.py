@@ -46,7 +46,17 @@ def create_enemy(player):
 
     mob_class = random.choices(classes, weights=weights, k=1)[0]
     rank      = roll_rank(player.level)
-    return mob_class(rank=rank)
+    mob       = mob_class(rank=rank)
+
+    diff = getattr(player, "difficulty", "normal")
+    if diff != "normal":
+        from main import DIFFICULTY_SETTINGS
+        cfg = DIFFICULTY_SETTINGS[diff]
+        mob.max_hp = max(1, int(mob.max_hp * cfg["hp_mult"]))
+        mob.hp     = mob.max_hp
+        mob.attack = max(1, int(mob.attack * cfg["atk_mult"]))
+
+    return mob
 
 
 def consumable_menu(player) -> str:
