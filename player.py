@@ -42,7 +42,8 @@ class Character:
 
         self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
 
-        self.ng_plus = 0
+        self.ng_plus      = 0
+        self.achievements = set()
 
         self.stats = {
             "fights": 0,
