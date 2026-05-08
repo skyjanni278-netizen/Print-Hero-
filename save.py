@@ -21,6 +21,8 @@ def save_game(player):
         "equipment": player.equipment,
         "stats": player.stats,
         "difficulty": player.difficulty,
+        "fights_until_event": player.fights_until_event,
+        "next_fight_xp_mult": player.next_fight_xp_mult,
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -45,8 +47,10 @@ def load_game():
     default_stats = {"fights": 0, "kills": 0, "deaths": 0,
                      "damage_dealt": 0, "damage_taken": 0,
                      "gold_earned": 0, "potions_used": 0}
-    player.stats      = {**default_stats, **data.get("stats", {})}
-    player.difficulty = data.get("difficulty", "normal")
+    player.stats               = {**default_stats, **data.get("stats", {})}
+    player.difficulty          = data.get("difficulty", "normal")
+    player.fights_until_event  = data.get("fights_until_event", 2)
+    player.next_fight_xp_mult  = data.get("next_fight_xp_mult", 1.0)
     print("📂 Spielstand geladen!")
     return player
 

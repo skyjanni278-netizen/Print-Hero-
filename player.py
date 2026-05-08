@@ -26,7 +26,9 @@ class Character:
         # Temporäre Kampf-Boni – werden nach dem Kampf zurückgesetzt
         self.combat_modifiers = {"attack": 0}
 
-        self.difficulty = "normal"
+        self.difficulty          = "normal"
+        self.next_fight_xp_mult  = 1.0
+        self.fights_until_event  = random.randint(2, 3)
 
         self.stats = {
             "fights": 0,
