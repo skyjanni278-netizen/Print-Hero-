@@ -5,6 +5,7 @@ from combat import generate_enemy_group, combat, collect_loot
 from pause import camp_menu
 from save import load_game, save_exists
 from events import trigger_event
+from achievements import check_all
 
 DIFFICULTY_SETTINGS = {
     "easy":   {"hp_mult": 0.80, "atk_mult": 0.85, "start_hp": 35, "label": "Einfach  🟢"},
@@ -47,6 +48,8 @@ def _offer_ng_plus(player):
         c = input("\nDeine Wahl: ").lower()
         if c == 'j':
             player.start_ng_plus()
+            for m in check_all(player, {"event": "ng_plus"}):
+                print(m)
             clear_screen()
             print_header("⭐ New Game+ gestartet!")
             print(f"Runde {player.ng_plus} beginnt. Viel Erfolg, Held!")
@@ -92,9 +95,17 @@ def main():
             player.stats["fights"] += 1
             player.stats["kills"]  += len(enemy_group)
 
-            gold_before = player.inventory["Gold"]
-            loot_lines = collect_loot(player, enemy_group)
+            potions_before = sum(player.inventory.get("Consumables", {}).values())
+            gold_before    = player.inventory["Gold"]
+            loot_lines     = collect_loot(player, enemy_group)
             player.stats["gold_earned"] += player.inventory["Gold"] - gold_before
+
+            # Achievement: Legendary-Loot Check
+            from loot_tables import EQUIPMENT_DEFS
+            got_leg = any(
+                EQUIPMENT_DEFS.get(i["name"], {}).get("rarity") == "legendary"
+                for i in player.inventory.get("Equipment", [])
+            )
 
             if loot_lines:
                 print("\nBeute:")
@@ -108,6 +119,21 @@ def main():
             print(f"\nGruppe besiegt! Du erhältst {total_xp} XP!")
             player.xp += total_xp
             player.check_level_up()
+
+            # Achievement-Checks
+            potions_after = sum(player.inventory.get("Consumables", {}).values())
+            ach_msgs = check_all(player, {
+                "event": "victory",
+                "enemies": enemy_group,
+                "potions_before": potions_before,
+                "potions_after":  potions_after,
+            })
+            ach_msgs += check_all(player, {"event": "level_up", "level": player.level})
+            ach_msgs += check_all(player, {"event": "loot", "got_legendary": got_leg})
+            ach_msgs += check_all(player, {"event": "gold_check"})
+            for m in ach_msgs:
+                print(m)
+
             input("\nDu ziehst weiter... (ENTER)")
 
             if player.level >= 10:
