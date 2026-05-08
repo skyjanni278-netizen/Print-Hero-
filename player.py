@@ -26,6 +26,16 @@ class Character:
         # Temporäre Kampf-Boni – werden nach dem Kampf zurückgesetzt
         self.combat_modifiers = {"attack": 0}
 
+        self.stats = {
+            "fights": 0,
+            "kills": 0,
+            "deaths": 0,
+            "damage_dealt": 0,
+            "damage_taken": 0,
+            "gold_earned": 0,
+            "potions_used": 0,
+        }
+
         self.equipment = {
             "weapon": {"name": "Fäuste",       "attack": 0},
             "chest":  {"name": "Lumpen",       "armor": 0},
@@ -149,7 +159,7 @@ class Character:
         raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
         real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
         target.hp   = max(0, target.hp - real_damage)
-        return f"{self.name} macht {real_damage} Schaden!"
+        return f"{self.name} macht {real_damage} Schaden!", real_damage
 
     def try_flee(self):
         return random.randint(1, 20) >= 10
@@ -213,6 +223,7 @@ class Character:
         if consumables[key] == 0:
             del consumables[key]
 
+        self.stats["potions_used"] += 1
         effect = cdef["effect"]
         value  = cdef.get("value", 0)
         emoji  = cdef.get("emoji", "🧪")

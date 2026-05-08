@@ -30,8 +30,13 @@ def main():
             clear_screen()
             print_header("Kampf-Ergebnis")
 
-            # Loot über zentrales System
+            player.stats["fights"] += 1
+            player.stats["kills"]  += len(enemy_group)
+
+            gold_before = player.inventory["Gold"]
             loot_lines = collect_loot(player, enemy_group)
+            player.stats["gold_earned"] += player.inventory["Gold"] - gold_before
+
             if loot_lines:
                 print("\nBeute:")
                 for line in loot_lines:
@@ -46,6 +51,7 @@ def main():
             input("\nDu ziehst weiter... (ENTER)")
 
         elif result == "defeat":
+            player.stats["deaths"] += 1
             print(f"\nGame Over! {player.name} wurde besiegt.")
             break
 

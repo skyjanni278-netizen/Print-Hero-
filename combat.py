@@ -157,7 +157,9 @@ def combat(player, enemy_list):
                 if 0 <= target_index < len(enemy_list) and enemy_list[target_index].is_alive():
                     target = enemy_list[target_index]
                     if choice == 'a':
-                        print(player.attack_target(target))
+                        msg, dmg = player.attack_target(target)
+                        player.stats["damage_dealt"] += dmg
+                        print(msg)
                     elif choice == 's':
                         print(player.heavenstrike(target))
                     elif choice == 'c':
@@ -217,7 +219,9 @@ def combat(player, enemy_list):
             if not player.is_alive():
                 break
             if e.is_alive():
-                print(e.attack_target(player))
+                msg, dmg = e.attack_target(player)
+                player.stats["damage_taken"] += dmg
+                print(msg)
 
         player.regenerate()
         input("\nNächste Runde (ENTER)...")
