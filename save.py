@@ -27,6 +27,7 @@ def save_game(player):
         "equipment_upgrades": player.equipment_upgrades,
         "fights_until_event": player.fights_until_event,
         "next_fight_xp_mult": player.next_fight_xp_mult,
+        "ng_plus": player.ng_plus,
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -61,6 +62,7 @@ def load_game():
     player.shield_active       = False
     default_upgrades           = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
     player.equipment_upgrades  = {**default_upgrades, **data.get("equipment_upgrades", {})}
+    player.ng_plus             = data.get("ng_plus", 0)
     print("📂 Spielstand geladen!")
     return player
 

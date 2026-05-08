@@ -25,6 +25,37 @@ def _choose_difficulty():
             return mapping[c]
 
 
+def _offer_ng_plus(player):
+    from utils import clear_screen, print_header
+    from loot_tables import EQUIPMENT_DEFS
+    clear_screen()
+    print_header("⭐ New Game+ verfügbar!")
+    ng_next = player.ng_plus + 1
+    mult    = round(1.3 ** ng_next, 2)
+    kept = [i["name"] for i in player.inventory["Equipment"]
+            if EQUIPMENT_DEFS.get(i["name"], {}).get("rarity") == "legendary"]
+    print(f"Du hast Level 10 erreicht! Starte New Game+ Runde {ng_next}.")
+    print(f"\nGegnerskalierung: ×{mult} HP und ATK")
+    print(f"Du behältst: {player.inventory['Gold']} Gold")
+    if kept:
+        print(f"Legendäre Items: {', '.join(kept)}")
+    else:
+        print("Legendäre Items: keine im Inventar")
+    print("\nAlles andere (Level, Skills, Equipment) wird zurückgesetzt.")
+    print("\n[J] New Game+ starten   [N] Weiterspielen (kein Reset)")
+    while True:
+        c = input("\nDeine Wahl: ").lower()
+        if c == 'j':
+            player.start_ng_plus()
+            clear_screen()
+            print_header("⭐ New Game+ gestartet!")
+            print(f"Runde {player.ng_plus} beginnt. Viel Erfolg, Held!")
+            input("(ENTER)")
+            break
+        elif c == 'n':
+            break
+
+
 def main():
     clear_screen()
 
@@ -78,6 +109,9 @@ def main():
             player.xp += total_xp
             player.check_level_up()
             input("\nDu ziehst weiter... (ENTER)")
+
+            if player.level >= 10:
+                _offer_ng_plus(player)
 
             player.fights_until_event -= 1
             if player.fights_until_event <= 0:

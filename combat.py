@@ -56,6 +56,13 @@ def create_enemy(player):
         mob.hp     = mob.max_hp
         mob.attack = max(1, int(mob.attack * cfg["atk_mult"]))
 
+    ng = getattr(player, "ng_plus", 0)
+    if ng > 0:
+        ng_mult    = 1.3 ** ng
+        mob.max_hp = max(1, int(mob.max_hp * ng_mult))
+        mob.hp     = mob.max_hp
+        mob.attack = max(1, int(mob.attack * ng_mult))
+
     return mob
 
 
