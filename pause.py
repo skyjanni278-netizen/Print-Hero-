@@ -15,7 +15,7 @@ def camp_menu(player):
         c = player.equipment['chest']
         h = player.equipment['head']
         f = player.equipment['feet']
-        from main import DIFFICULTY_SETTINGS
+        from config import DIFFICULTY_SETTINGS
         from classes import CLASS_DEFS
         diff_label  = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
         ng          = getattr(player, "ng_plus", 0)
@@ -278,11 +278,10 @@ def sell_menu(player):
 
         # Equipment
         equip_items = player.inventory["Equipment"]
-        STARTER_ITEMS = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
         if equip_items:
             print("\n[ Ausrüstung ]")
         for i, item in enumerate(equip_items):
-            if item["name"] in STARTER_ITEMS:
+            if item["name"] in _STARTER_ITEMS:
                 continue
             edef  = EQUIPMENT_DEFS.get(item["name"], {})
             price = edef.get("sell", 5)
