@@ -3,16 +3,14 @@ from utils import clear_screen, print_header
 
 
 def _wandering_merchant(player):
-    from loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
-    from shop import shop_menu
     clear_screen()
     print_header("Wandernder Haendler")
     print("Ein Haendler tritt aus dem Gebusch — sein Sortiment wirkt verlockend.")
     print("Er bietet dir 3 zuefaellige Items zu einem Sonderpreis an!\n")
 
     # 3 zufaellige Consumables aus dem Shop-Sortiment mit 20% Rabatt
-    from shop import SHOP_CATALOG
-    available = [item for item in SHOP_CATALOG if item.get("type") == "consumable"
+    from shop import SHOP_CATALOGUE
+    available = [item for item in SHOP_CATALOGUE if item.get("type") == "consumable"
                  and item.get("min_level", 1) <= player.level]
     if not available:
         print("Er hat leider nichts fuer dich.")

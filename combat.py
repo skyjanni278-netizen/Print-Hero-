@@ -50,7 +50,7 @@ def create_enemy(player):
 
     diff = getattr(player, "difficulty", "normal")
     if diff != "normal":
-        from main import DIFFICULTY_SETTINGS
+        from config import DIFFICULTY_SETTINGS
         cfg = DIFFICULTY_SETTINGS[diff]
         mob.max_hp = max(1, int(mob.max_hp * cfg["hp_mult"]))
         mob.hp     = mob.max_hp
@@ -112,11 +112,11 @@ def combat(player, enemy_list):
         print(f"     LVL: {player.level}    | XP: {player.xp}/{player.xp_to_level_up}")
         if player.bleed_stacks > 0:
             print(f"     ⚠️  Blutung: {player.bleed_stacks} Stacks")
-        if getattr(player, "poison_stacks", 0) > 0:
+        if player.poison_stacks > 0:
             print(f"     ☠️  Gift: {player.poison_stacks} Stacks")
-        if getattr(player, "armor_debuff", 0) > 0:
+        if player.armor_debuff > 0:
             print(f"     🟢 Säure-Debuff: -{player.armor_debuff} DEF")
-        if getattr(player, "stunned", False):
+        if player.stunned:
             print(f"     🪨 BETÄUBT — überspringt diese Runde!")
         print("-" * 30)
 
@@ -138,21 +138,19 @@ def combat(player, enemy_list):
         has_cleave       = player.level >= 2
         has_whirlwind    = player.level >= 3
         has_heavenstrike = player.level >= 5
-        has_shield       = getattr(player, "shield_ready", False)
+        has_shield       = player.shield_ready
 
         # Fokus-Skill + Magier-Klasse: Spezialfähigkeiten kosten weniger Energie
-        fokus_red  = 5 if "Fokus" in getattr(player, "skills", set()) else 0
-        mage_red   = 5 if getattr(player, "player_class", "") == "mage" else 0
-        total_red  = fokus_red + mage_red
+        total_red = player._energy_cost_reduction()
         cost_s = max(5, 20 - total_red)
         cost_r = max(5, 15 - total_red)
         cost_c = max(5, 10 - total_red)
 
         # Klassen-Fähigkeit
         from classes import CLASS_DEFS
-        pclass      = getattr(player, "player_class", "warrior")
-        cdef        = CLASS_DEFS.get(pclass, {})
-        ability_used = getattr(player, "class_ability_used", False)
+        pclass       = player.player_class
+        cdef         = CLASS_DEFS.get(pclass, {})
+        ability_used = player.class_ability_used
         ability_label = f"[X] {cdef.get('ability_name','?')} (einmal/Kampf)"
 
         # Aktionsmenü dynamisch aufbauen
@@ -176,7 +174,7 @@ def combat(player, enemy_list):
         action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
 
         # Betäubung: Spielerzug überspringen
-        if getattr(player, "stunned", False):
+        if player.stunned:
             player.stunned = False
             print("\n🪨 Du bist betäubt und kannst nicht handeln!")
             input("ENTER...")
@@ -310,10 +308,10 @@ def combat(player, enemy_list):
             if not player.is_alive():
                 break
             if e.is_alive():
-                if getattr(player, "block_next", False):
+                if player.block_next:
                     player.block_next = False
                     print(f"🛡️  Schildwall blockt den Angriff von {e.name}!")
-                elif getattr(player, "shield_active", False):
+                elif player.shield_active:
                     player.shield_active = False
                     print(f"🔵 Magieschild blockt den Angriff von {e.name}!")
                 else:
