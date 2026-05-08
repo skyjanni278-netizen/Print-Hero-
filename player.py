@@ -37,6 +37,8 @@ class Character:
 
         self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
 
+        self.ng_plus = 0
+
         self.stats = {
             "fights": 0,
             "kills": 0,
@@ -297,4 +299,61 @@ class Character:
                 msgs.append("keine Blutung vorhanden")
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
+
+    def start_ng_plus(self):
+        from loot_tables import EQUIPMENT_DEFS
+        from main import DIFFICULTY_SETTINGS
+
+        self.ng_plus += 1
+
+        # Legendäre Items aus Inventar und Ausrüstung behalten
+        kept_equip = [
+            item for item in self.inventory["Equipment"]
+            if EQUIPMENT_DEFS.get(item["name"], {}).get("rarity") == "legendary"
+        ]
+        kept_gold = self.inventory["Gold"]
+        kept_achievements = getattr(self, "achievements", set())
+
+        # Reset auf Level-1-Werte
+        start_hp = DIFFICULTY_SETTINGS.get(self.difficulty, {}).get("start_hp", 30)
+        self.max_hp        = start_hp
+        self.hp            = start_hp
+        self.attack        = 10
+        self.min_attack    = 1
+        self.level         = 1
+        self.xp            = 0
+        self.xp_to_level_up = 30
+        self.energy        = 15
+        self.bleed_stacks  = 0
+        self.combat_modifiers = {"attack": 0}
+
+        # Ausrüstung zurücksetzen
+        self.equipment = {
+            "weapon": {"name": "Fäuste",       "attack": 0},
+            "chest":  {"name": "Lumpen",        "armor": 0},
+            "head":   {"name": "Kein Helm",     "armor": 0},
+            "feet":   {"name": "Keine Schuhe",  "armor": 0},
+        }
+        self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
+
+        # Inventar zurücksetzen, Gold + Legendaries behalten
+        self.inventory = {
+            "Consumables": {"Healing Potion": 2},
+            "Junk":        {},
+            "Gold":        kept_gold,
+            "Equipment":   kept_equip,
+        }
+
+        # Skills zurücksetzen
+        self.skill_points  = 0
+        self.skills        = set()
+        self.shield_ready  = False
+        self.shield_active = False
+
+        # Events und XP-Buff zurücksetzen
+        self.next_fight_xp_mult = 1.0
+        self.fights_until_event = 2
+
+        # Achievements behalten
+        self.achievements = kept_achievements
 
