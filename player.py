@@ -45,6 +45,11 @@ class Character:
         self.ng_plus      = 0
         self.achievements = set()
 
+        self.player_class        = "warrior"
+        self.class_ability_used  = False
+        self.block_next          = False
+        self.shadow_strike_ready = False
+
         self.stats = {
             "fights": 0,
             "kills": 0,
@@ -127,11 +132,14 @@ class Character:
 
     def reset_combat_modifiers(self):
         """Setzt alle temporären Kampfboni zurück. Nach jedem Kampf aufrufen."""
-        self.combat_modifiers = {"attack": 0}
-        self.stunned          = False
-        self.poison_stacks    = 0
-        self.armor_debuff     = 0
-        self.shield_active    = False
+        self.combat_modifiers    = {"attack": 0}
+        self.stunned             = False
+        self.poison_stacks       = 0
+        self.armor_debuff        = 0
+        self.shield_active       = False
+        self.block_next          = False
+        self.shadow_strike_ready = False
+        self.class_ability_used  = False
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in getattr(self, "skills", set()) else 0
@@ -192,30 +200,45 @@ class Character:
     def attack_target(self, target):
         raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
         skills      = getattr(self, "skills", set())
+        crit        = False
+        ignore_def  = False
 
-        # Kritischer Treffer: 15% Chance auf Doppelschaden
-        crit = "Kritischer Treffer" in skills and random.random() < 0.15
-        if crit:
+        # Aus dem Schatten (Schurke): garantierter Krit + ignoriert DEF
+        if getattr(self, "shadow_strike_ready", False):
+            self.shadow_strike_ready = False
             raw_damage *= 2
+            crit        = True
+            ignore_def  = True
+        else:
+            # Kritischer Treffer: 15% (+10% Schurke) Chance auf Doppelschaden
+            rogue_bonus = 0.10 if getattr(self, "player_class", "") == "rogue" else 0
+            base_crit   = 0.15 if "Kritischer Treffer" in skills else 0
+            if random.random() < (base_crit + rogue_bonus):
+                raw_damage *= 2
+                crit = True
 
-        real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
+        real_damage = raw_damage if ignore_def else self.apply_armor_reduction(raw_damage, target.get_total_armor())
         target.hp   = max(0, target.hp - real_damage)
+
+        crit_tag = " 💥 KRITISCH!" if crit else ""
 
         # Blutgier: 20% Lifesteal
         if "Blutgier" in skills and random.random() < 0.20:
             heal = max(1, real_damage // 4)
             self.hp = min(self.max_hp, self.hp + heal)
-            return f"{self.name} macht {real_damage} Schaden! {'💥 KRIT! ' if crit else ''}🩸 Blutgier +{heal} HP", real_damage
+            return f"{self.name} macht {real_damage} Schaden!{crit_tag} 🩸 Blutgier +{heal} HP", real_damage
 
-        crit_tag = " 💥 KRITISCH!" if crit else ""
         return f"{self.name} macht {real_damage} Schaden!{crit_tag}", real_damage
 
     def try_flee(self):
+        if getattr(self, "player_class", "") == "rogue":
+            return random.random() < 0.70
         return random.randint(1, 20) >= 10
 
     def regenerate(self):
         skills      = getattr(self, "skills", set())
-        energy_gain = self.energy_regen + (2 if "Energiefluss" in skills else 0)
+        mage_bonus  = 3 if getattr(self, "player_class", "") == "mage" else 0
+        energy_gain = self.energy_regen + (2 if "Energiefluss" in skills else 0) + mage_bonus
         self.energy = min(self.max_energy, self.energy + energy_gain)
         msgs = [f"{self.name} regeneriert {energy_gain} Energie."]
         if "Regeneration" in skills:
@@ -225,8 +248,9 @@ class Character:
         return " ".join(msgs)
 
     def heavenstrike(self, target):
-        fokus = 5 if "Fokus" in getattr(self, "skills", set()) else 0
-        cost = max(5, 20 - fokus)
+        fokus      = 5 if "Fokus" in getattr(self, "skills", set()) else 0
+        mage_red   = 5 if getattr(self, "player_class", "") == "mage" else 0
+        cost = max(5, 20 - fokus - mage_red)
         if self.energy >= cost:
             raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack()) + 5
             real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
@@ -236,8 +260,9 @@ class Character:
         return f"{self.name} hat nicht genug Energie für einen Himmelsschlag!"
 
     def whirlwind(self, enemy_list):
-        fokus = 5 if "Fokus" in getattr(self, "skills", set()) else 0
-        cost = max(5, 15 - fokus)
+        fokus    = 5 if "Fokus" in getattr(self, "skills", set()) else 0
+        mage_red = 5 if getattr(self, "player_class", "") == "mage" else 0
+        cost = max(5, 15 - fokus - mage_red)
         if self.energy >= cost:
             self.energy -= cost
             results = []
@@ -250,8 +275,9 @@ class Character:
         return "Nicht genug Energie!"
 
     def cleave(self, target):
-        fokus = 5 if "Fokus" in getattr(self, "skills", set()) else 0
-        cost = max(5, 10 - fokus)
+        fokus    = 5 if "Fokus" in getattr(self, "skills", set()) else 0
+        mage_red = 5 if getattr(self, "player_class", "") == "mage" else 0
+        cost = max(5, 10 - fokus - mage_red)
         if self.energy >= cost:
             self.energy -= cost
             raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
@@ -377,4 +403,8 @@ class Character:
 
         # Achievements behalten
         self.achievements = kept_achievements
+
+        # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
+        from classes import apply_class
+        apply_class(self, self.player_class)
 
