@@ -35,6 +35,8 @@ class Character:
         self.shield_ready  = False
         self.shield_active = False
 
+        self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
+
         self.stats = {
             "fights": 0,
             "kills": 0,
@@ -111,8 +113,9 @@ class Character:
 
     # ── Stats ────────────────────────────────────────────────
     def get_total_attack(self):
-        skill_bonus = 2 if "Scharfe Klingen" in getattr(self, "skills", set()) else 0
-        return self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus
+        skill_bonus   = 2 if "Scharfe Klingen" in getattr(self, "skills", set()) else 0
+        upgrade_bonus = getattr(self, "equipment_upgrades", {}).get("weapon", 0) * 2
+        return self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus + upgrade_bonus
 
     def reset_combat_modifiers(self):
         """Setzt alle temporären Kampfboni zurück. Nach jedem Kampf aufrufen."""
@@ -120,11 +123,14 @@ class Character:
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in getattr(self, "skills", set()) else 0
+        upgrades    = getattr(self, "equipment_upgrades", {})
+        upgrade_def = upgrades.get("chest", 0) + upgrades.get("head", 0) + upgrades.get("feet", 0)
         return (self.armor
                 + self.equipment["chest"]["armor"]
                 + self.equipment["head"]["armor"]
                 + self.equipment["feet"]["armor"]
-                + skill_bonus)
+                + skill_bonus
+                + upgrade_def)
 
     def get_effective_min_attack(self) -> int:
         weapon_bonus = self.equipment["weapon"]["attack"] // 2

@@ -24,6 +24,7 @@ def save_game(player):
         "skill_points": player.skill_points,
         "skills": list(player.skills),
         "shield_ready": player.shield_ready,
+        "equipment_upgrades": player.equipment_upgrades,
         "fights_until_event": player.fights_until_event,
         "next_fight_xp_mult": player.next_fight_xp_mult,
     }
@@ -58,6 +59,8 @@ def load_game():
     player.skills              = set(data.get("skills", []))
     player.shield_ready        = data.get("shield_ready", False)
     player.shield_active       = False
+    default_upgrades           = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
+    player.equipment_upgrades  = {**default_upgrades, **data.get("equipment_upgrades", {})}
     print("📂 Spielstand geladen!")
     return player
 
