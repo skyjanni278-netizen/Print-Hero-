@@ -2,10 +2,14 @@ import random
 from ui.utils import clear_screen, print_header
 
 ROOM_ICONS = {
-    "combat":   ("⚔️ ", "Kampf",     "Gegner lauern im nächsten Raum."),
-    "event":    ("🎲 ", "Ereignis",  "Ein unbekanntes Ereignis erwartet dich."),
-    "miniboss": ("💀 ", "Mini-Boss", "Ein mächtiger Einzelgegner blockiert den Weg."),
-    "boss":     ("🔥 ", "Boss",      "Der Anführer dieses Dungeons wartet auf dich!"),
+    "combat":   ("⚔️ ", "Kampf",        "Gegner lauern im nächsten Raum."),
+    "event":    ("🎲 ", "Ereignis",     "Ein unbekanntes Ereignis erwartet dich."),
+    "elite":    ("💪 ", "Elite-Gegner", "Ein starker Krieger versperrt den Weg."),
+    "shrine":   ("🕯️ ", "Schrein",      "Ein uralter Schrein verbreitet mystische Energie."),
+    "trap":     ("⚠️ ", "Falle",        "Dieser Raum sieht gefährlich aus..."),
+    "empty":    ("🌫️ ", "Leerer Raum",  "Stille. Was auch immer hier war, ist verschwunden."),
+    "miniboss": ("💀 ", "Mini-Boss",    "Ein mächtiger Einzelgegner blockiert den Weg."),
+    "boss":     ("🔥 ", "Boss",         "Der Anführer dieses Dungeons wartet auf dich!"),
 }
 
 
@@ -14,8 +18,8 @@ def _generate_rooms(player_level: int) -> list:
     middle = []
     for _ in range(n - 1):
         rtype = random.choices(
-            ["combat", "event", "miniboss"],
-            weights=[65, 20, 15],
+            ["combat", "event", "elite", "shrine", "trap", "empty", "miniboss"],
+            weights=[40, 10, 15, 12, 12, 11, 10],
             k=1
         )[0]
         middle.append(rtype)
@@ -56,6 +60,111 @@ def _room_loot(player, enemy_group) -> tuple:
     player.xp += total_xp
     player.check_level_up()
     return loot_lines, total_xp
+
+
+def _shrine_room(player):
+    clear_screen()
+    print_header("🕯️  Heiliger Schrein")
+    print("Eine göttliche Energie umgibt diesen uralten Schrein.")
+    print("Wähle eine Segnung:\n")
+    heal_amt   = max(5, player.max_hp // 4)
+    energy_gap = player.max_energy - player.energy
+    print(f"  [H] Heilsegen     — +{heal_amt} HP")
+    print(f"  [E] Energiesegen  — +{energy_gap} Energie (vollständig auffüllen)")
+    print(f"  [K] Kampfsegen    — +50% XP im nächsten Kampf")
+    print(f"  [F] Fluch wagen   — unbekannter Effekt (gut oder schlecht)")
+    choice = input("\nDeine Wahl: ").lower()
+    if choice == "e":
+        player.energy = player.max_energy
+        print(f"\nKraft strömt durch dich. +{energy_gap} Energie  (Energie: {player.energy}/{player.max_energy})")
+    elif choice == "k":
+        player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.5)
+        print("\nEin Kampfgeist erfasst dich. +50% XP im nächsten Kampf!")
+    elif choice == "f":
+        roll = random.random()
+        if roll < 0.35:
+            hp_gain = max(5, player.max_hp // 3)
+            player.hp = min(player.max_hp, player.hp + hp_gain)
+            player.energy = player.max_energy
+            print(f"\nDunkle Energie wandelt sich ins Licht! +{hp_gain} HP, volle Energie!")
+        elif roll < 0.65:
+            from content.loot_tables import roll_loot, apply_loot
+            items = roll_loot(rank=3, rolls=2)
+            msgs  = apply_loot(player, items)
+            print("\nDer Schrein öffnet eine verborgene Kammer!")
+            for m in msgs:
+                print(m)
+        else:
+            dmg = random.randint(8, 15)
+            player.hp = max(1, player.hp - dmg)
+            print(f"\nDer Schrein reagiert feindselig! -{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+    else:
+        healed = min(heal_amt, player.max_hp - player.hp)
+        player.hp = min(player.max_hp, player.hp + heal_amt)
+        print(f"\nDer Schrein strahlt warm. +{healed} HP  (HP: {player.hp}/{player.max_hp})")
+    input("\n(ENTER)")
+
+
+def _trap_room(player):
+    trap_names = [
+        "Pfeilschießstand",
+        "Druckplatten mit Klingen",
+        "Klingenpendel",
+        "Giftnebel-Falle",
+    ]
+    trap_name   = random.choice(trap_names)
+    energy_cost = 8
+    can_dodge   = player.energy >= energy_cost
+
+    clear_screen()
+    print_header(f"⚠️  Falle: {trap_name}")
+    print(f"Du betrittst den Raum und erkennst zu spät: {trap_name}!\n")
+    print(f"  [A] Ausweichen  — kostet {energy_cost} Energie  {'[✓]' if can_dodge else '[✗ zu wenig Energie]'}")
+    print(f"  [T] Durchlaufen — nimmst 8–18 Schaden")
+    choice = input("\nDeine Wahl: ").lower()
+
+    if choice == "a" and can_dodge:
+        player.energy -= energy_cost
+        print(f"\nDu rollst geschickt durch die Falle! -{energy_cost} Energie  (Energie: {player.energy}/{player.max_energy})")
+    elif choice == "a":
+        dmg = random.randint(4, 9)
+        player.hp = max(1, player.hp - dmg)
+        print(f"\nDu willst ausweichen, aber deine Energie reicht nicht! -{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+    else:
+        dmg = random.randint(8, 18)
+        player.hp = max(1, player.hp - dmg)
+        print(f"\nDu läufst mitten in die Falle! -{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+    input("\n(ENTER)")
+
+
+def _empty_room(player):
+    flavors = [
+        "Staubige Stille. Hier war einmal etwas — jetzt nur noch Asche.",
+        "Die Wände tragen alte Kratzer. Jemand war hier, lange vor dir.",
+        "Leere Kisten, zerbrochene Fackeln. Andere waren schneller.",
+        "Ein verlassenes Lager. Die Glut ist noch warm.",
+        "Ein langer Seufzer hallt durch den leeren Raum.",
+    ]
+    clear_screen()
+    print_header("🌫️  Leerer Raum")
+    print(random.choice(flavors))
+    print()
+    roll = random.random()
+    if roll < 0.25:
+        from content.loot_tables import roll_loot, apply_loot
+        items = roll_loot(rank=1, rolls=2)
+        msgs  = apply_loot(player, items)
+        print("Du durchsuchst den Raum sorgfältig — und wirst belohnt!")
+        for m in msgs:
+            print(m)
+    elif roll < 0.45:
+        gold = random.randint(3, 15)
+        player.inventory["Gold"] += gold
+        player.stats["gold_earned"] += gold
+        print(f"Zwischen den Trümmern glitzert etwas. +{gold} Gold!")
+    else:
+        print("Du findest nichts Nützliches.")
+    input("\n(ENTER)")
 
 
 def _between_room_menu(player, next_room_type: str) -> str:
@@ -165,11 +274,48 @@ def run_dungeon(player) -> str:
             print(f"\n+{xp} XP")
             input("\n(ENTER)")
 
+        # ── Elite-Raum ────────────────────────────────────────
+        elif room_type == "elite":
+            elite = _create_scaled_enemy(player, forced_rank=2)
+            print(f"--- 💪 {elite.name} stellt sich dir entgegen! ---")
+            input("Bereit machen... (ENTER)")
+            result = combat(player, [elite])
+            player.reset_combat_modifiers()
+            if result == "defeat":
+                return "defeated"
+            if result == "fled":
+                return "fled"
+            clear_screen()
+            print_header(f"Raum {room_num} geleert!")
+            loot_lines, xp = _room_loot(player, [elite])
+            if loot_lines:
+                print("Beute:")
+                for line in loot_lines:
+                    print(line)
+            print(f"\n+{xp} XP")
+            input("\n(ENTER)")
+
         # ── Ereignis-Raum ─────────────────────────────────────
         elif room_type == "event":
             trigger_event(player)
             if not player.is_alive():
                 return "defeated"
+
+        # ── Schrein-Raum ──────────────────────────────────────
+        elif room_type == "shrine":
+            _shrine_room(player)
+            if not player.is_alive():
+                return "defeated"
+
+        # ── Fallen-Raum ───────────────────────────────────────
+        elif room_type == "trap":
+            _trap_room(player)
+            if not player.is_alive():
+                return "defeated"
+
+        # ── Leerer Raum ───────────────────────────────────────
+        elif room_type == "empty":
+            _empty_room(player)
 
         # ── Mini-Boss-Raum ────────────────────────────────────
         elif room_type == "miniboss":
