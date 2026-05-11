@@ -1,11 +1,11 @@
 import random
-from player import Character
-from utils import clear_screen, print_header
-from combat import generate_enemy_group, combat, collect_loot
-from pause import camp_menu
-from save import load_game, save_exists
-from events import trigger_event
-from achievements import check_all
+from core.player import Character
+from ui.utils import clear_screen, print_header
+from core.combat import generate_enemy_group, combat, collect_loot
+from ui.pause import camp_menu
+from core.save import load_game, save_exists
+from systems.events import trigger_event
+from systems.achievements import check_all
 from config import DIFFICULTY_SETTINGS
 
 
@@ -22,10 +22,10 @@ def _choose_difficulty():
 
 
 def _new_game():
-    from classes import choose_class, apply_class
+    from content.classes import choose_class, apply_class
     diff     = _choose_difficulty()
     class_id = choose_class()
-    from classes import CLASS_DEFS
+    from content.classes import CLASS_DEFS
     cdef     = CLASS_DEFS[class_id]
     player   = Character("Hero", hp=cdef["start_hp"], attack=cdef["start_atk"])
     player.difficulty = diff
@@ -34,8 +34,7 @@ def _new_game():
 
 
 def _offer_ng_plus(player):
-    from utils import clear_screen, print_header
-    from loot_tables import EQUIPMENT_DEFS
+    from content.loot_tables import EQUIPMENT_DEFS
     clear_screen()
     print_header("⭐ New Game+ verfügbar!")
     ng_next = player.ng_plus + 1
@@ -67,7 +66,7 @@ def _offer_ng_plus(player):
 
 
 def _handle_victory(player, enemy_group):
-    from loot_tables import EQUIPMENT_DEFS
+    from content.loot_tables import EQUIPMENT_DEFS
     clear_screen()
     print_header("Kampf-Ergebnis")
 

@@ -1,6 +1,6 @@
 import json
 import os
-from player import Character
+from core.player import Character
 
 SAVE_FILE = "savegame.json"
 

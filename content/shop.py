@@ -1,5 +1,5 @@
-from utils import clear_screen, print_header
-from player import MAX_INVENTORY_SLOTS
+from ui.utils import clear_screen, print_header
+from core.player import MAX_INVENTORY_SLOTS
 
 
 SHOP_CATALOGUE = [
@@ -45,7 +45,7 @@ def get_shop_items(player_level: int) -> list:
 
 
 def get_next_unlock(player_level: int) -> dict:
-    from loot_tables import EQUIPMENT_DEFS
+    from content.loot_tables import EQUIPMENT_DEFS
     unlocks = {}
     for item in SHOP_CATALOGUE:
         min_lvl = item.get("min_level", 1)
@@ -64,7 +64,7 @@ def get_next_unlock(player_level: int) -> dict:
 
 
 def shop_menu(player):
-    from loot_tables import CONSUMABLE_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import CONSUMABLE_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
 
     SECTION_ORDER = [
         ("💊 Verbrauchsgegenstände", "consumable", None),

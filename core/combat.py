@@ -1,8 +1,8 @@
 import random
-from monsters import (Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf,
+from content.monsters import (Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf,
                        VenomSpider, Assassin, IceWitch, StoneGolem, DarkKnight, FireDemon, roll_rank)
-from utils import clear_screen, print_header
-from loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
+from ui.utils import clear_screen, print_header
+from content.loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
 
 
 def generate_enemy_group(player):
@@ -143,7 +143,7 @@ def combat(player, enemy_list):
         cost_c = max(5, 10 - total_red)
 
         # Klassen-Fähigkeit
-        from classes import CLASS_DEFS
+        from content.classes import CLASS_DEFS
         pclass       = player.player_class
         cdef         = CLASS_DEFS.get(pclass, {})
         ability_used = player.class_ability_used

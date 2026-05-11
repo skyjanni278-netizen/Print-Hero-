@@ -1,4 +1,4 @@
-from utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header
 
 SKILL_TREE = {
     # Kampf-Baum

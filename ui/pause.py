@@ -1,7 +1,7 @@
-from utils import clear_screen, print_header
-from save import save_game
-from shop import shop_menu
-from player import MAX_INVENTORY_SLOTS
+from ui.utils import clear_screen, print_header
+from core.save import save_game
+from content.shop import shop_menu
+from core.player import MAX_INVENTORY_SLOTS
 
 
 def camp_menu(player):
@@ -16,7 +16,7 @@ def camp_menu(player):
         h = player.equipment['head']
         f = player.equipment['feet']
         from config import DIFFICULTY_SETTINGS
-        from classes import CLASS_DEFS
+        from content.classes import CLASS_DEFS
         diff_label  = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
         ng          = getattr(player, "ng_plus", 0)
         ng_tag      = f" | ⭐ NG+{ng}" if ng > 0 else ""
@@ -52,10 +52,10 @@ def camp_menu(player):
         elif choice == 'k':
             shop_menu(player)
         elif choice == 'f':
-            from skilltree import skill_menu
+            from systems.skilltree import skill_menu
             skill_menu(player)
         elif choice == 'e':
-            from achievements import achievements_menu
+            from systems.achievements import achievements_menu
             achievements_menu(player)
         elif choice == 't':
             stats_menu(player)
@@ -153,7 +153,7 @@ def upgrade_menu(player):
 
 
 def _equip_line(item):
-    from loot_tables import EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import EQUIPMENT_DEFS, RARITY_LABEL
     edef    = EQUIPMENT_DEFS.get(item["name"], {})
     emoji   = edef.get("emoji", "⚔️")
     rarity  = edef.get("rarity", "common")
@@ -169,7 +169,7 @@ def _equip_line(item):
 
 
 def inventory_menu(player):
-    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
     while True:
         clear_screen()
         print_header("Dein Inventar")
@@ -240,7 +240,7 @@ def inventory_menu(player):
 
 
 def sell_menu(player):
-    from loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
 
     while True:
         clear_screen()

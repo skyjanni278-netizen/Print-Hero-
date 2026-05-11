@@ -84,7 +84,7 @@ class Character:
         return self.inventory_count() < MAX_INVENTORY_SLOTS
 
     def add_consumable(self, key: str, amount: int) -> int:
-        from loot_tables import CONSUMABLE_DEFS
+        from content.loot_tables import CONSUMABLE_DEFS
         cdef      = CONSUMABLE_DEFS.get(key, {})
         max_stack = cdef.get("max_stack", 99)
 
@@ -104,7 +104,7 @@ class Character:
         return added
 
     def can_add_consumable(self, key: str) -> bool:
-        from loot_tables import CONSUMABLE_DEFS
+        from content.loot_tables import CONSUMABLE_DEFS
         cdef      = CONSUMABLE_DEFS.get(key, {})
         max_stack = cdef.get("max_stack", 99)
         current   = self.inventory.get("Consumables", {}).get(key, 0)
@@ -299,7 +299,7 @@ class Character:
         return ""
 
     def use_consumable(self, key: str) -> str:
-        from loot_tables import CONSUMABLE_DEFS
+        from content.loot_tables import CONSUMABLE_DEFS
         consumables = self.inventory.get("Consumables", {})
         if consumables.get(key, 0) <= 0:
             return f"Du hast kein(e) {key}!"
@@ -342,7 +342,7 @@ class Character:
         return f"{emoji} {self.name} benutzt {key}."
 
     def start_ng_plus(self):
-        from loot_tables import EQUIPMENT_DEFS
+        from content.loot_tables import EQUIPMENT_DEFS
         from config import DIFFICULTY_SETTINGS
 
         self.ng_plus += 1
@@ -399,6 +399,6 @@ class Character:
         self.achievements = kept_achievements
 
         # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
-        from classes import apply_class
+        from content.classes import apply_class
         apply_class(self, self.player_class)
 

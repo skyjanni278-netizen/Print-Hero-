@@ -1,4 +1,4 @@
-from utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header
 
 CLASS_DEFS = {
     "warrior": {
@@ -59,7 +59,7 @@ def choose_class() -> str:
 
 
 def apply_class(player, class_id: str):
-    from loot_tables import EQUIPMENT_DEFS
+    from content.loot_tables import EQUIPMENT_DEFS
     c = CLASS_DEFS.get(class_id)
     if not c:
         return
