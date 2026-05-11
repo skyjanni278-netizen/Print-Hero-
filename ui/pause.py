@@ -29,6 +29,14 @@ def camp_menu(player):
         print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")
         print(f"Helm:    {h['name']} (+{h['armor']} DEF)")
         print(f"Schuhe:  {f['name']} (+{f['armor']} DEF)")
+        from content.loot_tables import get_active_sets
+        active_sets = get_active_sets(player)
+        if active_sets:
+            parts = []
+            for sname, sdef, count, bonus in active_sets:
+                star = "✅" if count == 4 else f"{count}/4"
+                parts.append(f"{sdef['emoji']} {sname} {star}: {bonus['desc']}")
+            print("Set:     " + "  |  ".join(parts))
         print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}")
         print("-" * 30)
         print("[I] Inventar & Ausrüsten")
@@ -153,7 +161,7 @@ def upgrade_menu(player):
 
 
 def _equip_line(item):
-    from content.loot_tables import EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import EQUIPMENT_DEFS, RARITY_LABEL, SET_DEFS
     edef    = EQUIPMENT_DEFS.get(item["name"], {})
     emoji   = edef.get("emoji", "⚔️")
     rarity  = edef.get("rarity", "common")
@@ -165,11 +173,16 @@ def _equip_line(item):
         stat = f"ATK +{item['attack']}"
     else:
         stat = f"DEF +{item['armor']}"
-    return f"{rbadge}{emoji} {item['name']:<24} {stat:<10} [{rlabel}] ({slot_label})"
+    set_tag = ""
+    for sname, sdef in SET_DEFS.items():
+        if item["name"] in sdef["pieces"]:
+            set_tag = f" {sdef['emoji']}{sname}"
+            break
+    return f"{rbadge}{emoji} {item['name']:<24} {stat:<10} [{rlabel}] ({slot_label}){set_tag}"
 
 
 def inventory_menu(player):
-    from content.loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
+    from content.loot_tables import CONSUMABLE_DEFS, JUNK_DEFS, EQUIPMENT_DEFS, RARITY_LABEL, get_active_sets
     while True:
         clear_screen()
         print_header("Dein Inventar")
@@ -180,6 +193,11 @@ def inventory_menu(player):
         h = player.equipment['head']
         f = player.equipment['feet']
         print(f"Angelegt: {player.equipment['weapon']['name']} | {c['name']} | {h['name']} | {f['name']}")
+        active_sets = get_active_sets(player)
+        if active_sets:
+            for sname, sdef, count, bonus in active_sets:
+                star = "✅ VOLL" if count == 4 else f"{count}/4"
+                print(f"  {sdef['emoji']} {sname} {star} → {bonus['desc']}")
         print()
 
         # --- Consumables ---
