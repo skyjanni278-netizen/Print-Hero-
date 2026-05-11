@@ -2,9 +2,11 @@ import json
 import os
 from core.player import Character
 
-SAVE_FILE = "savegame.json"
+SAVE_DIR  = "saves"
+SAVE_FILE = os.path.join(SAVE_DIR, "savegame.json")
 
 def save_game(player):
+    os.makedirs(SAVE_DIR, exist_ok=True)
     data = {
         "name": player.name,
         "hp": player.hp,
@@ -30,15 +32,17 @@ def save_game(player):
         "ng_plus": player.ng_plus,
         "achievements": list(getattr(player, "achievements", set())),
         "player_class": getattr(player, "player_class", "warrior"),
+        "current_zone": getattr(player, "current_zone", "wald"),
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
     print("💾 Spielstand gespeichert!")
 
 def load_game():
-    if not os.path.exists(SAVE_FILE):
+    path = SAVE_FILE if os.path.exists(SAVE_FILE) else "savegame.json"
+    if not os.path.exists(path):
         return None
-    with open(SAVE_FILE, "r") as f:
+    with open(path, "r") as f:
         data = json.load(f)
     player = Character(data["name"], data["max_hp"], data["attack"])
     player.hp             = data["hp"]
@@ -72,6 +76,7 @@ def load_game():
     player.ng_plus             = data.get("ng_plus", 0)
     player.achievements        = set(data.get("achievements", []))
     player.player_class        = data.get("player_class", "warrior")
+    player.current_zone        = data.get("current_zone", "wald")
     player.class_ability_used  = False
     player.block_next          = False
     player.shadow_strike_ready = False
@@ -79,4 +84,4 @@ def load_game():
     return player
 
 def save_exists():
-    return os.path.exists(SAVE_FILE)
+    return os.path.exists(SAVE_FILE) or os.path.exists("savegame.json")
