@@ -51,9 +51,18 @@ EQUIPMENT_DEFS = {
     "Runenhelm":            {"slot": "head",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 90,  "desc": "Runen leuchten schwach"},
     "Drachenkrone":         {"slot": "head",   "armor": 9,   "rarity": "epic",      "emoji": "👑",  "sell": 140, "desc": "Krone eines Drachenfürsten"},
     "Krone des Ewigen":     {"slot": "head",   "armor": 13,  "rarity": "legendary", "emoji": "🌟",  "sell": 300, "desc": "Trägt, wer Ewigkeit verdient"},
+    # ── SCHATTEN-SET ─────────────────────────────────────────
+    "Schattendolch":        {"slot": "weapon", "attack": 7,  "rarity": "uncommon",  "emoji": "🌑",  "sell": 50,  "desc": "Schnell und lautlos"},
+    "Schattenrüstung":      {"slot": "chest",  "armor": 8,   "rarity": "rare",      "emoji": "🌑",  "sell": 85,  "desc": "Gewobene Dunkelheit"},
+    "Schattenhelm":         {"slot": "head",   "armor": 5,   "rarity": "rare",      "emoji": "🌑",  "sell": 70,  "desc": "Verbirgt das Gesicht"},
+    "Schattenstiefel":      {"slot": "feet",   "armor": 3,   "rarity": "uncommon",  "emoji": "🌑",  "sell": 32,  "desc": "Lautlose Sohlen"},
+    # ── EXTRA WAFFEN ─────────────────────────────────────────
+    "Sturmklinge":          {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Züngelnde Blitze"},
+    "Knochensense":         {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Aus Todenochen gefertigt"},
     # ── SCHUHE ───────────────────────────────────────────────
     "Lederstiefel":         {"slot": "feet",   "armor": 1,   "rarity": "common",    "emoji": "👞",  "sell": 10,  "desc": "Einfache Lederschuhe"},
     "Eisenstiefel":         {"slot": "feet",   "armor": 2,   "rarity": "common",    "emoji": "🥾",  "sell": 20,  "desc": "Schwere Eisensohlen"},
+    "Kriegsstiefel":        {"slot": "feet",   "armor": 3,   "rarity": "uncommon",  "emoji": "🥾",  "sell": 35,  "desc": "Gehärtete Kriegssohlen"},
     "Schnellläuferstiefel": {"slot": "feet",   "armor": 4,   "rarity": "uncommon",  "emoji": "💨",  "sell": 42,  "desc": "Leicht und wendig"},
     "Runenstiefel":         {"slot": "feet",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 85,  "desc": "Mit Schutzrunen versehen"},
     "Drachenklauen":        {"slot": "feet",   "armor": 9,   "rarity": "epic",      "emoji": "🐉",  "sell": 130, "desc": "Krallen eines Drachen"},
@@ -68,6 +77,85 @@ RARITY_LABEL = {
     "epic":      ("Episch",      "🟪"),
     "legendary": ("Legendär",    "🟨"),
 }
+
+# Ausrüstungs-Sets: 4 Teile je Set, Boni bei 2/3/4 angelegten Teilen
+SET_DEFS = {
+    "Leder-Set": {
+        "emoji": "🥋",
+        "pieces": {"Kurzschwert", "Lederrüstung", "Lederkappe", "Lederstiefel"},
+        "bonuses": {
+            2: {"desc": "+2 DEF",         "atk": 0, "def": 2},
+            3: {"desc": "+2 DEF +1 ATK",  "atk": 1, "def": 2},
+            4: {"desc": "+4 DEF +3 ATK",  "atk": 3, "def": 4},
+        },
+    },
+    "Eisen-Set": {
+        "emoji": "⛓️",
+        "pieces": {"Langschwert", "Kettenhemd", "Eisenhelm", "Eisenstiefel"},
+        "bonuses": {
+            2: {"desc": "+3 DEF",         "atk": 0, "def": 3},
+            3: {"desc": "+3 DEF +2 ATK",  "atk": 2, "def": 3},
+            4: {"desc": "+6 DEF +4 ATK",  "atk": 4, "def": 6},
+        },
+    },
+    "Stahl-Set": {
+        "emoji": "🔩",
+        "pieces": {"Kriegshammer", "Plattenpanzer", "Stahlhelm", "Schnellläuferstiefel"},
+        "bonuses": {
+            2: {"desc": "+4 DEF",         "atk": 0, "def": 4},
+            3: {"desc": "+4 DEF +3 ATK",  "atk": 3, "def": 4},
+            4: {"desc": "+8 DEF +6 ATK",  "atk": 6, "def": 8},
+        },
+    },
+    "Schatten-Set": {
+        "emoji": "🌑",
+        "pieces": {"Schattendolch", "Schattenrüstung", "Schattenhelm", "Schattenstiefel"},
+        "bonuses": {
+            2: {"desc": "+4 DEF",         "atk": 0, "def": 4},
+            3: {"desc": "+4 DEF +4 ATK",  "atk": 4, "def": 4},
+            4: {"desc": "+8 DEF +8 ATK",  "atk": 8, "def": 8},
+        },
+    },
+    "Runen-Set": {
+        "emoji": "🌀",
+        "pieces": {"Runenschwert", "Runenrüstung", "Runenhelm", "Runenstiefel"},
+        "bonuses": {
+            2: {"desc": "+6 DEF",          "atk": 0, "def": 6},
+            3: {"desc": "+6 DEF +4 ATK",   "atk": 4, "def": 6},
+            4: {"desc": "+12 DEF +8 ATK",  "atk": 8, "def": 12},
+        },
+    },
+    "Drachen-Set": {
+        "emoji": "🐉",
+        "pieces": {"Drachenzahn", "Drachenschuppen", "Drachenkrone", "Drachenklauen"},
+        "bonuses": {
+            2: {"desc": "+8 DEF",           "atk": 0,  "def": 8},
+            3: {"desc": "+8 DEF +6 ATK",    "atk": 6,  "def": 8},
+            4: {"desc": "+15 DEF +12 ATK",  "atk": 12, "def": 15},
+        },
+    },
+    "Licht-Set": {
+        "emoji": "✨",
+        "pieces": {"Göttliche Klinge", "Rüstung des Lichts", "Krone des Ewigen", "Stiefel der Ewigkeit"},
+        "bonuses": {
+            2: {"desc": "+12 DEF",          "atk": 0,  "def": 12},
+            3: {"desc": "+12 DEF +10 ATK",  "atk": 10, "def": 12},
+            4: {"desc": "+20 DEF +18 ATK",  "atk": 18, "def": 20},
+        },
+    },
+}
+
+
+def get_active_sets(player) -> list:
+    """Gibt Liste von (set_name, sdef, count, bonus) für alle aktiven Sets (>= 2 Teile) zurück."""
+    equipped = {item["name"] for item in player.equipment.values()}
+    result = []
+    for sname, sdef in SET_DEFS.items():
+        count = len(equipped & sdef["pieces"])
+        bonus = sdef["bonuses"].get(count)
+        if bonus:
+            result.append((sname, sdef, count, bonus))
+    return result
 
 LOOT_POOL = {
     # -- COMMON
@@ -95,33 +183,40 @@ LOOT_POOL = {
         {"name": "Wolfspelz",       "type": "junk",         "key": "Wolfspelz",       "min": 1, "max": 2},
         {"name": "Trollfell",       "type": "junk",         "key": "Trollfell",       "min": 1, "max": 1},
         {"name": "Banditen-Abzeichen", "type": "junk",      "key": "Banditen-Abzeichen", "min": 1, "max": 1},
-        {"name": "Eisenhelm",       "type": "equipment",   "key": "Eisenhelm"},
-        {"name": "Langschwert",     "type": "equipment",   "key": "Langschwert"},
-        {"name": "Kriegshammer",    "type": "equipment",   "key": "Kriegshammer"},
-        {"name": "Kettenhemd",      "type": "equipment",   "key": "Kettenhemd"},
-        {"name": "Plattenpanzer",   "type": "equipment",   "key": "Plattenpanzer"},
+        {"name": "Eisenhelm",            "type": "equipment", "key": "Eisenhelm"},
+        {"name": "Langschwert",          "type": "equipment", "key": "Langschwert"},
+        {"name": "Kriegshammer",         "type": "equipment", "key": "Kriegshammer"},
+        {"name": "Kettenhemd",           "type": "equipment", "key": "Kettenhemd"},
+        {"name": "Plattenpanzer",        "type": "equipment", "key": "Plattenpanzer"},
         {"name": "Schnellläuferstiefel", "type": "equipment", "key": "Schnellläuferstiefel"},
+        {"name": "Schattendolch",        "type": "equipment", "key": "Schattendolch"},
+        {"name": "Schattenstiefel",      "type": "equipment", "key": "Schattenstiefel"},
+        {"name": "Kriegsstiefel",        "type": "equipment", "key": "Kriegsstiefel"},
     ],
     # -- RARE
     "rare": [
         {"name": "Gold",            "type": "gold",        "key": "Gold",            "min": 25, "max": 60},
         {"name": "Elixier",         "type": "consumable",  "key": "Elixier",         "min": 1, "max": 1},
         {"name": "Energie-Kristall","type": "consumable",  "key": "Energie-Kristall","min": 1, "max": 2},
-        {"name": "Stahlhelm",       "type": "equipment",   "key": "Stahlhelm"},
-        {"name": "Runenschwert",    "type": "equipment",   "key": "Runenschwert"},
-        {"name": "Runenrüstung",    "type": "equipment",   "key": "Runenrüstung"},
-        {"name": "Runenhelm",       "type": "equipment",   "key": "Runenhelm"},
-        {"name": "Runenstiefel",    "type": "equipment",   "key": "Runenstiefel"},
+        {"name": "Stahlhelm",       "type": "equipment", "key": "Stahlhelm"},
+        {"name": "Runenschwert",    "type": "equipment", "key": "Runenschwert"},
+        {"name": "Runenrüstung",    "type": "equipment", "key": "Runenrüstung"},
+        {"name": "Runenhelm",       "type": "equipment", "key": "Runenhelm"},
+        {"name": "Runenstiefel",    "type": "equipment", "key": "Runenstiefel"},
+        {"name": "Sturmklinge",     "type": "equipment", "key": "Sturmklinge"},
+        {"name": "Schattenrüstung", "type": "equipment", "key": "Schattenrüstung"},
+        {"name": "Schattenhelm",    "type": "equipment", "key": "Schattenhelm"},
     ],
     # -- EPIC
     "epic": [
         {"name": "Gold",            "type": "gold",       "key": "Gold",            "min": 60, "max": 120},
         {"name": "Phönixfeder",     "type": "consumable", "key": "Phönixfeder",     "min": 1, "max": 1},
         {"name": "Stärketrank",     "type": "consumable", "key": "Stärketrank",     "min": 1, "max": 2},
-        {"name": "Drachenzahn",     "type": "equipment",  "key": "Drachenzahn"},
-        {"name": "Drachenschuppen", "type": "equipment",  "key": "Drachenschuppen"},
-        {"name": "Drachenkrone",    "type": "equipment",  "key": "Drachenkrone"},
-        {"name": "Drachenklauen",   "type": "equipment",  "key": "Drachenklauen"},
+        {"name": "Drachenzahn",     "type": "equipment", "key": "Drachenzahn"},
+        {"name": "Drachenschuppen", "type": "equipment", "key": "Drachenschuppen"},
+        {"name": "Drachenkrone",    "type": "equipment", "key": "Drachenkrone"},
+        {"name": "Drachenklauen",   "type": "equipment", "key": "Drachenklauen"},
+        {"name": "Knochensense",    "type": "equipment", "key": "Knochensense"},
     ],
     # -- LEGENDARY  (sehr seltener Pool)
     "legendary": [
