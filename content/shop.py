@@ -5,7 +5,7 @@ from core.player import MAX_INVENTORY_SLOTS
 SHOP_CATALOGUE = [
     # ── Consumables ───────────────────────────────────────────
     {"name": "Healing Potion",   "type": "consumable", "key": "Healing Potion",   "amount": 1, "price":  15, "desc": "Heilt 10 HP",         "min_level": 1},
-    {"name": "Antidot",          "type": "consumable", "key": "Antidot",          "amount": 1, "price":  12, "desc": "Entfernt Blutung",     "min_level": 1},
+    {"name": "Antidot",          "type": "consumable", "key": "Antidot",          "amount": 1, "price":  12, "desc": "Entfernt Blutung & Gift", "min_level": 1},
     {"name": "Energie-Kristall", "type": "consumable", "key": "Energie-Kristall", "amount": 1, "price":  25, "desc": "+15 Energie",          "min_level": 1},
     {"name": "Großes Heiltrank", "type": "consumable", "key": "Großes Heiltrank", "amount": 1, "price":  35, "desc": "Heilt 25 HP",          "min_level": 3},
     {"name": "Stärketrank",      "type": "consumable", "key": "Stärketrank",      "amount": 1, "price":  40, "desc": "+3 ATK (Kampf)",       "min_level": 3},

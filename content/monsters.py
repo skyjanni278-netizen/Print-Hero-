@@ -60,7 +60,7 @@ class Skeleton(Character):
         _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
 
     def boss_ability(self, target) -> str:
-        target.bleed_stacks = max(getattr(target, "bleed_stacks", 0), 3)
+        target.bleed_stacks += 3
         return f"🦴 {self.name}: Knochenregen! {target.name} erhält 3 Blutungsstacks!"
 
 
@@ -207,7 +207,7 @@ class Assassin(Character):
     def boss_ability(self, target) -> str:
         raw = random.randint(self.get_effective_min_attack(), self.get_total_attack()) * 2
         target.hp = max(0, target.hp - raw)
-        target.bleed_stacks = max(target.bleed_stacks, 3)
+        target.bleed_stacks += 3
         return f"🗡️  {self.name}: Aus dem Schatten! {raw} Schaden (ignoriert DEF) + 3 Blutungsstacks!"
 
 
@@ -284,14 +284,14 @@ class DarkKnight(Character):
             raw  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
             real = self.apply_armor_reduction(raw, target.get_total_armor())
             target.hp = max(0, target.hp - real)
-            target.bleed_stacks = max(target.bleed_stacks, 3)
+            target.bleed_stacks += 3
             return f"⚔️  {self.name}: Klingenwirbel! {real} Schaden + 3 Blutungsstacks!", real
         return super().attack_target(target)
 
     def boss_ability(self, target) -> str:
         dmg = random.randint(25, 40)
         target.hp = max(0, target.hp - dmg)
-        target.bleed_stacks = max(target.bleed_stacks, 4)
+        target.bleed_stacks += 4
         return f"⚔️  {self.name}: Dunkle Klinge! {dmg} Schaden (ignoriert DEF) + 4 Blutungsstacks!"
 
 
