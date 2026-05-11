@@ -1,5 +1,5 @@
 import random
-from player import Character
+from core.player import Character
 
 # Neue Status-Typen fuer Boss-Faehigkeiten
 # player.stunned        → Spieler ueberspringt naechste Runde

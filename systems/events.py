@@ -1,5 +1,5 @@
 import random
-from utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header
 
 
 def _wandering_merchant(player):
@@ -9,7 +9,7 @@ def _wandering_merchant(player):
     print("Er bietet dir 3 zuefaellige Items zu einem Sonderpreis an!\n")
 
     # 3 zufaellige Consumables aus dem Shop-Sortiment mit 20% Rabatt
-    from shop import SHOP_CATALOGUE
+    from content.shop import SHOP_CATALOGUE
     available = [item for item in SHOP_CATALOGUE if item.get("type") == "consumable"
                  and item.get("min_level", 1) <= player.level]
     if not available:
@@ -69,7 +69,7 @@ def _abandoned_shrine(player):
     elif choice == "g":
         roll = random.random()
         if roll < 0.5:
-            from loot_tables import CONSUMABLE_DEFS
+            from content.loot_tables import CONSUMABLE_DEFS
             key = random.choice(["Healing Potion", "Energie-Kristall"])
             added = player.add_consumable(key, 1)
             if added:
@@ -95,7 +95,7 @@ def _poison_trap(player):
 
 
 def _treasure_chest(player):
-    from loot_tables import roll_loot, apply_loot
+    from content.loot_tables import roll_loot, apply_loot
     clear_screen()
     print_header("Schatz-Truhe")
     print("Du entdeckst eine verstaubte Truhe im Dickicht!\n")
