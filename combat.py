@@ -1,5 +1,6 @@
 import random
-from monsters import Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf, roll_rank
+from monsters import (Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf,
+                       VenomSpider, Assassin, IceWitch, StoneGolem, DarkKnight, FireDemon, roll_rank)
 from utils import clear_screen, print_header
 from loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
 
@@ -20,29 +21,24 @@ def create_enemy(player):
     lvl = player.level
 
     if lvl <= 2:
-        # Nur die einfachsten Gegner
         classes = [Slime,  ShadowWolf, Goblin]
-        weights = [45,     35,         20]
+        weights = [40,     35,         25]
 
     elif lvl <= 4:
-        # Schleime werden seltener, Banditen & Zombies kommen dazu
-        classes = [Slime,  ShadowWolf, Goblin, Bandit, Zombie]
-        weights = [20,     30,         20,     15,     15]
+        classes = [Slime,  ShadowWolf, Goblin, Bandit, Zombie, VenomSpider]
+        weights = [15,     25,         15,     15,     15,     15]
 
     elif lvl <= 6:
-        # Schleime verschwinden, Waldtroll und Skelett tauchen auf
-        classes = [ShadowWolf, Goblin, Bandit, Zombie, WoodTroll, Skeleton]
-        weights = [20,         15,     20,     20,     15,        10]
+        classes = [ShadowWolf, Goblin, Bandit, Zombie, WoodTroll, Skeleton, VenomSpider, Assassin, IceWitch]
+        weights = [15,         10,     15,     15,     10,        10,       10,          10,       5]
 
     elif lvl <= 8:
-        # Schattenwölfe verschwinden, Drachen tauchen auf
-        classes = [Goblin, Bandit, Zombie, WoodTroll, Skeleton, Dragon]
-        weights = [10,     20,     15,     20,        25,       10]
+        classes = [Goblin, Bandit, Zombie, WoodTroll, Skeleton, Dragon, Assassin, IceWitch, StoneGolem, DarkKnight]
+        weights = [5,      15,     10,     15,        15,       10,     10,       10,       5,          5]
 
     else:
-        # LVL 9–10: Nur starke Gegner, keine schwachen mehr
-        classes = [Bandit, WoodTroll, Skeleton, Dragon]
-        weights = [10,     25,        35,       30]
+        classes = [WoodTroll, Skeleton, Dragon, Assassin, IceWitch, StoneGolem, DarkKnight, FireDemon]
+        weights = [10,        20,       15,     10,       15,       10,         10,         10]
 
     mob_class = random.choices(classes, weights=weights, k=1)[0]
     rank      = roll_rank(player.level)

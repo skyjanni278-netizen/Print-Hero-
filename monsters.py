@@ -161,6 +161,167 @@ class ShadowWolf(Character):
         return f"🐺 {self.name}: Rudel-Heul! Heilt sich selbst um {heal} HP. (HP: {self.hp}/{self.max_hp})"
 
 
+class VenomSpider(Character):
+    """Giftige Spinne – erscheint LVL 2–6, schwach aber vergiftet zuverlässig"""
+    BASE_HP     = 9
+    BASE_ATTACK = 5
+    BASE_XP     = 14
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Giftige Spinne", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 0
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        msg, dmg = super().attack_target(target)
+        if random.random() < 0.40:
+            stacks = 2
+            target.poison_stacks += stacks
+            return f"{msg}\n  🕷️  Giftstich! {target.name} erhält {stacks} Giftstacks.", dmg
+        return msg, dmg
+
+    def boss_ability(self, target) -> str:
+        stacks = 5
+        target.poison_stacks += stacks
+        return f"🕷️  {self.name}: Giftwolke! {target.name} erhält {stacks} Giftstacks!"
+
+
+class Assassin(Character):
+    """Meuchler – erscheint LVL 3–8, niedriger HP aber kann Rüstung ignorieren"""
+    BASE_HP     = 13
+    BASE_ATTACK = 10
+    BASE_XP     = 28
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Meuchler", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 0
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.25:
+            raw = random.randint(self.get_effective_min_attack(), self.get_total_attack()) * 2
+            target.hp = max(0, target.hp - raw)
+            return f"🗡️  {self.name}: Meucheln! {raw} Schaden (ignoriert Rüstung) 💥 KRITISCH!", raw
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        raw = random.randint(self.get_effective_min_attack(), self.get_total_attack()) * 2
+        target.hp = max(0, target.hp - raw)
+        target.bleed_stacks = max(target.bleed_stacks, 3)
+        return f"🗡️  {self.name}: Aus dem Schatten! {raw} Schaden (ignoriert DEF) + 3 Blutungsstacks!"
+
+
+class IceWitch(Character):
+    """Eismagierin – erscheint LVL 4–9, kann einfrieren und Rüstung halbieren"""
+    BASE_HP     = 22
+    BASE_ATTACK = 11
+    BASE_XP     = 35
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Eismagierin", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 1
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.30:
+            raw        = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+            half_armor = max(0, target.get_total_armor() // 2)
+            real       = self.apply_armor_reduction(raw, half_armor)
+            target.hp  = max(0, target.hp - real)
+            target.stunned = True
+            return f"❄️  {self.name}: Frostpfeil! {real} Eisschaden — {target.name} ist eingefroren (nächste Runde betäubt)!", real
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        dmg = random.randint(18, 28)
+        target.hp = max(0, target.hp - dmg)
+        debuff = 4
+        target.armor_debuff += debuff
+        return f"❄️  {self.name}: Eisnova! {dmg} magischen Schaden (ignoriert DEF) + -{debuff} DEF für diesen Kampf!"
+
+
+class StoneGolem(Character):
+    """Steingolem – erscheint LVL 5–10, sehr hohe HP und Rüstung, kann betäuben"""
+    BASE_HP     = 55
+    BASE_ATTACK = 8
+    BASE_XP     = 45
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Steingolem", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 8
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.30:
+            raw  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+            real = self.apply_armor_reduction(raw, target.get_total_armor())
+            target.hp = max(0, target.hp - real)
+            target.stunned = True
+            return f"🪨 {self.name}: Felsstoß! {real} Schaden — {target.name} ist betäubt!", real
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        dmg = random.randint(20, 35)
+        target.hp = max(0, target.hp - dmg)
+        debuff = 5
+        target.armor_debuff += debuff
+        return f"🪨 {self.name}: Erschütterung! {dmg} Schaden (ignoriert DEF) + -{debuff} DEF für diesen Kampf!"
+
+
+class DarkKnight(Character):
+    """Dunkelritter – erscheint LVL 6–10, hohe HP + Rüstung, Klingenwirbel verursacht Blutung"""
+    BASE_HP     = 40
+    BASE_ATTACK = 12
+    BASE_XP     = 50
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Dunkelritter", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 6
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.25:
+            raw  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+            real = self.apply_armor_reduction(raw, target.get_total_armor())
+            target.hp = max(0, target.hp - real)
+            target.bleed_stacks = max(target.bleed_stacks, 3)
+            return f"⚔️  {self.name}: Klingenwirbel! {real} Schaden + 3 Blutungsstacks!", real
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        dmg = random.randint(25, 40)
+        target.hp = max(0, target.hp - dmg)
+        target.bleed_stacks = max(target.bleed_stacks, 4)
+        return f"⚔️  {self.name}: Dunkle Klinge! {dmg} Schaden (ignoriert DEF) + 4 Blutungsstacks!"
+
+
+class FireDemon(Character):
+    """Flammendämon – erscheint LVL 7–10, Feuerangriffe ignorieren halbe Rüstung"""
+    BASE_HP     = 30
+    BASE_ATTACK = 13
+    BASE_XP     = 55
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Flammendämon", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 3
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.35:
+            raw        = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+            half_armor = max(0, target.get_total_armor() // 2)
+            real       = self.apply_armor_reduction(raw, half_armor)
+            target.hp  = max(0, target.hp - real)
+            return f"🔥 {self.name}: Feuerball! {real} Feuerschaden (halbe DEF ignoriert)!", real
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        dmg = random.randint(20, 35)
+        target.hp = max(0, target.hp - dmg)
+        target.poison_stacks += 2
+        return f"🔥 {self.name}: Inferno! {dmg} Feuerschaden (ignoriert DEF) + 2 Verbrennungsstacks!"
+
+
 def roll_rank(player_level: int) -> int:
     """
     Höhere Spieler-Level → höhere Chance auf starke Ränge (bis LVL 10).
