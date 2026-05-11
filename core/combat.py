@@ -1,65 +1,20 @@
 import random
-from content.monsters import (Zombie, Slime, Goblin, Skeleton, Dragon, Bandit, WoodTroll, ShadowWolf,
-                       VenomSpider, Assassin, IceWitch, StoneGolem, DarkKnight, FireDemon, roll_rank)
 from ui.utils import clear_screen, print_header
 from content.loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
 
 
 def generate_enemy_group(player):
-    lvl = player.level
-    # Frühe Level: nur 1–2 Gegner; ab LVL 5: bis 3; ab LVL 8: bis 4
-    if lvl <= 4:
-        count = random.randint(1, 2)
-    elif lvl <= 7:
-        count = random.randint(1, 3)
-    else:
-        count = random.randint(2, 4)
-    return [create_enemy(player) for _ in range(count)]
+    from systems.zones import ZONE_DEFS, create_zone_enemy
+    zone_id      = getattr(player, "current_zone", "wald")
+    zdef         = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
+    mn, mx       = zdef["group_size"]
+    count        = random.randint(mn, mx)
+    return [create_zone_enemy(player, zone_id) for _ in range(count)]
 
 
 def create_enemy(player):
-    lvl = player.level
-
-    if lvl <= 2:
-        classes = [Slime,  ShadowWolf, Goblin]
-        weights = [40,     35,         25]
-
-    elif lvl <= 4:
-        classes = [Slime,  ShadowWolf, Goblin, Bandit, Zombie, VenomSpider]
-        weights = [15,     25,         15,     15,     15,     15]
-
-    elif lvl <= 6:
-        classes = [ShadowWolf, Goblin, Bandit, Zombie, WoodTroll, Skeleton, VenomSpider, Assassin, IceWitch]
-        weights = [15,         10,     15,     15,     10,        10,       10,          10,       5]
-
-    elif lvl <= 8:
-        classes = [Goblin, Bandit, Zombie, WoodTroll, Skeleton, Dragon, Assassin, IceWitch, StoneGolem, DarkKnight]
-        weights = [5,      15,     10,     15,        15,       10,     10,       10,       5,          5]
-
-    else:
-        classes = [WoodTroll, Skeleton, Dragon, Assassin, IceWitch, StoneGolem, DarkKnight, FireDemon]
-        weights = [10,        20,       15,     10,       15,       10,         10,         10]
-
-    mob_class = random.choices(classes, weights=weights, k=1)[0]
-    rank      = roll_rank(player.level)
-    mob       = mob_class(rank=rank)
-
-    diff = getattr(player, "difficulty", "normal")
-    if diff != "normal":
-        from config import DIFFICULTY_SETTINGS
-        cfg = DIFFICULTY_SETTINGS[diff]
-        mob.max_hp = max(1, int(mob.max_hp * cfg["hp_mult"]))
-        mob.hp     = mob.max_hp
-        mob.attack = max(1, int(mob.attack * cfg["atk_mult"]))
-
-    ng = getattr(player, "ng_plus", 0)
-    if ng > 0:
-        ng_mult    = 1.3 ** ng
-        mob.max_hp = max(1, int(mob.max_hp * ng_mult))
-        mob.hp     = mob.max_hp
-        mob.attack = max(1, int(mob.attack * ng_mult))
-
-    return mob
+    from systems.zones import create_zone_enemy
+    return create_zone_enemy(player)
 
 
 def consumable_menu(player) -> str:

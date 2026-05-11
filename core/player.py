@@ -50,6 +50,8 @@ class Character:
         self.block_next          = False
         self.shadow_strike_ready = False
 
+        self.current_zone = "wald"
+
         self.stats = {
             "fights": 0,
             "kills": 0,

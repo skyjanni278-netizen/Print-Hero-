@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
 
-**Aktuelle Version: v1.9.1** | Python 3.10+ | Keine externen Pakete
+**Aktuelle Version: v1.9.2** | Python 3.10+ | Keine externen Pakete
 
 ---
 
@@ -31,9 +31,12 @@ content/
   classes.py             — Klassen-Definitionen & Startboni
 systems/
   dungeon.py             — Dungeon-Schleife, Raumgenerierung, Raumtypen
+  zones.py               — Zonen-Definitionen, Monster-Pools, Rang-Gewichtung
   events.py              — Zufalls-Events zwischen Räumen
   skilltree.py           — Skill-Auswahl & Skill-Effekte
   achievements.py        — Achievement-System
+saves/
+  savegame.json          — Gespeicherter Spielstand (automatisch erstellt)
 ui/
   pause.py               — Lagerfeuer-Menü, Inventar, Verkauf, Skills
   utils.py               — clear_screen, print_header
@@ -51,6 +54,21 @@ Beim Start wählst du eine von drei Klassen — jede hat unterschiedliche Startw
 | Krieger | 40       | 8         | Schildwall — blockiert einen Angriff |
 | Schurke | 28       | 12        | Aus dem Schatten — garantierter Kritischer Treffer |
 | Magier  | 22       | 10        | Arkane Entladung — Magie-Angriff + DEF-Debuff |
+
+---
+
+### Zonen
+Das Spiel ist in **5 Zonen** unterteilt, die mit dem Level freigeschaltet werden. Jede Zone hat ihren eigenen Gegner-Pool und eine andere Schwierigkeitsverteilung.
+
+| Zone | Emoji | Freischaltung | Gegner |
+|------|-------|:-------------:|--------|
+| Wald | 🌲 | Lv. 1 | Schleim, Schattenwolf, Goblin, Waldtroll |
+| Ruinen | 🏚️ | Lv. 2 | Zombie, Skelett, Bandit, Waldtroll |
+| Wüste | 🏜️ | Lv. 4 | Bandit, Meuchler, Giftige Spinne, Goblin |
+| Vulkan | 🌋 | Lv. 6 | Flammendämon, Steingolem, Drache, Dunkelritter |
+| Dunkel-Reich | 💀 | Lv. 8 | Dunkelritter, Eismagierin, Drache, Flammendämon |
+
+Die Zone wird im Lagerfeuer-Menü unter **[Z] Zone wählen** gewechselt und im Spielstand gespeichert.
 
 ---
 
