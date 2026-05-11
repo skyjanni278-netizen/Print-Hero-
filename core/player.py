@@ -289,8 +289,8 @@ class Character:
             raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
             real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
             target.hp = max(0, target.hp - real_damage)
-            target.bleed_stacks = max(target.bleed_stacks, 3)
-            return f"{self.name} führt einen Cleave aus und macht {real_damage} Schaden! {target.name} erhält {target.bleed_stacks} Blutungsstacks!"
+            target.bleed_stacks += 3
+            return f"{self.name} führt einen Cleave aus und macht {real_damage} Schaden! {target.name} erhält 3 Blutungsstacks!"
         return "Nicht genug Energie!"
 
     def check_bleed(self) -> str:
@@ -347,8 +347,11 @@ class Character:
             if self.bleed_stacks > 0:
                 self.bleed_stacks = 0
                 msgs.append("Blutung entfernt")
-            else:
-                msgs.append("keine Blutung vorhanden")
+            if self.poison_stacks > 0:
+                self.poison_stacks = 0
+                msgs.append("Gift entfernt")
+            if not msgs:
+                msgs.append("keine Statuseffekte vorhanden")
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
 

@@ -17,11 +17,13 @@ def _wandering_merchant(player):
         input("(ENTER)")
         return
 
+    from content.loot_tables import CONSUMABLE_DEFS
     picks = random.sample(available, min(3, len(available)))
     print(f"Gold: {player.inventory['Gold']} Muenzen\n")
     for i, item in enumerate(picks):
         discounted = max(1, int(item["price"] * 0.8))
-        print(f"  [{i+1}] {item.get('emoji','🧪')} {item['name']:<22} {discounted} Gold  (statt {item['price']})")
+        emoji = CONSUMABLE_DEFS.get(item["key"], {}).get("emoji", "🧪")
+        print(f"  [{i+1}] {emoji} {item['name']:<22} {discounted} Gold  (statt {item['price']})")
     print("\n  [0] Weiterziehen")
 
     while True:
@@ -38,7 +40,7 @@ def _wandering_merchant(player):
             print("Zu wenig Gold!")
             input("(ENTER)")
             break
-        added = player.add_consumable(item["name"], 1)
+        added = player.add_consumable(item["key"], 1)
         if added:
             player.inventory["Gold"] -= discounted
             print(f"Gekauft! Gold verbleibend: {player.inventory['Gold']}")

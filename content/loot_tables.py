@@ -9,7 +9,7 @@ CONSUMABLE_DEFS = {
     "Phönixfeder":      {"effect": "cleanse", "value": 15, "emoji": "🪶", "desc": "Heilt 15 HP & entfernt Blutung","max_stack": 3,  "sell": 40},
     "Energie-Kristall": {"effect": "energy",  "value": 15, "emoji": "💎", "desc": "Stellt 15 Energie wieder her",  "max_stack": 5,  "sell": 12},
     "Stärketrank":      {"effect": "attack",  "value": 3,  "emoji": "💪", "desc": "+3 ATK für diesen Kampf",       "max_stack": 3,  "sell": 20},
-    "Antidot":          {"effect": "cleanse", "value": 0,  "emoji": "🌿", "desc": "Entfernt alle Blutungsstacks",  "max_stack": 5,  "sell": 5},
+    "Antidot":          {"effect": "cleanse", "value": 0,  "emoji": "🌿", "desc": "Entfernt Blutung & Gift",       "max_stack": 5,  "sell": 5},
 }
 
 # Junk-Items: nur zum Verkaufen
