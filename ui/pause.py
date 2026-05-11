@@ -237,24 +237,28 @@ def inventory_menu(player):
         ]
         _STARTER = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
 
-        print("[ Ausrüstung (Nummer zum Anlegen) ]")
-        indexed_items = []  # maps display number → inventory item
-
+        # Block 1: Alle angelegten Items auf einen Blick
+        print("[ Angelegt ]")
         for slot_key, slot_label in SLOT_ORDER:
             equipped = player.equipment[slot_key]
-            inv_for_slot = [it for it in equip_items if it["type"] == slot_key]
+            print(f"  ★ {slot_label:<12} {_equip_line(equipped)}")
 
+        # Block 2: Inventar-Alternativen zum Anlegen
+        print("\n[ Inventar — Nummer zum Anlegen ]")
+        indexed_items = []
+
+        for slot_key, slot_label in SLOT_ORDER:
+            inv_for_slot = [it for it in equip_items if it["type"] == slot_key]
+            if not inv_for_slot:
+                continue
             print(f"\n  {slot_label}")
-            # currently equipped — shown with ★, not numbered
-            print(f"    ★ {_equip_line(equipped)}")
-            # inventory alternatives
-            if inv_for_slot:
-                for item in inv_for_slot:
-                    n = len(indexed_items)
-                    indexed_items.append(item)
-                    print(f"  [{n:>2}] {_equip_line(item)}")
-            else:
-                print("      (keine Alternative im Inventar)")
+            for item in inv_for_slot:
+                n = len(indexed_items)
+                indexed_items.append(item)
+                print(f"  [{n:>2}] {_equip_line(item)}")
+
+        if not indexed_items:
+            print("  (keine Ausrüstung im Inventar)")
 
         print(f"\n[Nummer] Anlegen  |  [Z] Zurück")
         choice = input("\nDeine Wahl: ").lower()
