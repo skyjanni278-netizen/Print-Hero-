@@ -1,10 +1,9 @@
 import random
 from core.player import Character
 from ui.utils import clear_screen, print_header
-from core.combat import generate_enemy_group, combat, collect_loot
 from ui.pause import camp_menu
 from core.save import load_game, save_exists
-from systems.events import trigger_event
+from systems.dungeon import run_dungeon
 from systems.achievements import check_all
 from config import DIFFICULTY_SETTINGS
 
@@ -65,61 +64,6 @@ def _offer_ng_plus(player):
             break
 
 
-def _handle_victory(player, enemy_group):
-    from content.loot_tables import EQUIPMENT_DEFS
-    clear_screen()
-    print_header("Kampf-Ergebnis")
-
-    player.stats["fights"] += 1
-    player.stats["kills"]  += len(enemy_group)
-
-    potions_before = sum(player.inventory.get("Consumables", {}).values())
-    gold_before    = player.inventory["Gold"]
-    loot_lines     = collect_loot(player, enemy_group)
-    player.stats["gold_earned"] += player.inventory["Gold"] - gold_before
-
-    got_leg = any(
-        EQUIPMENT_DEFS.get(i["name"], {}).get("rarity") == "legendary"
-        for i in player.inventory.get("Equipment", [])
-    )
-
-    if loot_lines:
-        print("\nBeute:")
-        for line in loot_lines:
-            print(line)
-    else:
-        print("\n- Keine Beute gefunden -")
-
-    total_xp = int(sum(e.xp_value for e in enemy_group) * player.next_fight_xp_mult)
-    player.next_fight_xp_mult = 1.0
-    print(f"\nGruppe besiegt! Du erhältst {total_xp} XP!")
-    player.xp += total_xp
-    player.check_level_up()
-
-    potions_after = sum(player.inventory.get("Consumables", {}).values())
-    ach_msgs = check_all(player, {
-        "event": "victory",
-        "enemies": enemy_group,
-        "potions_before": potions_before,
-        "potions_after":  potions_after,
-    })
-    ach_msgs += check_all(player, {"event": "level_up", "level": player.level})
-    ach_msgs += check_all(player, {"event": "loot", "got_legendary": got_leg})
-    ach_msgs += check_all(player, {"event": "gold_check"})
-    for m in ach_msgs:
-        print(m)
-
-    input("\nDu ziehst weiter... (ENTER)")
-
-    if player.level >= 10:
-        _offer_ng_plus(player)
-
-    player.fights_until_event -= 1
-    if player.fights_until_event <= 0:
-        trigger_event(player)
-        player.fights_until_event = random.randint(2, 3)
-
-
 def _handle_defeat(player):
     player.stats["deaths"] += 1
     print(f"\nGame Over! {player.name} wurde besiegt.")
@@ -140,21 +84,19 @@ def main():
 
     while player.is_alive():
         camp_menu(player)
-        enemy_group = generate_enemy_group(player)
-        clear_screen()
-        print(f"--- Eine Gruppe erscheint: {', '.join(e.name for e in enemy_group)}! ---")
-        input("Bereit machen... (ENTER)")
 
-        result = combat(player, enemy_group)
-        player.reset_combat_modifiers()
+        result = run_dungeon(player)
 
-        if result == "victory":
-            _handle_victory(player, enemy_group)
-        elif result == "defeat":
+        if result == "defeated":
             _handle_defeat(player)
             break
-        elif result == "fled":
-            input("\nDu ziehst weiter... (ENTER)")
+        elif result == "completed":
+            ach_msgs = check_all(player, {"event": "gold_check"})
+            for m in ach_msgs:
+                print(m)
+            if player.level >= 10:
+                _offer_ng_plus(player)
+        # 'fled' → zurück zum Lagerfeuer
 
 
 if __name__ == "__main__":
