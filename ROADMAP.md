@@ -41,7 +41,7 @@
 
 ---
 
-## 🔧 v1.9.2 — Zonen-Vorbereitung
+## ✅ v1.9.2 — Zonen-Vorbereitung
 **Typ:** Technisch + Content
 
 - Zonen-Themen definiert: Wald, Ruinen, Wüste, Vulkan, Dunkel-Reich
@@ -56,7 +56,7 @@
 
 ---
 
-## ⬜ v1.9.3 — Klassen-Waffen
+## 🔧 v1.9.3 — Klassen-Waffen
 **Typ:** Content + Identity
 
 - Jede Waffe hat 3 Varianten — eine pro Klasse, gleiche Stats, klassenspezifischer Name
@@ -154,8 +154,8 @@ v1.8.3   ✅  Pause-Menü Cleanup
 v1.9     ✅  Dungeon-Fundament
 ─────────────────────────────────────────────
 v1.9.1   ✅  Dungeon Raum-Vielfalt
-v1.9.2   🔧  Zonen-Vorbereitung           ← aktuell
-v1.9.3   ⬜  Klassen-Waffen
+v1.9.2   ✅  Zonen-Vorbereitung
+v1.9.3   🔧  Klassen-Waffen              ← aktuell
 v1.9.4   ⬜  Klassen-Fähigkeiten
 v1.9.5   ⬜  Klassen-Rüstungssets
 v1.9.6   ⬜  Story & Lore

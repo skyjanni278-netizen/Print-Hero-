@@ -59,6 +59,39 @@ EQUIPMENT_DEFS = {
     # ── EXTRA WAFFEN ─────────────────────────────────────────
     "Sturmklinge":          {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Züngelnde Blitze"},
     "Knochensense":         {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Aus Todenochen gefertigt"},
+    # ── KLASSEN-WAFFEN (gleiche Stats, klassenspezifischer Name) ─
+    # Kurzschwert-Varianten (common, ATK 3)
+    "Kampfschwert":         {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "⚔️",  "sell": 20,  "desc": "Kräftige Klinge für den Nahkampf"},
+    "Spitzdolch":           {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Schnell und präzise"},
+    "Novizenstab":          {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🪄",  "sell": 20,  "desc": "Einfacher Magierstab"},
+    # Langschwert-Varianten (uncommon, ATK 6)
+    "Bastardschwert":       {"slot": "weapon", "attack": 6,  "rarity": "uncommon",  "emoji": "⚔️",  "sell": 40,  "desc": "Schwere Zweihandklinge"},
+    "Klingenschatten":      {"slot": "weapon", "attack": 6,  "rarity": "uncommon",  "emoji": "🌑",  "sell": 40,  "desc": "Im Schatten kaum sichtbar"},
+    "Magierstab":           {"slot": "weapon", "attack": 6,  "rarity": "uncommon",  "emoji": "🪄",  "sell": 40,  "desc": "Verstärkt magische Kräfte"},
+    # Kriegshammer-Varianten (uncommon, ATK 9)
+    "Streitaxt":            {"slot": "weapon", "attack": 9,  "rarity": "uncommon",  "emoji": "🪓",  "sell": 60,  "desc": "Brutal und wuchtig"},
+    "Schattenbeil":         {"slot": "weapon", "attack": 9,  "rarity": "uncommon",  "emoji": "🌑",  "sell": 60,  "desc": "Lautlos und tödlich"},
+    "Arkane Keule":         {"slot": "weapon", "attack": 9,  "rarity": "uncommon",  "emoji": "🔮",  "sell": 60,  "desc": "Mit arkaner Energie geladen"},
+    # Sturmklinge-Varianten (rare, ATK 11)
+    "Gewitterschwert":      {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Blitze tanzen auf der Klinge"},
+    "Blitzdolch":           {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Schnell wie ein Blitz"},
+    "Sturmstab":            {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "🌩️",  "sell": 90,  "desc": "Beschwört Blitzgewitter"},
+    # Runenschwert-Varianten (rare, ATK 13)
+    "Runenklinge":          {"slot": "weapon", "attack": 13, "rarity": "rare",      "emoji": "🌀",  "sell": 100, "desc": "Runen schützen den Träger"},
+    "Runendolch":           {"slot": "weapon", "attack": 13, "rarity": "rare",      "emoji": "🌀",  "sell": 100, "desc": "Magische Runenschärfe"},
+    "Runenstab":            {"slot": "weapon", "attack": 13, "rarity": "rare",      "emoji": "🌀",  "sell": 100, "desc": "Kanalisiert Runenkraft"},
+    # Knochensense-Varianten (epic, ATK 15)
+    "Kriegssense":          {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "⚔️",  "sell": 145, "desc": "Mäht durch Feinde wie Gras"},
+    "Seelenstehler":        {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Stiehlt die Seele des Feindes"},
+    "Totenstab":            {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Beschwört Todesenergien"},
+    # Drachenzahn-Varianten (epic, ATK 17)
+    "Drachenklaue":         {"slot": "weapon", "attack": 17, "rarity": "epic",      "emoji": "🐉",  "sell": 160, "desc": "Scharfe Drachenkralle"},
+    "Drachenstich":         {"slot": "weapon", "attack": 17, "rarity": "epic",      "emoji": "🐉",  "sell": 160, "desc": "Präzise wie ein Drachenangriff"},
+    "Drachenstab":          {"slot": "weapon", "attack": 17, "rarity": "epic",      "emoji": "🐉",  "sell": 160, "desc": "Von Drachenmagie durchdrungen"},
+    # Göttliche Klinge-Varianten (legendary, ATK 25)
+    "Heilige Klinge":       {"slot": "weapon", "attack": 25, "rarity": "legendary", "emoji": "✨",  "sell": 350, "desc": "Gesegnet von den Göttern"},
+    "Klingengeist":         {"slot": "weapon", "attack": 25, "rarity": "legendary", "emoji": "👻",  "sell": 350, "desc": "Ein Geist wohnt in der Klinge"},
+    "Götterstab":           {"slot": "weapon", "attack": 25, "rarity": "legendary", "emoji": "✨",  "sell": 350, "desc": "Würdig eines Gottes"},
     # ── SCHUHE ───────────────────────────────────────────────
     "Lederstiefel":         {"slot": "feet",   "armor": 1,   "rarity": "common",    "emoji": "👞",  "sell": 10,  "desc": "Einfache Lederschuhe"},
     "Eisenstiefel":         {"slot": "feet",   "armor": 2,   "rarity": "common",    "emoji": "🥾",  "sell": 20,  "desc": "Schwere Eisensohlen"},
@@ -67,6 +100,18 @@ EQUIPMENT_DEFS = {
     "Runenstiefel":         {"slot": "feet",   "armor": 6,   "rarity": "rare",      "emoji": "🌀",  "sell": 85,  "desc": "Mit Schutzrunen versehen"},
     "Drachenklauen":        {"slot": "feet",   "armor": 9,   "rarity": "epic",      "emoji": "🐉",  "sell": 130, "desc": "Krallen eines Drachen"},
     "Stiefel der Ewigkeit": {"slot": "feet",   "armor": 12,  "rarity": "legendary", "emoji": "⚡",  "sell": 280, "desc": "Kein Weg ist zu weit"},
+}
+
+# Generische Waffe → klassenspezifische Variante beim Drop
+CLASS_WEAPON_MAP = {
+    "Kurzschwert":      {"warrior": "Kampfschwert",    "rogue": "Spitzdolch",      "mage": "Novizenstab"},
+    "Langschwert":      {"warrior": "Bastardschwert",  "rogue": "Klingenschatten", "mage": "Magierstab"},
+    "Kriegshammer":     {"warrior": "Streitaxt",       "rogue": "Schattenbeil",    "mage": "Arkane Keule"},
+    "Sturmklinge":      {"warrior": "Gewitterschwert", "rogue": "Blitzdolch",      "mage": "Sturmstab"},
+    "Runenschwert":     {"warrior": "Runenklinge",     "rogue": "Runendolch",      "mage": "Runenstab"},
+    "Knochensense":     {"warrior": "Kriegssense",     "rogue": "Seelenstehler",   "mage": "Totenstab"},
+    "Drachenzahn":      {"warrior": "Drachenklaue",    "rogue": "Drachenstich",    "mage": "Drachenstab"},
+    "Göttliche Klinge": {"warrior": "Heilige Klinge",  "rogue": "Klingengeist",    "mage": "Götterstab"},
 }
 
 # Rarity-Label und Farb-Emoji für Anzeige
@@ -287,13 +332,19 @@ def apply_loot(player, loot_list: list) -> list:
             if not player.has_inventory_space():
                 messages.append(f"  ⚠️  Inventar voll! {item['name']} verloren.")
                 continue
-            edef   = EQUIPMENT_DEFS.get(item["key"], {})
+            item_key = item["key"]
+            if EQUIPMENT_DEFS.get(item_key, {}).get("slot") == "weapon":
+                player_class = getattr(player, "player_class", "warrior")
+                variant = CLASS_WEAPON_MAP.get(item_key, {}).get(player_class)
+                if variant and variant in EQUIPMENT_DEFS:
+                    item_key = variant
+            edef   = EQUIPMENT_DEFS.get(item_key, {})
             slot   = edef.get("slot", "weapon")
             emoji  = edef.get("emoji", "⚔️")
             rarity = edef.get("rarity", "common")
             rlabel, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
 
-            equip = {"name": item["name"], "type": slot}
+            equip = {"name": item_key, "type": slot}
             if slot == "weapon":
                 equip["attack"] = edef["attack"]
                 stat = f"ATK +{edef['attack']}"
@@ -302,6 +353,6 @@ def apply_loot(player, loot_list: list) -> list:
                 stat = f"DEF +{edef['armor']}"
 
             player.inventory["Equipment"].append(equip)
-            messages.append(f"  {rbadge}{emoji} {item['name']} [{rlabel}] ({stat})")
+            messages.append(f"  {rbadge}{emoji} {item_key} [{rlabel}] ({stat})")
 
     return messages
