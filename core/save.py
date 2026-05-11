@@ -50,6 +50,11 @@ def load_game():
     player.energy         = data["energy"]
     player.max_energy     = data["max_energy"]
     player.equipment      = data["equipment"]
+    # Rückwärtskompatibilität: "type"-Feld in Slots ergänzen falls fehlt
+    _slot_types = {"weapon": "weapon", "chest": "chest", "head": "head", "feet": "feet"}
+    for slot, item in player.equipment.items():
+        if "type" not in item:
+            item["type"] = _slot_types[slot]
     player.inventory      = data["inventory"]
     default_stats = {"fights": 0, "kills": 0, "deaths": 0,
                      "damage_dealt": 0, "damage_taken": 0,
