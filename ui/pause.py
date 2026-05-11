@@ -164,13 +164,13 @@ def _equip_line(item):
     emoji   = edef.get("emoji", "⚔️")
     rarity  = edef.get("rarity", "common")
     rlabel, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
-    slot    = item.get("type", "?")
+    slot    = item.get("type") or edef.get("slot", "weapon")
     slot_labels = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm", "feet": "Schuhe"}
     slot_label  = slot_labels.get(slot, slot)
     if slot == "weapon":
-        stat = f"ATK +{item['attack']}"
+        stat = f"ATK +{item.get('attack', 0)}"
     else:
-        stat = f"DEF +{item['armor']}"
+        stat = f"DEF +{item.get('armor', 0)}"
     set_tag = ""
     for sname, sdef in SET_DEFS.items():
         if item["name"] in sdef["pieces"]:

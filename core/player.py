@@ -61,10 +61,10 @@ class Character:
         }
 
         self.equipment = {
-            "weapon": {"name": "Fäuste",       "attack": 0},
-            "chest":  {"name": "Lumpen",       "armor": 0},
-            "head":   {"name": "Kein Helm",    "armor": 0},
-            "feet":   {"name": "Keine Schuhe", "armor": 0},
+            "weapon": {"name": "Fäuste",       "attack": 0, "type": "weapon"},
+            "chest":  {"name": "Lumpen",       "armor": 0,  "type": "chest"},
+            "head":   {"name": "Kein Helm",    "armor": 0,  "type": "head"},
+            "feet":   {"name": "Keine Schuhe", "armor": 0,  "type": "feet"},
         }
         self.inventory = {
             "Consumables": {"Healing Potion": 2},
@@ -384,10 +384,10 @@ class Character:
 
         # Ausrüstung zurücksetzen
         self.equipment = {
-            "weapon": {"name": "Fäuste",       "attack": 0},
-            "chest":  {"name": "Lumpen",        "armor": 0},
-            "head":   {"name": "Kein Helm",     "armor": 0},
-            "feet":   {"name": "Keine Schuhe",  "armor": 0},
+            "weapon": {"name": "Fäuste",       "attack": 0, "type": "weapon"},
+            "chest":  {"name": "Lumpen",        "armor": 0, "type": "chest"},
+            "head":   {"name": "Kein Helm",     "armor": 0, "type": "head"},
+            "feet":   {"name": "Keine Schuhe",  "armor": 0, "type": "feet"},
         }
         self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
 
