@@ -229,12 +229,32 @@ def inventory_menu(player):
 
         # --- Equipment nach Slot gruppiert ---
         equip_items = player.inventory["Equipment"]
+        SLOT_ORDER = [
+            ("weapon", "🗡️  Waffe"),
+            ("chest",  "🛡️  Rüstung"),
+            ("head",   "🪖 Helm"),
+            ("feet",   "👟 Schuhe"),
+        ]
+        _STARTER = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
+
         print("[ Ausrüstung (Nummer zum Anlegen) ]")
-        if equip_items:
-            for i, item in enumerate(equip_items):
-                print(f"  [{i}] {_equip_line(item)}")
-        else:
-            print("  (keine)")
+        indexed_items = []  # maps display number → inventory item
+
+        for slot_key, slot_label in SLOT_ORDER:
+            equipped = player.equipment[slot_key]
+            inv_for_slot = [it for it in equip_items if it["type"] == slot_key]
+
+            print(f"\n  {slot_label}")
+            # currently equipped — shown with ★, not numbered
+            print(f"    ★ {_equip_line(equipped)}")
+            # inventory alternatives
+            if inv_for_slot:
+                for item in inv_for_slot:
+                    n = len(indexed_items)
+                    indexed_items.append(item)
+                    print(f"  [{n:>2}] {_equip_line(item)}")
+            else:
+                print("      (keine Alternative im Inventar)")
 
         print(f"\n[Nummer] Anlegen  |  [Z] Zurück")
         choice = input("\nDeine Wahl: ").lower()
@@ -244,12 +264,12 @@ def inventory_menu(player):
 
         if choice.isdigit():
             idx = int(choice)
-            if 0 <= idx < len(equip_items):
-                new_item = equip_items.pop(idx)
+            if 0 <= idx < len(indexed_items):
+                new_item = indexed_items[idx]
+                equip_items.remove(new_item)
                 slot     = new_item["type"]
                 old_item = player.equipment[slot]
-                # Starter-Items nicht zurück ins Inventar
-                if old_item["name"] not in ("Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"):
+                if old_item["name"] not in _STARTER:
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
                 player.equipment_upgrades[slot] = 0
