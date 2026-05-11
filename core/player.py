@@ -1,6 +1,6 @@
 import random
 
-MAX_INVENTORY_SLOTS = 20  # Jeder einzigartige Stapel (Consumable/Junk) + jedes Equipment = 1 Slot
+MAX_INVENTORY_SLOTS = 30  # Jeder einzigartige Stapel (Consumable/Junk) + jedes Equipment = 1 Slot
 
 
 class Character:
