@@ -340,7 +340,15 @@ def run_dungeon(player) -> str:
 
         # ── Boss-Raum ─────────────────────────────────────────
         elif room_type == "boss":
-            boss_rank = random.choices([4, 5], weights=[55, 45])[0]
+            lvl = player.level
+            if lvl <= 3:
+                boss_rank = random.choices([2, 3], weights=[55, 45])[0]
+            elif lvl <= 5:
+                boss_rank = random.choices([3, 4], weights=[60, 40])[0]
+            elif lvl <= 7:
+                boss_rank = random.choices([3, 4, 5], weights=[20, 50, 30])[0]
+            else:
+                boss_rank = random.choices([4, 5], weights=[55, 45])[0]
             boss      = _create_scaled_enemy(player, forced_rank=boss_rank)
             clear_screen()
             print_header(f"🔥 BOSS  —  {boss.name}")
