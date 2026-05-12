@@ -77,7 +77,7 @@
 
 ---
 
-## 🔧 v1.9.5 — Klassen-Rüstungssets
+## ✅ v1.9.5 — Klassen-Rüstungssets
 **Typ:** Feature + Balance
 
 - Krieger-Set **"Eisenfestung"**: DEF + Block-Synergien
@@ -91,19 +91,19 @@
 
 ---
 
-## ⬜ v1.9.6 — Story & Lore
+## ✅ v1.9.6 — Story & Lore
 **Typ:** Content + Atmosphäre
 
 - Boss-Intros: kurzer Einleitungstext pro benanntem Boss beim Betreten
-- Zonen-Flavor: 2–3 Sätze Atmosphäre beim Betreten einer Zone
-- 3–4 neue Event-Typen mit mehr Dialog-Optionen:
-  - z.B. „Gefangener Soldat" — befreien (spätere Belohnung) oder ignorieren
-  - z.B. „Alter Schmied" — zahle Gold für einmaliges Gratis-Upgrade
-- Dungeon-Namen aus zufälligem Pool (z.B. „Die Blutigen Ruinen", „Höhle des Ewigen Frostes")
+- Zonen-Flavor: 2–3 Sätze Atmosphäre beim Betreten einer Zone (in Zone-Auswahl)
+- 2 neue Event-Typen:
+  - „Gefangener Soldat" — befreien (−5 HP, +Gold + Loot-Chance) oder ignorieren
+  - „Alter Schmied" — einmaliges kostenloses Equipment-Upgrade
+- Dungeon-Namen aus zufälligem Pool pro Zone (z.B. „Die Blutigen Ruinen", „Höhle des Ewigen Frostes")
 
 ---
 
-## ⬜ v1.9.7 — Wirtschaft & Crafting
+## 🔧 v1.9.7 — Wirtschaft & Crafting
 **Typ:** Feature
 
 - Junk-Items kombinieren zu Consumables:
@@ -157,9 +157,9 @@ v1.9.1   ✅  Dungeon Raum-Vielfalt
 v1.9.2   ✅  Zonen-Vorbereitung
 v1.9.3   ✅  Klassen-Waffen
 v1.9.4   ✅  Klassen-Fähigkeiten
-v1.9.5   🔧  Klassen-Rüstungssets        ← aktuell
-v1.9.6   ⬜  Story & Lore
-v1.9.7   ⬜  Wirtschaft & Crafting
+v1.9.5   ✅  Klassen-Rüstungssets
+v1.9.6   ✅  Story & Lore
+v1.9.7   🔧  Wirtschaft & Crafting        ← aktuell
 v1.9.8   ⬜  Balance & Meta
 v1.9.9   ⬜  V2.0 Tech-Prep
 ─────────────────────────────────────────────

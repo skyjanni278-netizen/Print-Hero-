@@ -1,6 +1,61 @@
 import random
 from ui.utils import clear_screen, print_header
 
+DUNGEON_NAMES = {
+    "wald": [
+        "Die Finstere Waldschlucht",
+        "Höhle des Schattenwolfes",
+        "Das Versunkene Dickicht",
+        "Hain der alten Bestien",
+        "Der Knochenpfad",
+    ],
+    "ruinen": [
+        "Die Blutigen Ruinen",
+        "Gewölbe des Vergessens",
+        "Katakomben des ewigen Fluches",
+        "Das Grabmal der Verdammten",
+        "Untote Festung Arkenmoor",
+    ],
+    "wueste": [
+        "Das Sandgrab des Sultans",
+        "Ruinen von Dhar'Khan",
+        "Die Räuberhöhle von Al-Marak",
+        "Tempel des Sonnengottes",
+        "Schlucht der Meuchler",
+    ],
+    "vulkan": [
+        "Schmiede der Verdammnis",
+        "Höhle des Ewigen Frostes",
+        "Lavafestung Ignaris",
+        "Der Brennende Abgrund",
+        "Tempel des Feuerdämons",
+    ],
+    "dunkelreich": [
+        "Zitadelle der Finsternis",
+        "Das Ewige Labyrinth",
+        "Thron des Dunkelritters",
+        "Gewölbe des Vergänglichen",
+        "Herz der Dunkelheit",
+    ],
+}
+
+BOSS_INTROS = {
+    "Zombie":        "Ein gewaltiger Untoter erhebt sich aus dem Boden. Sein Blick ist leer — sein Hunger grenzenlos.",
+    "Skelett":       "Das Skelett rasselt mit seinen Knochen. Einst ein mächtiger Krieger, jetzt ein nie endender Albtraum.",
+    "Schleim":       "Eine riesige Schleimmasse pulsiert bedrohlich. Alles, was sie berührt, löst sich in nichts auf.",
+    "Goblin":        "Der Anführer der Goblin-Horde grinst bösartig. Sein Gold-durchtränkter Blick verrät grenzenlose Gier.",
+    "Drache":        "Der Drache entfaltet seine mächtigen Schwingen. Ein jahrtausendealter Schatz liegt hinter ihm.",
+    "Bandit":        "Der Banditenkönig tritt vor. Narben zieren sein Gesicht — jede davon eine Geschichte überlebter Kämpfe.",
+    "Waldtroll":     "Der Waldtroll schlägt sich mit seinen Fäusten auf die Brust. Der Boden bebt unter jedem Schritt.",
+    "Schattenwolf":  "Der Alphawolf jault. Aus dem Dunkel treten seine Augen hervor — brennend wie Glutkohlen.",
+    "Giftige Spinne": "Die Riesenspinne lauert in ihrem Netz. Ihr Gift ist stark genug, einen Ochsen in Minuten zu töten.",
+    "Meuchler":      "Der Meistermeuchler verschmilzt mit den Schatten. Du weißt, dass er da ist — aber wo genau, bleibt verborgen.",
+    "Eismagierin":   "Die Eismagierin hebt ihre Hände. Die Temperatur fällt sofort — dein Atem bildet Dampfwolken.",
+    "Steingolem":    "Der Steingolem erwacht. Felsbrocken fallen von seinem Körper, als er sich langsam aufrichtet.",
+    "Dunkelritter":  "Der Dunkelritter zieht seine pechschwarze Klinge. Sein Blick ist eiskalt — keine Gnade, kein Erbarmen.",
+    "Flammendämon":  "Der Flammendämon tritt aus der Lava. Sein Körper brennt wie ein lebendiger Scheiterhaufen.",
+}
+
 ROOM_ICONS = {
     "combat":   ("⚔️ ", "Kampf",        "Gegner lauern im nächsten Raum."),
     "event":    ("🎲 ", "Ereignis",     "Ein unbekanntes Ereignis erwartet dich."),
@@ -229,10 +284,12 @@ def run_dungeon(player) -> str:
 
     rooms = _generate_rooms(player.level)
     total = len(rooms)
+    zone_id = getattr(player, "current_zone", "wald")
+    dungeon_name = random.choice(DUNGEON_NAMES.get(zone_id, DUNGEON_NAMES["wald"]))
 
     # Dungeon-Einstieg
     clear_screen()
-    print_header("Dungeon betreten")
+    print_header(f"🗡️  {dungeon_name}")
     preview = "  →  ".join(f"{ROOM_ICONS[r][0]}{ROOM_ICONS[r][1]}" for r in rooms)
     print(f"Räume ({total}):  {preview}")
     print(f"\nHP: {player.hp}/{player.max_hp}  |  Energie: {player.energy}/{player.max_energy}")
@@ -352,7 +409,18 @@ def run_dungeon(player) -> str:
             boss      = _create_scaled_enemy(player, forced_rank=boss_rank)
             clear_screen()
             print_header(f"🔥 BOSS  —  {boss.name}")
-            print("Der Anführer dieses Dungeons stellt sich dir entgegen!")
+            base_name = type(boss).__name__
+            name_map = {
+                "Zombie": "Zombie", "Skeleton": "Skelett", "Slime": "Schleim",
+                "Goblin": "Goblin", "Dragon": "Drache", "Bandit": "Bandit",
+                "WoodTroll": "Waldtroll", "ShadowWolf": "Schattenwolf",
+                "VenomSpider": "Giftige Spinne", "Assassin": "Meuchler",
+                "IceWitch": "Eismagierin", "StoneGolem": "Steingolem",
+                "DarkKnight": "Dunkelritter", "FireDemon": "Flammendämon",
+            }
+            intro_key = name_map.get(base_name, "")
+            intro = BOSS_INTROS.get(intro_key, "Der Anführer dieses Dungeons stellt sich dir entgegen!")
+            print(intro)
             input("\nIn den Kampf! (ENTER)")
             result = combat(player, [boss])
             player.reset_combat_modifiers()
