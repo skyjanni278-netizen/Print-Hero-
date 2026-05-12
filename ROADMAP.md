@@ -56,7 +56,7 @@
 
 ---
 
-## 🔧 v1.9.3 — Klassen-Waffen
+## ✅ v1.9.3 — Klassen-Waffen
 **Typ:** Content + Identity
 
 - Jede Waffe hat 3 Varianten — eine pro Klasse, gleiche Stats, klassenspezifischer Name
@@ -66,7 +66,7 @@
 
 ---
 
-## ⬜ v1.9.4 — Klassen-Fähigkeiten Erweiterung
+## 🔧 v1.9.4 — Klassen-Fähigkeiten Erweiterung
 **Typ:** Feature
 
 - 2 neue aktive Fähigkeiten pro Klasse (zusätzlich zu den bestehenden):
@@ -155,8 +155,8 @@ v1.9     ✅  Dungeon-Fundament
 ─────────────────────────────────────────────
 v1.9.1   ✅  Dungeon Raum-Vielfalt
 v1.9.2   ✅  Zonen-Vorbereitung
-v1.9.3   🔧  Klassen-Waffen              ← aktuell
-v1.9.4   ⬜  Klassen-Fähigkeiten
+v1.9.3   ✅  Klassen-Waffen
+v1.9.4   🔧  Klassen-Fähigkeiten         ← aktuell
 v1.9.5   ⬜  Klassen-Rüstungssets
 v1.9.6   ⬜  Story & Lore
 v1.9.7   ⬜  Wirtschaft & Crafting
