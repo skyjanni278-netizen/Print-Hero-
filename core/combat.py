@@ -101,8 +101,23 @@ def combat(player, enemy_list):
         from content.classes import CLASS_DEFS
         pclass       = player.player_class
         cdef         = CLASS_DEFS.get(pclass, {})
-        ability_used = player.class_ability_used
+        ability_used  = player.class_ability_used
+        ability2_used = getattr(player, "class_ability2_used", False)
+        ability3_used = getattr(player, "class_ability3_used", False)
+        ability2_unlocked = player.level >= 4
+        ability3_unlocked = player.level >= 7
         ability_label = f"[X] {cdef.get('ability_name','?')} (einmal/Kampf)"
+
+        _ABILITY2_LABEL = {
+            "warrior": f"[1] Schildstoß   15E — Angriff + Betäubung (50%)",
+            "rogue":   f"[1] Giftklinge   12E — Angriff + 3 Giftstacks",
+            "mage":    f"[1] Froststrahl  18E — 15-25 Schaden + Einfrieren",
+        }
+        _ABILITY3_LABEL = {
+            "warrior": f"[2] Kriegsschrei 20E — +5 ATK für diesen Kampf",
+            "rogue":   f"[2] Rauchbombe   10E — garantierte Flucht",
+            "mage":    f"[2] Mana-Schild      — nächster Schaden via Energie",
+        }
 
         # Aktionsmenü dynamisch aufbauen
         action_lines = ["[A] Angreifen"]
@@ -122,6 +137,14 @@ def combat(player, enemy_list):
             action_lines.append("[M] Magieschild (Block)")
         if not ability_used:
             action_lines.append(ability_label)
+        if ability2_unlocked and not ability2_used:
+            action_lines.append(_ABILITY2_LABEL.get(pclass, "[1] ?"))
+        elif not ability2_unlocked:
+            action_lines.append("[1] Klassen-Fähigkeit 2 — 🔒 ab LVL 4")
+        if ability3_unlocked and not ability3_used:
+            action_lines.append(_ABILITY3_LABEL.get(pclass, "[2] ?"))
+        elif not ability3_unlocked:
+            action_lines.append("[2] Klassen-Fähigkeit 3 — 🔒 ab LVL 7")
         action_lines += ["[U] Verbrauchsgegenstände", "[F] Fliehen", "[Q] Beenden"]
 
         # Betäubung: Spielerzug überspringen
@@ -135,7 +158,7 @@ def combat(player, enemy_list):
 
         if choice == "__stunned__":
             pass  # Direkt zu Gegner-Angriffen
-        elif choice not in ['a', 's', 'r', 'c', 'm', 'x', 'u', 'f', 'q']:
+        elif choice not in ['a', 's', 'r', 'c', 'm', 'x', '1', '2', 'u', 'f', 'q']:
             print("\nUngültige Taste! Bitte wähle eine der angezeigten Optionen.")
             input("ENTER...")
             continue
@@ -163,6 +186,66 @@ def combat(player, enemy_list):
             elif pclass == "rogue":
                 player.shadow_strike_ready = True
                 print(f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.")
+
+        # Klassen-Fähigkeit 2 (Level 4)
+        elif choice == '1':
+            if not ability2_unlocked:
+                print("🔒 Fähigkeit wird bei Level 4 freigeschaltet!")
+                input("ENTER...")
+                continue
+            if ability2_used:
+                print("Fähigkeit bereits benutzt!")
+                input("ENTER...")
+                continue
+            try:
+                tidx = int(input("Welchen Gegner? (Nummer): ")) - 1
+            except ValueError:
+                continue
+            clear_screen()
+            print_header("Klassen-Fähigkeit 2")
+            if not (0 <= tidx < len(enemy_list) and enemy_list[tidx].is_alive()):
+                print("Ungültiges Ziel!")
+                input("ENTER...")
+                continue
+            target = enemy_list[tidx]
+            player.class_ability2_used = True
+            if pclass == "warrior":
+                msg, dmg = player.shield_bash(target)
+            elif pclass == "rogue":
+                msg, dmg = player.poison_blade(target)
+            else:  # mage
+                msg, dmg = player.frost_ray(target)
+            print(msg)
+            player.stats["damage_dealt"] += dmg
+
+        # Klassen-Fähigkeit 3 (Level 7)
+        elif choice == '2':
+            if not ability3_unlocked:
+                print("🔒 Fähigkeit wird bei Level 7 freigeschaltet!")
+                input("ENTER...")
+                continue
+            if ability3_used:
+                print("Fähigkeit bereits benutzt!")
+                input("ENTER...")
+                continue
+            player.class_ability3_used = True
+            clear_screen()
+            print_header("Klassen-Fähigkeit 3")
+            if pclass == "warrior":
+                print(player.warcry())
+            elif pclass == "rogue":
+                if player.energy >= 10:
+                    player.energy -= 10
+                    print("💨 Rauchbombe! Du verschwindest im Rauch...")
+                    input("ENTER...")
+                    return "fled"
+                else:
+                    player.class_ability3_used = False
+                    print(f"Nicht genug Energie! ({player.energy}/10)")
+                    input("ENTER...")
+                    continue
+            else:  # mage
+                print(player.activate_mana_shield())
 
         # Magieschild aktivieren
         elif choice == 'm':
@@ -259,12 +342,30 @@ def combat(player, enemy_list):
             if not player.is_alive():
                 break
             if e.is_alive():
+                # Gegner betäubt?
+                if getattr(e, "stunned", False):
+                    e.stunned = False
+                    print(f"🪨 {e.name} ist betäubt und überspringt diese Runde!")
+                    continue
                 if player.block_next:
                     player.block_next = False
                     print(f"🛡️  Schildwall blockt den Angriff von {e.name}!")
                 elif player.shield_active:
                     player.shield_active = False
                     print(f"🔵 Magieschild blockt den Angriff von {e.name}!")
+                elif getattr(player, "mana_shield_active", False):
+                    player.mana_shield_active = False
+                    raw = random.randint(max(1, getattr(e, "min_attack", 1)), e.attack)
+                    dmg = player.apply_armor_reduction(raw, player.get_total_armor())
+                    absorbed = min(dmg, player.energy)
+                    player.energy = max(0, player.energy - absorbed)
+                    leftover = max(0, dmg - absorbed)
+                    if leftover:
+                        player.hp = max(0, player.hp - leftover)
+                        player.stats["damage_taken"] += leftover
+                        print(f"🔮 Mana-Schild absorbiert {absorbed} Energie — {leftover} Restschaden! (HP: {player.hp}/{player.max_hp})")
+                    else:
+                        print(f"🔮 Mana-Schild absorbiert {dmg} Schaden vollständig! (Energie: {player.energy}/{player.max_energy})")
                 else:
                     msg, dmg = e.attack_target(player)
                     player.stats["damage_taken"] += dmg
