@@ -56,6 +56,34 @@ ZONE_DEFS = {
 
 ZONE_ORDER = ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
 
+ZONE_FLAVOR = {
+    "wald": [
+        "Die Bäume flüstern alte Geheimnisse. Zwischen den Ästen glitzern gefährliche Augen.",
+        "Moosbedeckte Pfade winden sich tiefer in die Dunkelheit. Hier hat die Sonne keine Kraft mehr.",
+        "Ein Knacken im Unterholz — du bist nicht allein.",
+    ],
+    "ruinen": [
+        "Gebrochene Mauern recken sich zum grauen Himmel. Die Toten hier kennen keinen Frieden.",
+        "Zwischen verwitterten Steinen flüstert der Wind wie klagende Seelen.",
+        "Einst stand hier eine stolze Festung. Jetzt nur noch Asche und Knochen.",
+    ],
+    "wueste": [
+        "Die Sonne brennt erbarmungslos. Hinter jedem Sandhügel könnte der Tod lauern.",
+        "Hitzewellen lassen die Luft flimmern. Banditen kennen diese Wüste besser als du.",
+        "Kein Schatten, kein Wasser. Nur Sand, Stille — und das Rascheln von Stahl.",
+    ],
+    "vulkan": [
+        "Der Boden zittert. Aus tiefen Spalten steigt glühende Asche empor.",
+        "Die Hitze ist fast unerträglich. Nur Bestien, die aus dem Feuer geboren wurden, gedeihen hier.",
+        "Lavafontänen beleuchten den Weg in die Hölle. Zurückzugehen ist keine Option mehr.",
+    ],
+    "dunkelreich": [
+        "Absolute Finsternis. Selbst das Licht deiner Fackel wagt sich kaum vorwärts.",
+        "Hier herrscht etwas Uraltes. Etwas, das weit mächtiger ist als du.",
+        "Die Luft riecht nach Verwesung und verbotener Magie. Jeder Schritt könnte dein letzter sein.",
+    ],
+}
+
 
 def get_unlocked_zones(player_level: int) -> list:
     return [zid for zid in ZONE_ORDER if player_level >= ZONE_DEFS[zid]["unlock_level"]]

@@ -313,8 +313,13 @@ def zone_menu(player):
                 if zid in unlocked:
                     player.current_zone = zid
                     zdef = ZONE_DEFS[zid]
+                    clear_screen()
+                    print_header(f"{zdef['emoji']}  {zdef['name']}")
+                    from systems.zones import ZONE_FLAVOR
+                    for line in ZONE_FLAVOR.get(zid, []):
+                        print(line)
                     print(f"\n✅ Zone gewechselt zu: {zdef['emoji']} {zdef['name']}")
-                    input("(ENTER)")
+                    input("\n(ENTER)")
                     break
                 else:
                     print(f"\n🔒 Diese Zone ist ab Level {ZONE_DEFS[zid]['unlock_level']} verfügbar.")
