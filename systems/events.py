@@ -135,13 +135,106 @@ def _mysterious_stranger(player):
     input("\n(ENTER)")
 
 
+def _captured_soldier(player):
+    clear_screen()
+    print_header("Gefangener Soldat")
+    print("Hinter einem Gitter liegt ein verwundeter Soldat.")
+    print("Er fleht dich an, ihn zu befreien. Es kostet Zeit — und vielleicht Kraft.\n")
+    print("  [B] Befreien   — nimmst 5 Schaden, erhältst dafür Gold und Loot")
+    print("  [I] Ignorieren — du gehst weiter")
+
+    choice = input("\nDeine Wahl: ").lower()
+    if choice == "b":
+        cost = 5
+        player.hp = max(1, player.hp - cost)
+        print(f"\nDu kämpfst das Gitter auf. -{cost} HP  (HP: {player.hp}/{player.max_hp})")
+        gold = random.randint(20, 45)
+        player.inventory["Gold"] += gold
+        player.stats["gold_earned"] += gold
+        print(f"Der Soldat drückt dir seinen Reservebeutel in die Hand. +{gold} Gold!")
+        if random.random() < 0.60:
+            from content.loot_tables import roll_loot, apply_loot
+            items = roll_loot(rank=2, rolls=1)
+            msgs  = apply_loot(player, items)
+            if msgs:
+                print("Er zieht noch etwas aus seinem Mantel hervor:")
+                for m in msgs:
+                    print(m)
+    else:
+        print("\nDu gehst weiter. Der Soldat verstummt enttäuscht.")
+    input("\n(ENTER)")
+
+
+def _old_blacksmith(player):
+    clear_screen()
+    print_header("Alter Schmied")
+    print("Ein alter Schmied hockt über seinem tragbaren Amboss.")
+    print("Er schaut kurz auf dein Equipment und nickt bedächtig.\n")
+    print("\"Ich kann das verbessern. Einmal, für umsonst. Such dir was aus.\"\n")
+
+    from content.loot_tables import EQUIPMENT_DEFS
+    _STARTER = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
+    _MAX_UPGRADE_LVL = 3
+    _SLOT_LABELS = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm", "feet": "Schuhe"}
+
+    upgradeable = []
+    for slot, label in _SLOT_LABELS.items():
+        item = player.equipment[slot]
+        if item["name"] in _STARTER:
+            continue
+        lvl = player.equipment_upgrades.get(slot, 0)
+        if lvl >= _MAX_UPGRADE_LVL:
+            continue
+        upgradeable.append((slot, label, item, lvl))
+
+    if not upgradeable:
+        print("Er schaut sich dein Equipment an und schüttelt den Kopf.")
+        print("\"Alles schon auf dem Höchstlevel. Gut gemacht.\"")
+        input("\n(ENTER)")
+        return
+
+    for i, (slot, label, item, lvl) in enumerate(upgradeable):
+        if slot == "weapon":
+            next_bonus = f"+{(lvl + 1) * 2} ATK"
+        else:
+            next_bonus = f"+{lvl + 1} DEF"
+        print(f"  [{i+1}] {label:<10} {item['name']:<24} Stufe {lvl} → {lvl+1}  ({next_bonus})")
+
+    print("\n  [0] Ablehnen")
+    choice = input("\nWas aufwerten? ").strip()
+
+    if choice == "0" or not choice.isdigit():
+        print("\nDu lehnst das Angebot ab. Der Schmied zuckt die Schultern.")
+        input("(ENTER)")
+        return
+
+    idx = int(choice) - 1
+    if not (0 <= idx < len(upgradeable)):
+        print("\nUngültige Auswahl.")
+        input("(ENTER)")
+        return
+
+    slot, label, item, lvl = upgradeable[idx]
+    player.equipment_upgrades[slot] = lvl + 1
+    new_lvl = player.equipment_upgrades[slot]
+    if slot == "weapon":
+        bonus_desc = f"+{new_lvl * 2} ATK gesamt"
+    else:
+        bonus_desc = f"+{new_lvl} DEF gesamt"
+    print(f"\nDer Schmied arbeitet geschickt. Ein kurzes Hämmern — fertig.")
+    print(f"⬆️  {item['name']} auf Stufe {new_lvl} aufgewertet! ({bonus_desc})")
+    input("\n(ENTER)")
+
+
 # Gewichtete Event-Tabelle: (Funktion, Gewicht)
 _EVENTS = [
-    (_wandering_merchant,  25),
-    (_abandoned_shrine,    20),
-    (_poison_trap,         15),
-    (_treasure_chest,      25),
+    (_wandering_merchant,  20),
+    (_abandoned_shrine,    15),
+    (_poison_trap,         10),
+    (_treasure_chest,      20),
     (_mysterious_stranger, 15),
+    (_captured_soldier,    12),
+    (_old_blacksmith,       8),
 ]
 
 
