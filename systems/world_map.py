@@ -4,9 +4,10 @@ from systems.zones import ZONE_DEFS, ZONE_ORDER, ZONE_FLAVOR, _is_zone_unlocked
 
 ZONE_BOSS_DEFS = {
     "wald": {
-        "name":    "Torg, Wächter des Waldes",
-        "emoji":   "🌿",
-        "hp_mult": 2.5,
+        "name":     "Torg, Wächter des Waldes",
+        "emoji":    "🌿",
+        "hp_mult":  2.25,
+        "atk_mult": 0.9,
         "intro":   (
             "Aus dem Dunkel des uralten Waldes tritt ein gewaltiger Troll.\n"
             "Torg hat diesen Wald seit Jahrhunderten bewacht — und er kennt\n"
@@ -15,9 +16,10 @@ ZONE_BOSS_DEFS = {
         "victory": "Torg stürzt donnernd zu Boden. Die Bäume erzittern. Zum ersten Mal seit Jahrhunderten herrscht Stille im Wald.",
     },
     "ruinen": {
-        "name":    "Korroth, der Ewige Wächter",
-        "emoji":   "🗿",
-        "hp_mult": 2.5,
+        "name":     "Korroth, der Ewige Wächter",
+        "emoji":    "🗿",
+        "hp_mult":  2.25,
+        "atk_mult": 0.9,
         "intro":   (
             "Die Ruinen beben. Steine fügen sich zu einer gewaltigen Gestalt.\n"
             "Korroth war einst der Hüter dieser Festung — jetzt ist er verdammt,\n"
@@ -26,9 +28,10 @@ ZONE_BOSS_DEFS = {
         "victory": "Mit einem letzten Knirschen zerfällt Korroth zu Staub. Die Ruinen schweigen endlich.",
     },
     "wueste": {
-        "name":    "Razin, König der Meuchler",
-        "emoji":   "🏜️",
-        "hp_mult": 2.8,
+        "name":     "Razin, König der Meuchler",
+        "emoji":    "🏜️",
+        "hp_mult":  2.5,
+        "atk_mult": 0.9,
         "intro":   (
             "Ein Schatten löst sich von der Wand.\n"
             "Razin, der Meuchler-König, tritt in das Licht — er hat dich\n"
@@ -37,9 +40,10 @@ ZONE_BOSS_DEFS = {
         "victory": "Razin sinkt in den Sand. Die Meuchler-Gilden sind führerlos. Die Wüste gehört dir.",
     },
     "vulkan": {
-        "name":    "Ignar, der Ewige Drache",
-        "emoji":   "🐉",
-        "hp_mult": 3.0,
+        "name":     "Ignar, der Ewige Drache",
+        "emoji":    "🐉",
+        "hp_mult":  2.7,
+        "atk_mult": 0.9,
         "intro":   (
             "Die Lava brodelt. Ein Drache — alt wie der Vulkan selbst —\n"
             "entfaltet seine gewaltigen Schwingen. Ignar hat noch keinen\n"
@@ -48,9 +52,10 @@ ZONE_BOSS_DEFS = {
         "victory": "Ignar stürzt in die Lava. Ein letzter Feuersturm erfüllt die Höhle — dann Stille. Du hast den ewigen Drachen bezwungen.",
     },
     "dunkelreich": {
-        "name":    "Malachar, Herr der Finsternis",
-        "emoji":   "💀",
-        "hp_mult": 3.5,
+        "name":     "Malachar, Herr der Finsternis",
+        "emoji":    "💀",
+        "hp_mult":  3.15,
+        "atk_mult": 0.9,
         "intro":   (
             "Absolute Stille. Dann: Schritte.\n"
             "Malachar, der Herr des Dunkel-Reichs, tritt aus der Finsternis.\n"
@@ -126,6 +131,7 @@ def run_zone_boss(player, zone_id: str) -> str:
     boss.name    = bdef["name"]
     boss.max_hp  = max(1, int(boss.max_hp * bdef.get("hp_mult", 2.5)))
     boss.hp      = boss.max_hp
+    boss.attack  = max(1, int(boss.attack * bdef.get("atk_mult", 1.0)))
 
     diff = getattr(player, "difficulty", "normal")
     if diff != "normal":

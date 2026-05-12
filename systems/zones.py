@@ -142,4 +142,9 @@ def create_zone_enemy(player, zone_id: str = None):
         mob.hp     = mob.max_hp
         mob.attack = max(1, int(mob.attack * mult))
 
+    # Basis-Buff normale Gegner (+10%)
+    mob.max_hp = max(1, int(mob.max_hp * 1.1))
+    mob.hp     = mob.max_hp
+    mob.attack = max(1, int(mob.attack * 1.1))
+
     return mob

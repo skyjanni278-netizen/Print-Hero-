@@ -102,6 +102,12 @@ def _create_scaled_enemy(player, forced_rank: int):
         enemy.max_hp = max(1, int(enemy.max_hp * mult))
         enemy.hp     = enemy.max_hp
         enemy.attack = max(1, int(enemy.attack * mult))
+
+    # Basis-Buff normale Gegner (+10%)
+    enemy.max_hp = max(1, int(enemy.max_hp * 1.1))
+    enemy.hp     = enemy.max_hp
+    enemy.attack = max(1, int(enemy.attack * 1.1))
+
     return enemy
 
 
