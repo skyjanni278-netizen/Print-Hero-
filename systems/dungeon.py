@@ -19,7 +19,7 @@ def _generate_rooms(player_level: int) -> list:
     for _ in range(n - 1):
         rtype = random.choices(
             ["combat", "event", "elite", "shrine", "trap", "empty", "miniboss"],
-            weights=[40, 10, 15, 12, 12, 11, 10],
+            weights=[55, 10, 15,  6,  6,  4,  8],
             k=1
         )[0]
         middle.append(rtype)
