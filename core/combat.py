@@ -12,10 +12,6 @@ def generate_enemy_group(player):
     return [create_zone_enemy(player, zone_id) for _ in range(count)]
 
 
-def create_enemy(player):
-    from systems.zones import create_zone_enemy
-    return create_zone_enemy(player)
-
 
 def consumable_menu(player) -> str:
     clear_screen()

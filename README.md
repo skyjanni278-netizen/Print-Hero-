@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
 
-**Aktuelle Version: v1.9.9** | Python 3.10+ | Keine externen Pakete
+**Aktuelle Version: v2.0** | Python 3.10+ | Keine externen Pakete
 
 ---
 
@@ -32,8 +32,8 @@ content/
 systems/
   dungeon.py             — Dungeon-Schleife, Raumgenerierung, Raumtypen
   zones.py               — Zonen-Definitionen, Monster-Pools, Boss-Klassen, Rang-Gewichtung
+  world_map.py           — Weltkarte, Zonen-Bosse, Endscreen, zone_progress-Logik
   events.py              — Zufalls-Events zwischen Räumen
-  world_map.py           — Weltkarten-Grundgerüst (Zonen-Status, zone_progress)
   skilltree.py           — Skill-Auswahl & Skill-Effekte
   achievements.py        — Achievement-System (20 Errungenschaften)
 saves/
@@ -61,17 +61,18 @@ Beim Start wählst du eine von drei Klassen — jede hat unterschiedliche Startw
 ---
 
 ### Zonen
-Das Spiel ist in **5 Zonen** unterteilt, die mit dem Level freigeschaltet werden. Jede Zone hat ihren eigenen Gegner-Pool und eine andere Schwierigkeitsverteilung.
+Das Spiel ist in **5 Zonen** unterteilt, die sequenziell durch das Besiegen des Zonen-Bosses freigeschaltet werden. Jede Zone hat ihren eigenen Gegner-Pool und einen einzigartigen Endgegner.
 
-| Zone | Emoji | Freischaltung | Gegner |
-|------|-------|:-------------:|--------|
-| Wald | 🌲 | Lv. 1 | Schleim, Schattenwolf, Goblin, Waldtroll |
-| Ruinen | 🏚️ | Lv. 2 | Zombie, Skelett, Bandit, Waldtroll |
-| Wüste | 🏜️ | Lv. 4 | Bandit, Meuchler, Giftige Spinne, Goblin |
-| Vulkan | 🌋 | Lv. 6 | Flammendämon, Steingolem, Drache, Dunkelritter |
-| Dunkel-Reich | 💀 | Lv. 8 | Dunkelritter, Eismagierin, Drache, Flammendämon |
+| Zone | Emoji | Min. Level | Zonen-Boss | Dungeons |
+|------|-------|:----------:|-----------|:--------:|
+| Wald | 🌲 | 1 | Torg, Wächter des Waldes | 3 |
+| Ruinen | 🏚️ | 2 | Korroth, der Ewige Wächter | 4 |
+| Wüste | 🏜️ | 4 | Razin, König der Meuchler | 5 |
+| Vulkan | 🌋 | 6 | Ignar, der Ewige Drache | 6 |
+| Dunkel-Reich | 💀 | 8 | Malachar, Herr der Finsternis | 7 |
 
-Die Zone wird im Lagerfeuer-Menü unter **[Z] Zone wählen** gewechselt und im Spielstand gespeichert.
+**Progression:** N Dungeons in einer Zone abschließen → Zonen-Boss ([B] im Lagerfeuer) → nächste Zone öffnet sich.  
+Die **Weltkarte** ist jederzeit über **[Z]** im Lagerfeuer erreichbar.
 
 ---
 
