@@ -33,6 +33,7 @@ def save_game(player):
         "achievements": list(getattr(player, "achievements", set())),
         "player_class": getattr(player, "player_class", "warrior"),
         "current_zone": getattr(player, "current_zone", "wald"),
+        "passive_crit_bonus": getattr(player, "passive_crit_bonus", 0.0),
     }
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f, indent=2)
@@ -78,8 +79,12 @@ def load_game():
     player.player_class        = data.get("player_class", "warrior")
     player.current_zone        = data.get("current_zone", "wald")
     player.class_ability_used  = False
+    player.class_ability2_used = False
+    player.class_ability3_used = False
     player.block_next          = False
     player.shadow_strike_ready = False
+    player.mana_shield_active  = False
+    player.passive_crit_bonus  = data.get("passive_crit_bonus", 0.0)
     print("📂 Spielstand geladen!")
     return player
 

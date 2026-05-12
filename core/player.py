@@ -47,8 +47,12 @@ class Character:
 
         self.player_class        = "warrior"
         self.class_ability_used  = False
+        self.class_ability2_used = False
+        self.class_ability3_used = False
         self.block_next          = False
         self.shadow_strike_ready = False
+        self.mana_shield_active  = False
+        self.passive_crit_bonus  = 0.0
 
         self.current_zone = "wald"
 
@@ -150,7 +154,10 @@ class Character:
         self.shield_active       = False
         self.block_next          = False
         self.shadow_strike_ready = False
+        self.mana_shield_active  = False
         self.class_ability_used  = False
+        self.class_ability2_used = False
+        self.class_ability3_used = False
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in self.skills else 0
@@ -179,9 +186,11 @@ class Character:
 
     # Welche Fähigkeiten bei welchem Level freigeschaltet werden
     SKILL_UNLOCKS = {
-        2: ("Cleave (C)",       "10 Energie – Angriff + 3 Blutungsstacks"),
-        3: ("Rundumschlag (R)", "15 Energie – Trifft alle Gegner"),
-        5: ("Himmelsschlag (S)","20 Energie – Starker Einzelangriff +5 Schaden"),
+        2: ("Cleave (C)",            "10 Energie – Angriff + 3 Blutungsstacks"),
+        3: ("Rundumschlag (R)",      "15 Energie – Trifft alle Gegner"),
+        4: ("Klassen-Fähigkeit [1]", "Klassenspezifisch – Taste [1] im Kampf"),
+        5: ("Himmelsschlag (S)",     "20 Energie – Starker Einzelangriff +5 Schaden"),
+        7: ("Klassen-Fähigkeit [2]", "Klassenspezifisch – Taste [2] im Kampf"),
     }
 
     def check_level_up(self):
@@ -204,6 +213,17 @@ class Character:
                 skill_name, skill_desc = self.SKILL_UNLOCKS[self.level]
                 print(f"🔓 Neue Fähigkeit freigeschaltet: {skill_name}")
                 print(f"   → {skill_desc}")
+            # Passive Klassen-Skalierung
+            if self.player_class == "warrior" and self.level % 2 == 0:
+                self.armor += 1
+                print(f"⚔️  Krieger-Passiv: +1 Rüstung durch Kampferfahrung! (Rüstung: {self.armor})")
+            elif self.player_class == "mage" and self.level % 2 == 0:
+                self.max_energy += 5
+                print(f"🔮 Magier-Passiv: +5 max. Energie durch Magiestudium! (Max. Energie: {self.max_energy})")
+            elif self.player_class == "rogue" and self.level % 3 == 0:
+                self.passive_crit_bonus += 0.05
+                pct = int((0.15 + self.passive_crit_bonus) * 100)
+                print(f"🗡️  Schurken-Passiv: +5% Krit-Chance durch Präzision! (Krit: {pct}%)")
 
     def is_alive(self):
         return self.hp > 0
@@ -221,7 +241,7 @@ class Character:
             ignore_def  = True
         else:
             # Kritischer Treffer: 15% (+10% Schurke) Chance auf Doppelschaden
-            rogue_bonus = 0.10 if self.player_class == "rogue" else 0
+            rogue_bonus = (0.10 + self.passive_crit_bonus) if self.player_class == "rogue" else 0
             base_crit   = 0.15 if "Kritischer Treffer" in self.skills else 0
             if random.random() < (base_crit + rogue_bonus):
                 raw_damage *= 2
@@ -356,6 +376,59 @@ class Character:
                 msgs.append("keine Statuseffekte vorhanden")
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
+
+    # ── Neue Klassen-Fähigkeiten (Level 4 + 7) ──────────────────
+
+    def shield_bash(self, target):
+        """Krieger Lv4: Angriff + 50% Betäubungs-Chance"""
+        cost = 15
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        raw = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+        dmg = self.apply_armor_reduction(raw, target.get_total_armor())
+        target.hp = max(0, target.hp - dmg)
+        if random.random() < 0.50:
+            target.stunned = True
+            return f"🛡️  Schildstoß! {dmg} Schaden — {target.name} ist betäubt!", dmg
+        return f"🛡️  Schildstoß! {dmg} Schaden.", dmg
+
+    def warcry(self):
+        """Krieger Lv7: +5 ATK für diesen Kampf"""
+        cost = 20
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})"
+        self.energy -= cost
+        self.combat_modifiers["attack"] = self.combat_modifiers.get("attack", 0) + 5
+        return f"⚔️  Kriegsschrei! +5 ATK für diesen Kampf. (ATK: {self.get_total_attack()})"
+
+    def poison_blade(self, target):
+        """Schurke Lv4: Angriff + 3 Giftstacks garantiert"""
+        cost = 12
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        raw = random.randint(self.get_effective_min_attack(), self.get_total_attack())
+        dmg = self.apply_armor_reduction(raw, target.get_total_armor())
+        target.hp = max(0, target.hp - dmg)
+        target.poison_stacks = getattr(target, "poison_stacks", 0) + 3
+        return f"🗡️  Giftklinge! {dmg} Schaden + 3 Giftstacks auf {target.name}!", dmg
+
+    def frost_ray(self, target):
+        """Magier Lv4: 15-25 Schaden (ignoriert DEF) + Betäubung"""
+        cost = 18
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        dmg = random.randint(15, 25)
+        target.hp = max(0, target.hp - dmg)
+        target.stunned = True
+        return f"❄️  Froststrahl! {dmg} Eisschaden (ignoriert DEF) — {target.name} ist eingefroren!", dmg
+
+    def activate_mana_shield(self):
+        """Magier Lv7: Absorbiert nächsten Angriff mit Energie statt HP"""
+        self.mana_shield_active = True
+        return "🔮 Mana-Schild aktiviert! Nächster Angriff wird durch Energie absorbiert."
 
     def start_ng_plus(self):
         from content.loot_tables import EQUIPMENT_DEFS
