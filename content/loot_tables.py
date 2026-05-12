@@ -114,6 +114,13 @@ CLASS_WEAPON_MAP = {
     "Göttliche Klinge": {"warrior": "Heilige Klinge",  "rogue": "Klingengeist",    "mage": "Götterstab"},
 }
 
+# Rückwärts-Map: Klassenvariante → generische Basiswaffe (für Set-Bonus-Prüfung)
+WEAPON_VARIANT_TO_BASE = {
+    variant: base
+    for base, variants in CLASS_WEAPON_MAP.items()
+    for variant in variants.values()
+}
+
 # Rarity-Label und Farb-Emoji für Anzeige
 RARITY_LABEL = {
     "common":    ("Gewöhnlich",  "⬜"),
@@ -193,7 +200,7 @@ SET_DEFS = {
 
 def get_active_sets(player) -> list:
     """Gibt Liste von (set_name, sdef, count, bonus) für alle aktiven Sets (>= 2 Teile) zurück."""
-    equipped = {item["name"] for item in player.equipment.values()}
+    equipped = {WEAPON_VARIANT_TO_BASE.get(item["name"], item["name"]) for item in player.equipment.values()}
     result = []
     for sname, sdef in SET_DEFS.items():
         count = len(equipped & sdef["pieces"])
