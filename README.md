@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
 
-**Aktuelle Version: v1.9.2** | Python 3.10+ | Keine externen Pakete
+**Aktuelle Version: v1.9.3** | Python 3.10+ | Keine externen Pakete
 
 ---
 
@@ -136,6 +136,24 @@ Skillpunkte bei Level-Up investieren in passive Boni:
 - Schnelligkeit — höhere Fluchtchance
 - Schildmeister — verbesserter Schildwall (Krieger)
 - … und weitere klassenspezifische Skills
+
+---
+
+### Klassen-Waffen
+Jede Waffe droppt als **klassenspezifische Variante** — gleiche Stats, aber passender Name und Emoji:
+
+| Generisch | Krieger ⚔️ | Schurke 🗡️ | Magier 🪄 |
+|-----------|-----------|-----------|----------|
+| Kurzschwert | Kampfschwert | Spitzdolch | Novizenstab |
+| Langschwert | Bastardschwert | Klingenschatten | Magierstab |
+| Kriegshammer | Streitaxt | Schattenbeil | Arkane Keule |
+| Sturmklinge | Gewitterschwert | Blitzdolch | Sturmstab |
+| Runenschwert | Runenklinge | Runendolch | Runenstab |
+| Knochensense | Kriegssense | Seelenstehler | Totenstab |
+| Drachenzahn | Drachenklaue | Drachenstich | Drachenstab |
+| Göttliche Klinge | Heilige Klinge | Klingengeist | Götterstab |
+
+Generische Waffennamen bleiben im **Shop** erhalten.
 
 ---
 
