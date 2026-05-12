@@ -1,7 +1,7 @@
 # 🗡️ Print-Hero
 
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
-> Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
+> Wähle deine Klasse, kämpfe dich durch 5 Zonen, besiege Zonen-Bosse und rette das Reich.
 
 **Aktuelle Version: v2.0** | Python 3.10+ | Keine externen Pakete
 
@@ -22,8 +22,8 @@ main.py                  — Spielschleife & Einstiegspunkt
 config.py                — Schwierigkeitsgrade & globale Konstanten
 core/
   player.py              — Spieler-Klasse, Inventar, Skills, Equipment
-  combat.py              — Kampflogik, Spezialattacken, Loot-Vergabe
-  save.py                — Speichern & Laden (JSON)
+  combat.py              — Kampflogik, Fähigkeiten, Loot-Vergabe
+  save.py                — Speichern & Laden (JSON, 3 Slots)
 content/
   monsters.py            — Alle Gegner-Klassen, Rang-System, Boss-Fähigkeiten
   loot_tables.py         — Loot-Pools, Item-Definitionen, Set-Definitionen
@@ -31,8 +31,8 @@ content/
   classes.py             — Klassen-Definitionen & Startboni
 systems/
   dungeon.py             — Dungeon-Schleife, Raumgenerierung, Raumtypen
-  zones.py               — Zonen-Definitionen, Monster-Pools, Boss-Klassen, Rang-Gewichtung
-  world_map.py           — Weltkarte, Zonen-Bosse, Endscreen, zone_progress-Logik
+  zones.py               — Zonen-Definitionen, Monster-Pools, Rang-Gewichtung
+  world_map.py           — Weltkarte, Zonen-Bosse, Endscreen, zone_progress
   events.py              — Zufalls-Events zwischen Räumen
   skilltree.py           — Skill-Auswahl & Skill-Effekte
   achievements.py        — Achievement-System (20 Errungenschaften)
@@ -50,101 +50,106 @@ ui/
 ## 🎮 Spielsysteme
 
 ### Klassen
-Beim Start wählst du eine von drei Klassen — jede hat unterschiedliche Startwerte und eine einzigartige Kampffähigkeit:
+Beim Start wählst du eine von drei Klassen — jede hat unterschiedliche Startwerte und drei einzigartige Kampffähigkeiten:
 
-| Klasse  | Start-HP | Start-ATK | Klassen-Fähigkeit |
-|---------|:--------:|:---------:|-------------------|
-| Krieger | 40       | 8         | Schildwall — blockiert einen Angriff |
-| Schurke | 28       | 12        | Aus dem Schatten — garantierter Kritischer Treffer |
-| Magier  | 22       | 10        | Arkane Entladung — Magie-Angriff + DEF-Debuff |
+| Klasse | Start-HP | Start-ATK | Fähigkeit 1 (immer) | Fähigkeit 2 (LVL 4) | Fähigkeit 3 (LVL 7) |
+|--------|:--------:|:---------:|---------------------|---------------------|---------------------|
+| ⚔️ Krieger | 40 | 8 | Schildwall — blockiert einen Angriff | Schildstoß — Schaden + Betäubung | Kriegsschrei — +5 ATK für diesen Kampf |
+| 🗡️ Schurke | 28 | 12 | Aus dem Schatten — Krit + ignoriert DEF | Giftklinge — Angriff + 3 Giftstacks | Rauchbombe — garantierte Flucht |
+| 🪄 Magier | 22 | 10 | Arkane Entladung — AoE-Magieschaden | Froststrahl — Schaden + Einfrieren | Mana-Schild — nächster Schaden via Energie |
 
 ---
 
 ### Zonen
-Das Spiel ist in **5 Zonen** unterteilt, die sequenziell durch das Besiegen des Zonen-Bosses freigeschaltet werden. Jede Zone hat ihren eigenen Gegner-Pool und einen einzigartigen Endgegner.
+Das Spiel ist in **5 Zonen** unterteilt, die sequenziell freigeschaltet werden.  
+**Voraussetzung:** Mindestlevel + Zonen-Boss der vorherigen Zone besiegt.
 
-| Zone | Emoji | Min. Level | Zonen-Boss | Dungeons |
-|------|-------|:----------:|-----------|:--------:|
+| Zone | Emoji | Min. Level | Zonen-Boss | Dungeons bis Boss |
+|------|-------|:----------:|-----------|:-----------------:|
 | Wald | 🌲 | 1 | Torg, Wächter des Waldes | 3 |
 | Ruinen | 🏚️ | 2 | Korroth, der Ewige Wächter | 4 |
 | Wüste | 🏜️ | 4 | Razin, König der Meuchler | 5 |
 | Vulkan | 🌋 | 6 | Ignar, der Ewige Drache | 6 |
 | Dunkel-Reich | 💀 | 8 | Malachar, Herr der Finsternis | 7 |
 
-**Progression:** N Dungeons in einer Zone abschließen → Zonen-Boss ([B] im Lagerfeuer) → nächste Zone öffnet sich.  
+**Progression:** N Dungeons abschließen → **[B] Zonen-Boss** → nächste Zone öffnet sich.  
 Die **Weltkarte** ist jederzeit über **[Z]** im Lagerfeuer erreichbar.
 
 ---
 
 ### Dungeon-System
-Das Herzstück des Spiels. Jeder Dungeon besteht aus **3–5 Räumen**, der letzte Raum ist immer der Boss.
-
-**Raumtypen:**
+Jeder Dungeon besteht aus **3–5 Räumen**, der letzte Raum ist immer der Boss.
 
 | Symbol | Typ | Beschreibung |
 |--------|-----|-------------|
 | ⚔️ | Kampf | 1–3 Gegner gleichzeitig |
-| 💪 | Elite-Gegner | Stärkerer Einzelkämpfer, bessere Beute |
+| 💪 | Elite-Gegner | Rang-2-Einzelkämpfer, bessere Beute |
 | 💀 | Mini-Boss | Rang-3-Gegner, gute Drops |
 | 🎲 | Ereignis | Zufälliger Event (Händler, Schrein, Falle…) |
-| 🕯️ | Schrein | Garantierte Segnung: HP, Energie, XP-Buff oder Fluch wagen |
+| 🕯️ | Schrein | Segnung wählen: HP / Energie / XP-Buff — oder Fluch wagen |
 | ⚠️ | Falle | Ausweichen (kostet Energie) oder Schaden nehmen |
-| 🌫️ | Leerer Raum | Flavor + Chance auf versteckten Loot |
-| 🔥 | Boss | Rang-4/5-Gegner mit Bonus-Loot nach dem Kill |
+| 🌫️ | Leerer Raum | Flavor-Text + Chance auf versteckten Loot |
+| 🔥 | Boss | Rang-4/5-Gegner mit Bonus-Loot |
 
-**Zwischen den Räumen** kannst du Ausrüstung anlegen, Tränke benutzen und den nächsten Raum einsehen.  
-Du kannst den Dungeon jederzeit verlassen — ohne Abschluss gibt es kein Loot und keine HP-Heilung.  
-Nach einem **vollständig abgeschlossenen Dungeon** werden HP und Energie vollständig wiederhergestellt.
+Zwischen Räumen kannst du ausrüsten, Tränke benutzen und den nächsten Raum einsehen.  
+Bei vollständigem Abschluss: **volle HP/Energie-Wiederherstellung**.  
+Flucht jederzeit möglich — ohne Abschluss kein Loot, keine Heilung.
 
 ---
 
 ### Kampf
-Rundenbasiert. Du und deine Gegner handeln abwechselnd.
+Rundenbasiert. Der Kampf-Screen zeigt HP-Balken, Statuseffekte und Zone auf einen Blick.
 
 | Taste | Aktion | Energie | Beschreibung |
 |-------|--------|:-------:|-------------|
-| A | Angreifen | — | Normaler Angriff |
-| S | Himmelsschlag | 20 | Starker Einzelangriff |
-| R | Rundumschlag | 15 | Trifft alle Gegner (−2 Schaden) |
-| C | Cleave | 10 | Angriff + 3 Blutungsstacks |
-| K | Klassen-Fähigkeit | — | Einmal pro Kampf nutzbar |
+| A | Angreifen | — | Normaler Angriff auf einen Gegner |
+| S | Himmelsschlag | 20 | Starker Einzelangriff (ab LVL 5) |
+| R | Rundumschlag | 15 | Trifft alle lebenden Gegner (ab LVL 3) |
+| C | Cleave | 10 | Angriff + 3 Blutungsstacks (ab LVL 2) |
+| X | Klassen-Fähigkeit 1 | — | Einmal pro Kampf |
+| 1 | Klassen-Fähigkeit 2 | variabel | Einmal pro Kampf (ab LVL 4) |
+| 2 | Klassen-Fähigkeit 3 | variabel | Einmal pro Kampf (ab LVL 7) |
+| M | Magieschild | — | Blockt nächsten Angriff (wenn verfügbar) |
 | U | Verbrauchsgegenstände | — | Tränke & Items im Kampf |
 | F | Fliehen | — | Verlässt den Kampf |
 
 **Statuseffekte:**
-- **Blutung:** Jeder Stack → 3 Schaden/Runde, reduziert sich um 1
-- **Gift:** Steigender Schaden pro Runde (+1 pro Stack)
-- **Energie-Regeneration:** +3 Energie automatisch pro Runde
+- **Blutung:** Jeder Stack → 3 Schaden/Runde, reduziert sich um 1 Stack
+- **Gift:** Schaden pro Runde, steigt mit der Stack-Anzahl
+- **Betäubung:** Betroffene überspringen die nächste Runde
+- **Säure-Debuff:** Temporäre DEF-Reduktion für den laufenden Kampf
+- **Energie-Regeneration:** +3 Energie automatisch am Ende jeder Runde
+
+Bei **Einzelgegner** entfällt die Zielauswahl — automatisches Auto-Targeting.
 
 ---
 
 ### Charakter-Progression
 
-| Level | max. HP (je nach Klasse) | Basis-ATK |
-|------:|:------------------------:|----------:|
-|     1 | 22 – 40                  |      8–12 |
-|     5 | 38 – 56                  |     12–16 |
-|    10 | 58 – 76                  |     17–21 |
+| Level | max. HP (je Klasse) | Basis-ATK |
+|------:|:-------------------:|----------:|
+| 1 | 22 – 40 | 8 – 12 |
+| 5 | 38 – 56 | 12 – 16 |
+| 10 | 58 – 76 | 17 – 21 |
 
 Pro Level-Up: **+4 max. HP**, **+1 ATK**, HP wird aufgefüllt.  
-Ab Level 2: Du erhältst **Skillpunkte** für den Skill-Tree.
+Ab Level 2: **Skillpunkte** für den Skill-Tree.
 
 ---
 
 ### Skill-Tree
-Skillpunkte bei Level-Up investieren in passive Boni:
+Skillpunkte bei Level-Up in passive Boni investieren:
 
-- Feuerkraft — +ATK permanent
-- Zähigkeit — +max. HP permanent
-- Regeneration — mehr Energie-Regen pro Runde
-- Schnelligkeit — höhere Fluchtchance
-- Schildmeister — verbesserter Schildwall (Krieger)
-- … und weitere klassenspezifische Skills
+- **Feuerkraft** — +ATK permanent
+- **Zähigkeit** — +max. HP permanent
+- **Regeneration** — mehr Energie-Regen pro Runde
+- **Schnelligkeit** — höhere Fluchtchance
+- Klassenspezifische Skills (Schildmeister, Schattenläufer, Arkane Kontrolle…)
 
 ---
 
 ### Klassen-Waffen
-Jede Waffe droppt als **klassenspezifische Variante** — gleiche Stats, aber passender Name und Emoji:
+Waffen droppen als **klassenspezifische Variante** — gleiche Stats, passender Name:
 
 | Generisch | Krieger ⚔️ | Schurke 🗡️ | Magier 🪄 |
 |-----------|-----------|-----------|----------|
@@ -162,11 +167,10 @@ Generische Waffennamen bleiben im **Shop** erhalten.
 ---
 
 ### Equipment & Sets
-Vier Ausrüstungsslots: **Waffe, Rüstung, Helm, Schuhe**.
-
+Vier Ausrüstungsslots: **Waffe, Rüstung, Helm, Schuhe**.  
 Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 
-**Set-Boni** bei 2/3/4 angelegten Teilen eines Sets:
+**Neutrale Sets** (für alle Klassen):
 
 | Set | 4-teiliger Bonus |
 |-----|-----------------|
@@ -178,10 +182,18 @@ Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 | Drachen-Set | +15 DEF, +12 ATK |
 | Licht-Set *(nur Loot)* | +20 DEF, +18 ATK |
 
+**Klassen-Sets** (nur für die jeweilige Klasse):
+
+| Set | Klasse | 4-teiliger Bonus |
+|-----|--------|-----------------|
+| Eisenfestung | Krieger | +10 DEF, Schildwall blockt 2 Angriffe |
+| Schattenhülle | Schurke | +15% Krit, Aus-dem-Schatten lädt alle 3 Runden auf |
+| Arkane Roben | Magier | +20 max. Energie, Arkane Entladung hat 2 Ladungen |
+
 ---
 
 ### Gegner & Ränge
-Gegner werden mit einem zufälligen **Rang** gespawnt:
+Gegner werden mit einem zufälligen **Rang** gespawnt — höhere Zonen bevorzugen höhere Ränge.
 
 | Rang | Titel | HP-Mult | ATK-Mult | Loot-Rolls |
 |:----:|-------|:-------:|:--------:|:----------:|
@@ -191,7 +203,7 @@ Gegner werden mit einem zufälligen **Rang** gespawnt:
 | 4 | 👑 Champion | ×3,0 | ×2,0 | 4 |
 | 5 | 🔥 Boss | ×5,0 | ×2,8 | 6 |
 
-Aktuell im Spiel: Schleim, Schattenwolf, Goblin, Zombie, Bandit, Waldtroll, Skelett, Drache, Assassine, Dunkelritter, Eismagierin, Golem, Werwolf.
+**Aktuell im Spiel:** Schleim, Schattenwolf, Goblin, Zombie, Bandit, Waldtroll, Skelett, Drache, Assassin, Dunkelritter, Eismagierin, Steingolem, Giftige Spinne, Flammendämon
 
 ---
 
@@ -206,32 +218,34 @@ Aktuell im Spiel: Schleim, Schattenwolf, Goblin, Zombie, Bandit, Waldtroll, Skel
 ---
 
 ### New Game+
-Nach Erreichen von **Level 10** kannst du New Game+ starten:
-- Gegner skalieren mit **×1.3 HP und ATK** pro NG+-Runde
-- Du behältst dein **Gold** und alle **legendären Items**
+Nach dem Besiegen **aller 5 Zonen-Bosse** erscheint der Endscreen mit NG+-Angebot:
+- Gegner skalieren mit **×1,3 HP und ATK** pro NG+-Runde (kumulativ)
+- Du behältst **Gold** und alle **legendären Items**
 - Level, Skills und normale Ausrüstung werden zurückgesetzt
+- Alle Zonen starten wieder gesperrt
 
 ---
 
 ### Achievements
-20 freischaltbare Errungenschaften in 5 Sektionen: Kampf, Aufstieg, Dungeons & Zonen, Wirtschaft, Meta.
+**20 freischaltbare Errungenschaften** in 5 Sektionen:
+Kampf · Aufstieg · Dungeons & Zonen · Wirtschaft · Meta
 
 ---
 
-### Inventar
-- **30 Slots** insgesamt
-- Consumables stapeln bis zu einem festgelegten Limit
-- Equipment belegt je 1 Slot (nicht stapelbar)
+### Crafting & Schwarzmarkt
+Am Lagerfeuer über **[C] Handwerk** erreichbar:
+- Junk-Items zu Consumables verarbeiten (4 Rezepte)
+- **Schwarzmarkt:** Wandernder Händler mit seltenen epischen Items — einmal pro Zone verfügbar
 
 ---
 
 ## 💾 Speichern & Laden
 
-Bis zu **3 Spielstände** gleichzeitig in `saves/savegame_1.json` bis `_3.json`.  
-Beim Start: Spielstand-Auswahl mit Klasse, Level und Schwierigkeitsgrad pro Slot.
+Bis zu **3 Spielstände** in `saves/savegame_1.json` bis `_3.json`.  
+Beim Start: Auswahl mit Klasse, Level, Schwierigkeit und NG+-Runde pro Slot.
 
 ---
 
 ## 📋 Roadmap
 
-Siehe [ROADMAP.md](ROADMAP.md) für die vollständige Planung bis v2.0.
+Siehe [ROADMAP.md](ROADMAP.md) für die Planung bis v2.1.
