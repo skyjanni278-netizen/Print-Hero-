@@ -69,6 +69,10 @@ class Character:
             "damage_taken": 0,
             "gold_earned": 0,
             "potions_used": 0,
+            "dungeons_completed": 0,
+            "dungeons_fled": 0,
+            "zone_kills": {},
+            "zones_cleared": [],
         }
 
         self.equipment = {
@@ -503,6 +507,11 @@ class Character:
 
         # Achievements behalten
         self.achievements = kept_achievements
+
+        # Zone + Shop zurücksetzen
+        self.current_zone           = "wald"
+        self.schwarzmarkt_available = True
+        self.shop_stock             = []
 
         # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
         from content.classes import apply_class
