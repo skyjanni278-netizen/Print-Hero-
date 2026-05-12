@@ -47,12 +47,15 @@ class Character:
 
         self.player_class        = "warrior"
         self.class_ability_used  = False
-        self.class_ability2_used = False
-        self.class_ability3_used = False
-        self.block_next          = False
-        self.shadow_strike_ready = False
-        self.mana_shield_active  = False
-        self.passive_crit_bonus  = 0.0
+        self.class_ability2_used      = False
+        self.class_ability3_used      = False
+        self.block_next               = False
+        self.block_charges            = 0
+        self.shadow_strike_ready      = False
+        self.shadow_recharge_countdown = 0
+        self.mana_shield_active       = False
+        self.arcane_charges_remaining = 1
+        self.passive_crit_bonus       = 0.0
 
         self.current_zone = "wald"
 
@@ -133,11 +136,19 @@ class Character:
     # ── Stats ────────────────────────────────────────────────
     def get_set_bonus(self) -> dict:
         from content.loot_tables import get_active_sets
-        atk = def_ = 0
+        atk = def_ = energy = 0
         for _, _, _, bonus in get_active_sets(self):
-            atk  += bonus.get("atk", 0)
-            def_ += bonus.get("def", 0)
-        return {"atk": atk, "def": def_}
+            atk    += bonus.get("atk", 0)
+            def_   += bonus.get("def", 0)
+            energy += bonus.get("energy", 0)
+        return {"atk": atk, "def": def_, "energy": energy}
+
+    def get_set_specials(self) -> set:
+        from content.loot_tables import get_set_specials
+        return get_set_specials(self)
+
+    def get_effective_max_energy(self) -> int:
+        return self.max_energy + self.get_set_bonus().get("energy", 0)
 
     def get_total_attack(self):
         skill_bonus   = 2 if "Scharfe Klingen" in self.skills else 0
@@ -154,7 +165,10 @@ class Character:
         self.shield_active       = False
         self.block_next          = False
         self.shadow_strike_ready = False
-        self.mana_shield_active  = False
+        self.mana_shield_active       = False
+        self.block_charges            = 0
+        self.shadow_recharge_countdown = 0
+        self.arcane_charges_remaining = 1
         self.class_ability_used  = False
         self.class_ability2_used = False
         self.class_ability3_used = False
@@ -241,7 +255,8 @@ class Character:
             ignore_def  = True
         else:
             # Kritischer Treffer: 15% (+10% Schurke) Chance auf Doppelschaden
-            rogue_bonus = (0.10 + self.passive_crit_bonus) if self.player_class == "rogue" else 0
+            set_crit    = 0.15 if "rogue_shadow_regen" in self.get_set_specials() else 0.0
+            rogue_bonus = (0.10 + self.passive_crit_bonus + set_crit) if self.player_class == "rogue" else 0
             base_crit   = 0.15 if "Kritischer Treffer" in self.skills else 0
             if random.random() < (base_crit + rogue_bonus):
                 raw_damage *= 2
@@ -268,7 +283,7 @@ class Character:
     def regenerate(self):
         mage_bonus  = 3 if self.player_class == "mage" else 0
         energy_gain = self.energy_regen + (2 if "Energiefluss" in self.skills else 0) + mage_bonus
-        self.energy = min(self.max_energy, self.energy + energy_gain)
+        self.energy = min(self.get_effective_max_energy(), self.energy + energy_gain)
         msgs = [f"{self.name} regeneriert {energy_gain} Energie."]
         if "Regeneration" in self.skills:
             hp_gain  = 1

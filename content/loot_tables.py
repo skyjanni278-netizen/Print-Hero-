@@ -59,6 +59,22 @@ EQUIPMENT_DEFS = {
     # ── EXTRA WAFFEN ─────────────────────────────────────────
     "Sturmklinge":          {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Züngelnde Blitze"},
     "Knochensense":         {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Aus Todenochen gefertigt"},
+    # ── KLASSEN-RÜSTUNGSSETS ─────────────────────────────────────
+    # Eisenfestung (Krieger, epic)
+    "Festungsklinge":   {"slot": "weapon", "attack": 15, "rarity": "epic", "emoji": "🏰", "sell": 140, "desc": "Klinge des Festungsritters",  "class_only": "warrior"},
+    "Festungsplatte":   {"slot": "chest",  "armor":  12, "rarity": "epic", "emoji": "🏰", "sell": 140, "desc": "Platte aus Festungsstein",    "class_only": "warrior"},
+    "Festungshelm":     {"slot": "head",   "armor":   8, "rarity": "epic", "emoji": "🏰", "sell": 100, "desc": "Helm der Eisenfestung",       "class_only": "warrior"},
+    "Festungsstiefel":  {"slot": "feet",   "armor":   7, "rarity": "epic", "emoji": "🏰", "sell":  95, "desc": "Stiefel aus getriebenem Eisen","class_only": "warrior"},
+    # Schattenhülle (Schurke, epic)
+    "Hüllendolch":      {"slot": "weapon", "attack": 14, "rarity": "epic", "emoji": "🌙", "sell": 135, "desc": "Dolch aus gewebtem Schatten",  "class_only": "rogue"},
+    "Hüllenpanzer":     {"slot": "chest",  "armor":  11, "rarity": "epic", "emoji": "🌙", "sell": 130, "desc": "Rüstung der Schattenhülle",   "class_only": "rogue"},
+    "Hüllenmaske":      {"slot": "head",   "armor":   7, "rarity": "epic", "emoji": "🌙", "sell":  95, "desc": "Maske aus Nachtgarn",         "class_only": "rogue"},
+    "Hüllenstiefel":    {"slot": "feet",   "armor":   6, "rarity": "epic", "emoji": "🌙", "sell":  85, "desc": "Lautlos wie der Mond",        "class_only": "rogue"},
+    # Arkane Roben (Magier, epic)
+    "Arkaner Stab":     {"slot": "weapon", "attack": 13, "rarity": "epic", "emoji": "🔮", "sell": 125, "desc": "Stab aus kristallisierter Magie","class_only": "mage"},
+    "Arkane Robe":      {"slot": "chest",  "armor":  10, "rarity": "epic", "emoji": "🔮", "sell": 125, "desc": "Von Arkaner Energie durchwirkt","class_only": "mage"},
+    "Arkane Kapuze":    {"slot": "head",   "armor":   6, "rarity": "epic", "emoji": "🔮", "sell":  90, "desc": "Kapuze des Arkanen Weisen",   "class_only": "mage"},
+    "Arkane Schuhe":    {"slot": "feet",   "armor":   5, "rarity": "epic", "emoji": "🔮", "sell":  80, "desc": "Gleiten über den Äther",      "class_only": "mage"},
     # ── KLASSEN-WAFFEN (gleiche Stats, klassenspezifischer Name) ─
     # Kurzschwert-Varianten (common, ATK 3)
     "Kampfschwert":         {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "⚔️",  "sell": 20,  "desc": "Kräftige Klinge für den Nahkampf"},
@@ -195,6 +211,34 @@ SET_DEFS = {
             4: {"desc": "+20 DEF +18 ATK",  "atk": 18, "def": 20},
         },
     },
+    # ── KLASSEN-SETS ─────────────────────────────────────────────
+    "Eisenfestung": {
+        "emoji": "🏰",
+        "pieces": {"Festungsklinge", "Festungsplatte", "Festungshelm", "Festungsstiefel"},
+        "bonuses": {
+            2: {"desc": "+3 DEF",                             "atk": 0, "def": 3},
+            3: {"desc": "+3 DEF +2 ATK",                      "atk": 2, "def": 3},
+            4: {"desc": "+10 DEF +5 ATK — Schildwall ×2",     "atk": 5, "def": 10, "special": "warrior_2block"},
+        },
+    },
+    "Schattenhülle": {
+        "emoji": "🌙",
+        "pieces": {"Hüllendolch", "Hüllenpanzer", "Hüllenmaske", "Hüllenstiefel"},
+        "bonuses": {
+            2: {"desc": "+3 DEF",                                        "atk": 0, "def": 3},
+            3: {"desc": "+5 DEF +4 ATK",                                 "atk": 4, "def": 5},
+            4: {"desc": "+8 DEF +5 ATK +15% Krit — Schatten lädt alle 3R", "atk": 5, "def": 8, "special": "rogue_shadow_regen"},
+        },
+    },
+    "Arkane Roben": {
+        "emoji": "🔮",
+        "pieces": {"Arkaner Stab", "Arkane Robe", "Arkane Kapuze", "Arkane Schuhe"},
+        "bonuses": {
+            2: {"desc": "+5 max Energie",                          "atk": 0, "def": 0, "energy":  5},
+            3: {"desc": "+10 max Energie +2 ATK",                  "atk": 2, "def": 0, "energy": 10},
+            4: {"desc": "+8 DEF +4 ATK +20 Energie — Arkane ×2",  "atk": 4, "def": 8, "energy": 20, "special": "mage_double_arcane"},
+        },
+    },
 }
 
 
@@ -208,6 +252,11 @@ def get_active_sets(player) -> list:
         if bonus:
             result.append((sname, sdef, count, bonus))
     return result
+
+
+def get_set_specials(player) -> set:
+    """Gibt Menge aller aktiven 4-teiligen Set-Spezialeffekte zurück."""
+    return {b["special"] for _, _, count, b in get_active_sets(player) if count == 4 and "special" in b}
 
 LOOT_POOL = {
     # -- COMMON
@@ -269,6 +318,19 @@ LOOT_POOL = {
         {"name": "Drachenkrone",    "type": "equipment", "key": "Drachenkrone"},
         {"name": "Drachenklauen",   "type": "equipment", "key": "Drachenklauen"},
         {"name": "Knochensense",    "type": "equipment", "key": "Knochensense"},
+        # Klassen-Sets (droppen nur für passende Klasse, Filter in apply_loot)
+        {"name": "Festungsklinge",  "type": "equipment", "key": "Festungsklinge"},
+        {"name": "Festungsplatte",  "type": "equipment", "key": "Festungsplatte"},
+        {"name": "Festungshelm",    "type": "equipment", "key": "Festungshelm"},
+        {"name": "Festungsstiefel", "type": "equipment", "key": "Festungsstiefel"},
+        {"name": "Hüllendolch",     "type": "equipment", "key": "Hüllendolch"},
+        {"name": "Hüllenpanzer",    "type": "equipment", "key": "Hüllenpanzer"},
+        {"name": "Hüllenmaske",     "type": "equipment", "key": "Hüllenmaske"},
+        {"name": "Hüllenstiefel",   "type": "equipment", "key": "Hüllenstiefel"},
+        {"name": "Arkaner Stab",    "type": "equipment", "key": "Arkaner Stab"},
+        {"name": "Arkane Robe",     "type": "equipment", "key": "Arkane Robe"},
+        {"name": "Arkane Kapuze",   "type": "equipment", "key": "Arkane Kapuze"},
+        {"name": "Arkane Schuhe",   "type": "equipment", "key": "Arkane Schuhe"},
     ],
     # -- LEGENDARY  (sehr seltener Pool)
     "legendary": [
@@ -339,8 +401,12 @@ def apply_loot(player, loot_list: list) -> list:
             if not player.has_inventory_space():
                 messages.append(f"  ⚠️  Inventar voll! {item['name']} verloren.")
                 continue
-            item_key = item["key"]
-            if EQUIPMENT_DEFS.get(item_key, {}).get("slot") == "weapon":
+            item_key  = item["key"]
+            raw_edef  = EQUIPMENT_DEFS.get(item_key, {})
+            class_only = raw_edef.get("class_only")
+            if class_only and class_only != getattr(player, "player_class", "warrior"):
+                continue  # Falsche Klasse – kein Drop
+            if raw_edef.get("slot") == "weapon":
                 player_class = getattr(player, "player_class", "warrior")
                 variant = CLASS_WEAPON_MAP.get(item_key, {}).get(player_class)
                 if variant and variant in EQUIPMENT_DEFS:
