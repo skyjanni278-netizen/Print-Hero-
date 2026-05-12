@@ -471,7 +471,8 @@ def combat(player, enemy_list):
                 msg, dmg = e.attack_target(player)
                 player.stats["damage_taken"] += dmg
                 print(f"  {msg}")
-            if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < 0.30:
+            ability_chance = getattr(e, "boss_ability_chance", 0.30)
+            if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < ability_chance:
                 print(f"  {e.boss_ability(player)}")
 
         player.regenerate()

@@ -130,9 +130,10 @@ class Bandit(Character):
 
 class WoodTroll(Character):
     """Tanky Nahkämpfer – erscheint LVL 3–9, hohe HP, mittlerer Angriff"""
-    BASE_HP     = 35
-    BASE_ATTACK = 6
-    BASE_XP     = 30
+    BASE_HP            = 35
+    BASE_ATTACK        = 6
+    BASE_XP            = 30
+    boss_ability_chance = 0.15  # Betäubung seltener als Standard (30%)
 
     def __init__(self, rank: int = 1):
         super().__init__("Waldtroll", hp=self.BASE_HP, attack=self.BASE_ATTACK)
