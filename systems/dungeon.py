@@ -465,10 +465,20 @@ def run_dungeon(player) -> str:
             input("\n(ENTER)")
 
     # ── Dungeon abgeschlossen ─────────────────────────────────
+    from systems.zones import ZONE_DEFS
+    from systems.world_map import ZONE_BOSS_DEFS
+
     player.stats["dungeons_completed"] = player.stats.get("dungeons_completed", 0) + 1
     zones_cleared = player.stats.setdefault("zones_cleared", [])
     if zone_id not in zones_cleared:
         zones_cleared.append(zone_id)
+
+    # zone_progress aktualisieren
+    zp = getattr(player, "zone_progress", {})
+    if zone_id not in zp:
+        zp[zone_id] = {"dungeons_completed": 0, "boss_defeated": False}
+    zp[zone_id]["dungeons_completed"] = zp[zone_id].get("dungeons_completed", 0) + 1
+    player.zone_progress = zp
 
     clear_screen()
     print_header("✅ Dungeon abgeschlossen!")
@@ -477,6 +487,15 @@ def run_dungeon(player) -> str:
     player.energy = player.max_energy
     print(f"💚 HP vollständig wiederhergestellt!      ({player.hp}/{player.max_hp})")
     print(f"⚡ Energie vollständig wiederhergestellt! ({player.energy}/{player.max_energy})")
+
+    # Boss-Benachrichtigung wenn Ziel erreicht
+    req  = ZONE_DEFS[zone_id]["dungeon_count"]
+    done = zp[zone_id]["dungeons_completed"]
+    if done >= req and not zp[zone_id].get("boss_defeated", False):
+        bdef = ZONE_BOSS_DEFS[zone_id]
+        print(f"\n🔥 Zonen-Ziel erreicht! ({done}/{req} Dungeons)")
+        print(f"   {bdef['name']} kann nun herausgefordert werden!")
+
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
         print(m)
     input("\n(ENTER)")

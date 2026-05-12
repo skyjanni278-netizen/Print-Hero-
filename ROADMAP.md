@@ -134,15 +134,22 @@
 
 ---
 
-## ⬜ v2.0 — Weltkarte & Zones
+## ✅ v2.0 — Weltkarte & Zones
 **Typ:** Major Release
 
-- Weltkarte mit 5 Zonen, die nacheinander freigeschaltet werden
-- Je Zone: 3–5 Dungeons + 1 einzigartiger Zonen-Boss mit eigenem Namen und Fähigkeiten
-- Unlock-System: Zonen-Boss besiegt → nächste Zone öffnet sich
-- Dungeons bleiben nach Abschluss gesperrt (kein endloses Farmen in derselben Zone)
-- NG+ = zweiter Weltkarten-Durchlauf mit 1.3× Skalierung pro Runde
-- Endscreen nach Abschluss aller 5 Zonen: Stats-Zusammenfassung + NG+-Angebot
+- Weltkarte mit 5 Zonen, die sequenziell freigeschaltet werden (Zonen-Boss besiegt → nächste Zone öffnet sich)
+- 5 einzigartige Zonen-Bosse mit eigenem Namen, Intro-Text und verstärkten Stats (×2.5–3.5 HP)
+  - Wald: **Torg, Wächter des Waldes** (WoodTroll)
+  - Ruinen: **Korroth, der Ewige Wächter** (StoneGolem)
+  - Wüste: **Razin, König der Meuchler** (Assassin)
+  - Vulkan: **Ignar, der Ewige Drache** (Dragon)
+  - Dunkel-Reich: **Malachar, Herr der Finsternis** (DarkKnight)
+- Zone-Progress-System: N Dungeons pro Zone → Boss-Kampf freigeschaltet ([B] im Lagerfeuer)
+- Interaktive Weltkarte ([Z] im Lagerfeuer) mit Zonen-Status: 🔒 / 🟢 / 🔵 / 🔥 / ✅
+- Endscreen nach allen 5 Zonen: vollständige Stats-Zusammenfassung + NG+-Angebot
+- NG+ weiterhin möglich (Trigger durch Endscreen, nicht mehr durch Level 10)
+- Legacy-Save-Kompatibilität: alte Spielstände werden automatisch korrekt freigeschaltet
+- Refactoring: `zone_menu` → `world_map.show_world_map`, `create_enemy` Wrapper entfernt, `camp_menu` gibt Aktion zurück
 
 ---
 
@@ -162,5 +169,5 @@ v1.9.7   ✅  Wirtschaft & Crafting
 v1.9.8   ✅  Balance & Meta
 v1.9.9   ✅  V2.0 Tech-Prep
 ─────────────────────────────────────────────
-v2.0     ⬜  Weltkarte & Zones
+v2.0     ✅  Weltkarte & Zones
 ```

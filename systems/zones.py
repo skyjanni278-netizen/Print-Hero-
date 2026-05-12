@@ -95,8 +95,21 @@ ZONE_FLAVOR = {
 }
 
 
-def get_unlocked_zones(player_level: int) -> list:
-    return [zid for zid in ZONE_ORDER if player_level >= ZONE_DEFS[zid]["unlock_level"]]
+def _is_zone_unlocked(player, zone_id: str) -> bool:
+    idx = ZONE_ORDER.index(zone_id)
+    if idx == 0:
+        return True
+    if player.level < ZONE_DEFS[zone_id]["unlock_level"]:
+        return False
+    prev_zone = ZONE_ORDER[idx - 1]
+    zp = getattr(player, "zone_progress", {})
+    return zp.get(prev_zone, {}).get("boss_defeated", False)
+
+
+def get_unlocked_zones(player_or_level) -> list:
+    if isinstance(player_or_level, int):
+        return [zid for zid in ZONE_ORDER if player_or_level >= ZONE_DEFS[zid]["unlock_level"]]
+    return [zid for zid in ZONE_ORDER if _is_zone_unlocked(player_or_level, zid)]
 
 
 def roll_rank_for_zone(zone_id: str) -> int:

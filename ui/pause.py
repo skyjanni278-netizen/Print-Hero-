@@ -4,8 +4,13 @@ from content.shop import shop_menu
 from core.player import MAX_INVENTORY_SLOTS
 
 
-def camp_menu(player):
+def camp_menu(player) -> str:
+    """
+    Lagerfeuer-Menü.
+    Rückgabe: 'dungeon' | 'boss' | 'quit'
+    """
     while True:
+        from systems.world_map import get_zone_status, ZONE_BOSS_DEFS
         clear_screen()
         print_header("Lagerfeuer - Pause")
         used_slots = player.inventory_count()
@@ -40,18 +45,32 @@ def camp_menu(player):
         from systems.zones import ZONE_DEFS
         zone_id    = getattr(player, "current_zone", "wald")
         zdef       = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
-        zone_line  = f"{zdef['emoji']} {zdef['name']}"
-        print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}  |  🗺️ Zone: {zone_line}")
+        zp         = getattr(player, "zone_progress", {}).get(zone_id, {})
+        zone_done  = zp.get("dungeons_completed", 0)
+        zone_req   = zdef["dungeon_count"]
+        zone_status = get_zone_status(player, zone_id)
+        boss_ready  = zone_status in ("boss_ready", "completed")
+        if zone_status == "completed":
+            prog_tag = "✅ Boss besiegt"
+        elif zone_status == "boss_ready":
+            prog_tag = f"🔥 Boss bereit! ({zone_done}/{zone_req})"
+        else:
+            prog_tag = f"{zone_done}/{zone_req} Dungeons"
+        zone_line  = f"{zdef['emoji']} {zdef['name']}  [{prog_tag}]"
+        print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}  |  🗺️ {zone_line}")
         print("-" * 50)
         print("  ⚔️  Ausrüstung              🧙 Charakter")
         print("  ─────────────────────      ─────────────────────")
         print(f"  [I] Inventar & Ausrüsten   [F] Fertigkeiten ({player.skill_points} Pkt)")
         print(f"  [U] Equipment aufwerten    [E] Errungenschaften ({len(player.achievements)}/20)")
         print(f"  [V] Inventar verkaufen     [T] Statistiken")
-        print(f"  [K] Händler besuchen       [Z] Zone wählen  ({zone_line})")
+        print(f"  [K] Händler besuchen       [Z] Weltkarte / Zone wählen")
         print(f"  [C] Handwerk (Crafting)")
         print("-" * 50)
-        print("  [S] Speichern   [W] Weiter zum Kampf   [Q] Beenden")
+        if boss_ready:
+            bname = ZONE_BOSS_DEFS[zone_id]["name"]
+            print(f"  [B] 🔥 Zone-Boss: {bname}")
+        print(f"  [W] Dungeon betreten  |  [S] Speichern  |  [Q] Beenden")
 
         choice = input("\nDeine Wahl: ").lower()
         if choice == 'i':
@@ -65,7 +84,8 @@ def camp_menu(player):
         elif choice == 'c':
             craft_menu(player)
         elif choice == 'z':
-            zone_menu(player)
+            from systems.world_map import show_world_map
+            show_world_map(player)
         elif choice == 'f':
             from systems.skilltree import skill_menu
             skill_menu(player)
@@ -80,9 +100,11 @@ def camp_menu(player):
         elif choice == 'q':
             clear_screen()
             print("Du verlässt das Spiel. Auf Wiedersehen!")
-            exit()
+            return "quit"
+        elif choice == 'b' and boss_ready:
+            return "boss"
         elif choice == 'w':
-            break
+            return "dungeon"
 
 
 def stats_menu(player):
@@ -355,47 +377,6 @@ def craft_menu(player):
         input("(ENTER)")
 
 
-def zone_menu(player):
-    from systems.zones import ZONE_DEFS, ZONE_ORDER, get_unlocked_zones
-    while True:
-        clear_screen()
-        print_header("Zone wählen")
-        print(f"Dein Level: {player.level}  |  Aktuelle Zone: ", end="")
-        zdef_cur = ZONE_DEFS.get(getattr(player, "current_zone", "wald"), ZONE_DEFS["wald"])
-        print(f"{zdef_cur['emoji']} {zdef_cur['name']}")
-        print()
-        unlocked = get_unlocked_zones(player.level)
-        for i, zid in enumerate(ZONE_ORDER):
-            zdef = ZONE_DEFS[zid]
-            active = "★ " if zid == getattr(player, "current_zone", "wald") else "  "
-            if zid in unlocked:
-                print(f"  [{i+1}] {active}{zdef['emoji']}  {zdef['name']:<16} — {zdef['desc']}")
-            else:
-                print(f"  [{i+1}]   {zdef['emoji']}  {zdef['name']:<16} 🔒 Ab Level {zdef['unlock_level']}")
-        print("\n  [Z] Zurück")
-        choice = input("\nDeine Wahl: ").strip()
-        if choice.lower() == "z":
-            break
-        if choice.isdigit():
-            idx = int(choice) - 1
-            if 0 <= idx < len(ZONE_ORDER):
-                zid = ZONE_ORDER[idx]
-                if zid in unlocked:
-                    player.current_zone = zid
-                    player.schwarzmarkt_available = True
-                    player.shop_stock = []
-                    zdef = ZONE_DEFS[zid]
-                    clear_screen()
-                    print_header(f"{zdef['emoji']}  {zdef['name']}")
-                    from systems.zones import ZONE_FLAVOR
-                    for line in ZONE_FLAVOR.get(zid, []):
-                        print(line)
-                    print(f"\n✅ Zone gewechselt zu: {zdef['emoji']} {zdef['name']}")
-                    input("\n(ENTER)")
-                    break
-                else:
-                    print(f"\n🔒 Diese Zone ist ab Level {ZONE_DEFS[zid]['unlock_level']} verfügbar.")
-                    input("(ENTER)")
 
 
 def sell_menu(player):

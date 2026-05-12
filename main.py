@@ -4,6 +4,7 @@ from ui.utils import clear_screen, print_header
 from ui.pause import camp_menu
 from core.save import load_game, get_save_slots
 from systems.dungeon import run_dungeon
+from systems.world_map import run_zone_boss, check_all_zones_cleared, endscreen
 from systems.achievements import check_all
 from config import DIFFICULTY_SETTINGS
 
@@ -75,62 +76,46 @@ def _slot_menu():
                 return _new_game(slot)
 
 
-def _offer_ng_plus(player):
-    from content.loot_tables import EQUIPMENT_DEFS
-    clear_screen()
-    print_header("⭐ New Game+ verfügbar!")
-    ng_next = player.ng_plus + 1
-    mult    = round(1.3 ** ng_next, 2)
-    kept = [i["name"] for i in player.inventory["Equipment"]
-            if EQUIPMENT_DEFS.get(i["name"], {}).get("rarity") == "legendary"]
-    print(f"Du hast Level 10 erreicht! Starte New Game+ Runde {ng_next}.")
-    print(f"\nGegnerskalierung: ×{mult} HP und ATK")
-    print(f"Du behältst: {player.inventory['Gold']} Gold")
-    if kept:
-        print(f"Legendäre Items: {', '.join(kept)}")
-    else:
-        print("Legendäre Items: keine im Inventar")
-    print("\nAlles andere (Level, Skills, Equipment) wird zurückgesetzt.")
-    print("\n[J] New Game+ starten   [N] Weiterspielen (kein Reset)")
-    while True:
-        c = input("\nDeine Wahl: ").lower()
-        if c == 'j':
-            player.start_ng_plus()
-            for m in check_all(player, {"event": "ng_plus"}):
-                print(m)
-            clear_screen()
-            print_header("⭐ New Game+ gestartet!")
-            print(f"Runde {player.ng_plus} beginnt. Viel Erfolg, Held!")
-            input("(ENTER)")
-            break
-        elif c == 'n':
-            break
-
-
 def _handle_defeat(player):
     player.stats["deaths"] += 1
-    print(f"\nGame Over! {player.name} wurde besiegt.")
+    clear_screen()
+    print_header("💀 Game Over")
+    print(f"\n  {player.name} wurde besiegt.\n")
+    print(f"  Kämpfe gewonnen : {player.stats.get('fights', 0)}")
+    print(f"  Gegner besiegt  : {player.stats.get('kills', 0)}")
+    print(f"  Dungeons fertig : {player.stats.get('dungeons_completed', 0)}")
+    input("\n(ENTER)")
 
 
 def main():
     player = _slot_menu()
 
     while player.is_alive():
-        camp_menu(player)
+        action = camp_menu(player)
 
-        result = run_dungeon(player)
-        player.shop_stock = []  # Sortiment erneuert sich nach jedem Dungeon
+        if action == "quit":
+            break
 
-        if result == "defeated":
+        player.shop_stock = []
+
+        if action == "boss":
+            result = run_zone_boss(player, player.current_zone)
+        else:
+            result = run_dungeon(player)
+
+        if result == "defeat":
             _handle_defeat(player)
             break
-        elif result == "completed":
-            ach_msgs = check_all(player, {"event": "gold_check"})
-            for m in ach_msgs:
+
+        if result in ("completed", "victory"):
+            for m in check_all(player, {"event": "gold_check"}):
                 print(m)
-            if player.level >= 10:
-                _offer_ng_plus(player)
-        # 'fled' → zurück zum Lagerfeuer
+
+            if check_all_zones_cleared(player):
+                outcome = endscreen(player)
+                if outcome == "ng_plus":
+                    continue
+                # "continue" → freies Erkunden, Loop geht weiter
 
 
 if __name__ == "__main__":
