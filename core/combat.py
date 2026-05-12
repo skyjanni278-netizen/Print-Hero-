@@ -54,6 +54,10 @@ def consumable_menu(player) -> str:
 
 
 def combat(player, enemy_list):
+    # Kampfstart: set-abhängige Werte initialisieren
+    specials = player.get_set_specials()
+    player.arcane_charges_remaining = 2 if "mage_double_arcane" in specials else 1
+
     while player.is_alive() and any(e.is_alive() for e in enemy_list):
         clear_screen()
         print_header("Kampf-Modus")
@@ -169,13 +173,19 @@ def combat(player, enemy_list):
                 print("Klassenfähigkeit bereits benutzt!")
                 input("ENTER...")
                 continue
-            player.class_ability_used = True
             clear_screen()
             print_header("Klassenfähigkeit")
             if pclass == "warrior":
-                player.block_next = True
-                print(f"🛡️  Schildwall! Nächster Angriff wird vollständig geblockt.")
+                has_2block = "warrior_2block" in player.get_set_specials()
+                player.block_charges = 2 if has_2block else 1
+                player.block_next    = True
+                player.class_ability_used = True
+                extra = " (Eisenfestung: 2 Angriffe!)" if has_2block else ""
+                print(f"🛡️  Schildwall aktiviert!{extra}")
             elif pclass == "mage":
+                player.arcane_charges_remaining -= 1
+                if player.arcane_charges_remaining <= 0:
+                    player.class_ability_used = True
                 living = [e for e in enemy_list if e.is_alive()]
                 dmg    = random.randint(25, 40)
                 for e in living:
@@ -183,9 +193,17 @@ def combat(player, enemy_list):
                 names = ", ".join(e.name for e in living)
                 print(f"✨ Arkane Entladung! {dmg} Schaden (ignoriert DEF) an: {names}")
                 player.stats["damage_dealt"] += dmg * len(living)
+                if player.arcane_charges_remaining > 0:
+                    print(f"   (Arkane Roben: {player.arcane_charges_remaining} Ladung verbleibend)")
             elif pclass == "rogue":
                 player.shadow_strike_ready = True
-                print(f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.")
+                player.class_ability_used  = True
+                has_regen = "rogue_shadow_regen" in player.get_set_specials()
+                if has_regen:
+                    player.shadow_recharge_countdown = 3
+                    print(f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF. (Lädt in 3 Runden neu)")
+                else:
+                    print(f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.")
 
         # Klassen-Fähigkeit 2 (Level 4)
         elif choice == '1':
@@ -348,8 +366,11 @@ def combat(player, enemy_list):
                     print(f"🪨 {e.name} ist betäubt und überspringt diese Runde!")
                     continue
                 if player.block_next:
-                    player.block_next = False
-                    print(f"🛡️  Schildwall blockt den Angriff von {e.name}!")
+                    player.block_charges -= 1
+                    if player.block_charges <= 0:
+                        player.block_next = False
+                    remaining = f" ({player.block_charges} verbleibend)" if player.block_charges > 0 else ""
+                    print(f"🛡️  Schildwall blockt {e.name}s Angriff!{remaining}")
                 elif player.shield_active:
                     player.shield_active = False
                     print(f"🔵 Magieschild blockt den Angriff von {e.name}!")
@@ -375,6 +396,14 @@ def combat(player, enemy_list):
                     print(e.boss_ability(player))
 
         player.regenerate()
+
+        # Schattenhülle: Aus-dem-Schatten Auflade-Countdown
+        if player.player_class == "rogue" and getattr(player, "shadow_recharge_countdown", 0) > 0:
+            player.shadow_recharge_countdown -= 1
+            if player.shadow_recharge_countdown == 0:
+                player.class_ability_used = False
+                print("🌙 Schattenhülle: Aus dem Schatten ist wieder aufgeladen! [X]")
+
         input("\nNächste Runde (ENTER)...")
 
     if not any(e.is_alive() for e in enemy_list):

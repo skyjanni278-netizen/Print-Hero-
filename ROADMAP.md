@@ -77,7 +77,7 @@
 
 ---
 
-## ⬜ v1.9.5 — Klassen-Rüstungssets
+## 🔧 v1.9.5 — Klassen-Rüstungssets
 **Typ:** Feature + Balance
 
 - Krieger-Set **"Eisenfestung"**: DEF + Block-Synergien
@@ -156,8 +156,8 @@ v1.9     ✅  Dungeon-Fundament
 v1.9.1   ✅  Dungeon Raum-Vielfalt
 v1.9.2   ✅  Zonen-Vorbereitung
 v1.9.3   ✅  Klassen-Waffen
-v1.9.4   🔧  Klassen-Fähigkeiten         ← aktuell
-v1.9.5   ⬜  Klassen-Rüstungssets
+v1.9.4   ✅  Klassen-Fähigkeiten
+v1.9.5   🔧  Klassen-Rüstungssets        ← aktuell
 v1.9.6   ⬜  Story & Lore
 v1.9.7   ⬜  Wirtschaft & Crafting
 v1.9.8   ⬜  Balance & Meta
