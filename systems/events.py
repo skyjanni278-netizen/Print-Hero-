@@ -137,17 +137,15 @@ def _mysterious_stranger(player):
 
 # Gewichtete Event-Tabelle: (Funktion, Gewicht)
 _EVENTS = [
-    (_wandering_merchant,  12),
-    (_abandoned_shrine,     9),
-    (_poison_trap,          9),
-    (_treasure_chest,       9),
-    (_mysterious_stranger,  9),
-    (None,                 52),  # Kein Event
+    (_wandering_merchant,  25),
+    (_abandoned_shrine,    20),
+    (_poison_trap,         15),
+    (_treasure_chest,      25),
+    (_mysterious_stranger, 15),
 ]
 
 
 def trigger_event(player):
     funcs, weights = zip(*_EVENTS)
     chosen = random.choices(funcs, weights=weights, k=1)[0]
-    if chosen is not None:
-        chosen(player)
+    chosen(player)
