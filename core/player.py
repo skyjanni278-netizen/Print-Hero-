@@ -58,6 +58,7 @@ class Character:
         self.passive_crit_bonus       = 0.0
 
         self.current_zone = "wald"
+        self.schwarzmarkt_available = True
 
         self.stats = {
             "fights": 0,

@@ -103,19 +103,17 @@
 
 ---
 
-## 🔧 v1.9.7 — Wirtschaft & Crafting
+## ✅ v1.9.7 — Wirtschaft & Crafting
 **Typ:** Feature
 
-- Junk-Items kombinieren zu Consumables:
-  - 3× Knochen → 1× Antidot
-  - 2× Trollfell + 1× Goblinzahn → 1× Stärketrank
-- Rezept-System: Rezepte beim Schmied oder in Truhen finden
-- Preisbalance-Pass aller Shop- und Verkaufspreise
-- Wandernder Händler bekommt 1× pro Zone einen „Schwarzmarkt"-Event
+- 4 Craft-Rezepte: Junk-Items → Consumables (Knochen→Antidot, Trollfell+Goblinzahn→Stärketrank, Schleimklumpen→Energie-Kristall, Wolfspelz+Lumpen→Healing Potion)
+- [C] Handwerk-Menü am Lagerfeuer — zeigt Materialien und verfügbare Rezepte
+- Schwarzmarkt: Wandernder Händler bietet 1× pro Zone seltene epische Items an
+- Preisbalance-Pass: Frühspiel-Items 10–15% günstiger
 
 ---
 
-## ⬜ v1.9.8 — Balance & Meta-Progression
+## 🔧 v1.9.8 — Balance & Meta-Progression
 **Typ:** Balance + Polish
 
 - Vollständiger Balance-Pass: Monster-Stats, Loot-Chancen, XP-Kurven, Preise
@@ -159,8 +157,8 @@ v1.9.3   ✅  Klassen-Waffen
 v1.9.4   ✅  Klassen-Fähigkeiten
 v1.9.5   ✅  Klassen-Rüstungssets
 v1.9.6   ✅  Story & Lore
-v1.9.7   🔧  Wirtschaft & Crafting        ← aktuell
-v1.9.8   ⬜  Balance & Meta
+v1.9.7   ✅  Wirtschaft & Crafting
+v1.9.8   🔧  Balance & Meta               ← aktuell
 v1.9.9   ⬜  V2.0 Tech-Prep
 ─────────────────────────────────────────────
 v2.0     ⬜  Weltkarte & Zones
