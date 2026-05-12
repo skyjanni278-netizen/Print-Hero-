@@ -2,6 +2,80 @@ import random
 from ui.utils import clear_screen, print_header
 
 
+_SCHWARZMARKT_CATALOGUE = [
+    {"name": "Drachenzahn",        "key": "Drachenzahn",        "type": "equipment", "price": 280},
+    {"name": "Knochensense",       "key": "Knochensense",       "type": "equipment", "price": 240},
+    {"name": "Drachenschuppen",    "key": "Drachenschuppen",    "type": "equipment", "price": 260},
+    {"name": "Drachenkrone",       "key": "Drachenkrone",       "type": "equipment", "price": 220},
+    {"name": "Drachenklauen",      "key": "Drachenklauen",      "type": "equipment", "price": 200},
+    {"name": "Elixier",            "key": "Elixier",            "type": "consumable","price":  55},
+    {"name": "Phönixfeder",        "key": "Phönixfeder",        "type": "consumable","price":  70},
+    {"name": "Stärketrank",        "key": "Stärketrank",        "type": "consumable","price":  35},
+]
+
+
+def _schwarzmarkt(player):
+    from content.loot_tables import EQUIPMENT_DEFS, CONSUMABLE_DEFS, RARITY_LABEL
+    from core.player import MAX_INVENTORY_SLOTS
+    clear_screen()
+    print_header("🏴 Schwarzmarkt")
+    print("Der Haendler schaut sich um und zieht eine schwarze Plane beiseite.")
+    print("\"Nur fuer dich, und nur dieses Mal. Sag niemandem, was du hier gesehen hast.\"\n")
+    picks = random.sample(_SCHWARZMARKT_CATALOGUE, min(4, len(_SCHWARZMARKT_CATALOGUE)))
+    print(f"Gold: {player.inventory['Gold']} Muenzen\n")
+    for i, item in enumerate(picks):
+        affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
+        if item["type"] == "equipment":
+            edef   = EQUIPMENT_DEFS.get(item["key"], {})
+            emoji  = edef.get("emoji", "⚔️")
+            _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
+            stat   = f"ATK +{edef['attack']}" if edef.get("slot") == "weapon" else f"DEF +{edef.get('armor',0)}"
+            print(f"  [{i+1}] {rbadge}{emoji} {item['name']:<24} {stat:<10} {item['price']} Gold  {affordable}")
+        else:
+            cdef  = CONSUMABLE_DEFS.get(item["key"], {})
+            emoji = cdef.get("emoji", "🧪")
+            desc  = cdef.get("desc", "")
+            print(f"  [{i+1}] {emoji} {item['name']:<24} {desc:<20} {item['price']} Gold  {affordable}")
+    print("\n  [0] Weggehen")
+    choice = input("\nWas kaufen? ").strip()
+    if not choice.isdigit() or choice == "0":
+        print("\"Komm wieder, wenn du Geld hast.\"")
+        input("(ENTER)")
+        return
+    idx = int(choice) - 1
+    if not (0 <= idx < len(picks)):
+        print("Ungueltige Auswahl.")
+        input("(ENTER)")
+        return
+    item = picks[idx]
+    if player.inventory["Gold"] < item["price"]:
+        print("Zu wenig Gold!")
+        input("(ENTER)")
+        return
+    if item["type"] == "consumable":
+        added = player.add_consumable(item["key"], 1)
+        if not added:
+            print("Inventar voll oder Stapel bereits voll!")
+            input("(ENTER)")
+            return
+    else:
+        if not player.has_inventory_space():
+            print("Inventar voll!")
+            input("(ENTER)")
+            return
+        edef  = EQUIPMENT_DEFS.get(item["key"], {})
+        slot  = edef.get("slot", "weapon")
+        equip = {"name": item["key"], "type": slot}
+        if slot == "weapon":
+            equip["attack"] = edef["attack"]
+        else:
+            equip["armor"] = edef["armor"]
+        player.inventory["Equipment"].append(equip)
+    player.inventory["Gold"] -= item["price"]
+    print(f"\n✅ {item['name']} erworben! Gold: {player.inventory['Gold']}")
+    input("(ENTER)")
+
+
 def _wandering_merchant(player):
     clear_screen()
     print_header("Wandernder Haendler")
@@ -48,6 +122,14 @@ def _wandering_merchant(player):
             print("Inventar voll oder Stapel bereits voll!")
         input("(ENTER)")
         break
+
+    if getattr(player, "schwarzmarkt_available", True):
+        print("\nDer Haendler schaut sich verschwoeererisch um...")
+        print("\"Psst — ich haette da noch... ein Sonderangebot. Nichts fuer schwache Nerven.\"")
+        c2 = input("[J] Schwarzmarkt besuchen  [N] Ablehnen: ").strip().lower()
+        if c2 == "j":
+            player.schwarzmarkt_available = False
+            _schwarzmarkt(player)
 
 
 def _abandoned_shrine(player):

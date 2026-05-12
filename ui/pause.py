@@ -49,6 +49,7 @@ def camp_menu(player):
         print(f"  [U] Equipment aufwerten    [E] Errungenschaften ({len(player.achievements)}/10)")
         print(f"  [V] Inventar verkaufen     [T] Statistiken")
         print(f"  [K] Händler besuchen       [Z] Zone wählen  ({zone_line})")
+        print(f"  [C] Handwerk (Crafting)")
         print("-" * 50)
         print("  [S] Speichern   [W] Weiter zum Kampf   [Q] Beenden")
 
@@ -61,6 +62,8 @@ def camp_menu(player):
             sell_menu(player)
         elif choice == 'k':
             shop_menu(player)
+        elif choice == 'c':
+            craft_menu(player)
         elif choice == 'z':
             zone_menu(player)
         elif choice == 'f':
@@ -285,6 +288,61 @@ def inventory_menu(player):
                 input("(ENTER)")
 
 
+def craft_menu(player):
+    from content.loot_tables import CRAFT_RECIPES, CONSUMABLE_DEFS, JUNK_DEFS
+    while True:
+        clear_screen()
+        print_header("🔨 Handwerk")
+        junk = player.inventory.get("Junk", {})
+        print("Materialien:  ", end="")
+        if junk:
+            print("  ".join(f"{JUNK_DEFS.get(k,{}).get('emoji','?')} {k} x{v}" for k, v in junk.items() if v > 0))
+        else:
+            print("(keine Schrott-Items)")
+        print()
+
+        craftable = []
+        for key, recipe in CRAFT_RECIPES.items():
+            can_craft = all(junk.get(mat, 0) >= qty for mat, qty in recipe["inputs"].items())
+            cdef  = CONSUMABLE_DEFS.get(recipe["output"], {})
+            emoji = cdef.get("emoji", "🧪")
+            mark  = "✅" if can_craft else "❌"
+            print(f"  [{len(craftable)+1}] {mark} {emoji} {recipe['desc']}")
+            craftable.append((key, recipe, can_craft))
+
+        print("\n  [Z] Zurück")
+        choice = input("\nWas herstellen? ").strip().lower()
+        if choice == "z":
+            break
+        if not choice.isdigit():
+            continue
+        idx = int(choice) - 1
+        if not (0 <= idx < len(craftable)):
+            continue
+        rkey, recipe, can_craft = craftable[idx]
+        if not can_craft:
+            print("\nNicht genug Materialien!")
+            input("(ENTER)")
+            continue
+        # Materialien verbrauchen
+        for mat, qty in recipe["inputs"].items():
+            player.inventory["Junk"][mat] -= qty
+            if player.inventory["Junk"][mat] <= 0:
+                del player.inventory["Junk"][mat]
+        # Output hinzufügen
+        added = player.add_consumable(recipe["output"], recipe["output_count"])
+        cdef  = CONSUMABLE_DEFS.get(recipe["output"], {})
+        emoji = cdef.get("emoji", "🧪")
+        if added:
+            print(f"\n{emoji} {recipe['output_count']}× {recipe['output']} hergestellt!")
+        else:
+            # Rückgabe der Materialien bei vollem Inventar
+            for mat, qty in recipe["inputs"].items():
+                player.inventory["Junk"][mat] = player.inventory["Junk"].get(mat, 0) + qty
+            print("\nInventar voll! Crafting abgebrochen.")
+        input("(ENTER)")
+
+
 def zone_menu(player):
     from systems.zones import ZONE_DEFS, ZONE_ORDER, get_unlocked_zones
     while True:
@@ -312,6 +370,7 @@ def zone_menu(player):
                 zid = ZONE_ORDER[idx]
                 if zid in unlocked:
                     player.current_zone = zid
+                    player.schwarzmarkt_available = True
                     zdef = ZONE_DEFS[zid]
                     clear_screen()
                     print_header(f"{zdef['emoji']}  {zdef['name']}")
