@@ -124,13 +124,13 @@
 
 ---
 
-## 🔧 v1.9.9 — V2.0 Technische Vorbereitung
+## ✅ v1.9.9 — V2.0 Technische Vorbereitung
 **Typ:** Refactor
 
-- Dungeon-System für Zonen-Kontext refaktorieren
-- `world_map.py` als leeres Grundgerüst anlegen
-- Zone-Klasse definieren (Name, Monster-Pool, Dungeons, Boss, Unlock-Bedingung)
-- Savegame-Format für Weltkarte erweitern (Zonen-Fortschritt, abgeschlossene Dungeons)
+- `_create_scaled_enemy` refaktoriert: nutzt jetzt direkt den Zonen-Monster-Pool aus `ZONE_DEFS` statt `core.combat.create_enemy`
+- `systems/world_map.py` als Grundgerüst angelegt: `get_zone_status()`, `show_world_map()` (Platzhalter für v2.0)
+- `ZONE_DEFS` erweitert: `boss_class` (Zonen-Boss-Klasse) und `dungeon_count` (benötigte Dungeons zum Boss) pro Zone
+- Savegame-Format erweitert: `zone_progress` dict (`{zone_id: {dungeons_completed, boss_defeated}}`), gespeichert, geladen und bei NG+ zurückgesetzt
 
 ---
 
@@ -160,8 +160,7 @@ v1.9.5   ✅  Klassen-Rüstungssets
 v1.9.6   ✅  Story & Lore
 v1.9.7   ✅  Wirtschaft & Crafting
 v1.9.8   ✅  Balance & Meta
-v1.9.9   🔧  V2.0 Tech-Prep               ← aktuell
-v1.9.9   ⬜  V2.0 Tech-Prep
+v1.9.9   ✅  V2.0 Tech-Prep
 ─────────────────────────────────────────────
 v2.0     ⬜  Weltkarte & Zones
 ```

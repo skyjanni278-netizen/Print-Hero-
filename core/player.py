@@ -61,6 +61,11 @@ class Character:
         self.schwarzmarkt_available = True
         self.shop_stock = []
 
+        self.zone_progress = {
+            zid: {"dungeons_completed": 0, "boss_defeated": False}
+            for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
+        }
+
         self.stats = {
             "fights": 0,
             "kills": 0,
@@ -512,6 +517,10 @@ class Character:
         self.current_zone           = "wald"
         self.schwarzmarkt_available = True
         self.shop_stock             = []
+        self.zone_progress = {
+            zid: {"dungeons_completed": 0, "boss_defeated": False}
+            for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
+        }
 
         # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
         from content.classes import apply_class
