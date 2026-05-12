@@ -59,6 +59,7 @@ def save_game(player):
         "current_zone": getattr(player, "current_zone", "wald"),
         "passive_crit_bonus": getattr(player, "passive_crit_bonus", 0.0),
         "schwarzmarkt_available": getattr(player, "schwarzmarkt_available", True),
+        "shop_stock": getattr(player, "shop_stock", []),
     }
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
@@ -117,6 +118,7 @@ def load_game(slot: int = 1):
     player.mana_shield_active  = False
     player.passive_crit_bonus      = data.get("passive_crit_bonus", 0.0)
     player.schwarzmarkt_available  = data.get("schwarzmarkt_available", True)
+    player.shop_stock              = data.get("shop_stock", [])
     player.save_slot               = slot
     print(f"📂 Spielstand {slot} geladen!")
     return player

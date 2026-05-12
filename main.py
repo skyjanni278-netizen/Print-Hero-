@@ -2,7 +2,7 @@ import random
 from core.player import Character
 from ui.utils import clear_screen, print_header
 from ui.pause import camp_menu
-from core.save import load_game, save_exists
+from core.save import load_game, get_save_slots
 from systems.dungeon import run_dungeon
 from systems.achievements import check_all
 from config import DIFFICULTY_SETTINGS
@@ -20,16 +20,59 @@ def _choose_difficulty():
             return mapping[c]
 
 
-def _new_game():
-    from content.classes import choose_class, apply_class
+def _new_game(slot: int):
+    from content.classes import choose_class, apply_class, CLASS_DEFS
     diff     = _choose_difficulty()
     class_id = choose_class()
-    from content.classes import CLASS_DEFS
     cdef     = CLASS_DEFS[class_id]
     player   = Character("Hero", hp=cdef["start_hp"], attack=cdef["start_atk"])
     player.difficulty = diff
     apply_class(player, class_id)
+    player.save_slot = slot
     return player
+
+
+def _slot_menu():
+    from content.classes import CLASS_DEFS
+    from config import DIFFICULTY_SETTINGS
+    while True:
+        clear_screen()
+        print_header("🗡️  Print-Hero  —  Spielstand wählen")
+        slots = get_save_slots()
+        for info in slots:
+            s = info["slot"]
+            if info["exists"]:
+                pclass  = info.get("player_class", "warrior")
+                emoji   = CLASS_DEFS.get(pclass, {}).get("emoji", "")
+                ng      = info.get("ng_plus", 0)
+                ng_tag  = f" NG+{ng}" if ng > 0 else ""
+                diff    = DIFFICULTY_SETTINGS.get(info.get("difficulty", "normal"), {}).get("label", "Normal")
+                print(f"  [{s}] Slot {s}:  {emoji} Level {info['level']}{ng_tag}  |  {diff}")
+            else:
+                print(f"  [{s}] Slot {s}:  — Leer —  [Neues Spiel]")
+        print("\n  [Q] Beenden")
+        choice = input("\nDeine Wahl: ").strip().lower()
+        if choice == "q":
+            exit()
+        if choice.isdigit() and 1 <= int(choice) <= 3:
+            slot = int(choice)
+            info = slots[slot - 1]
+            if info["exists"]:
+                clear_screen()
+                print_header(f"Slot {slot}")
+                pclass = info.get("player_class", "warrior")
+                emoji  = CLASS_DEFS.get(pclass, {}).get("emoji", "")
+                ng     = info.get("ng_plus", 0)
+                ng_tag = f" NG+{ng}" if ng > 0 else ""
+                print(f"  {emoji} Level {info['level']}{ng_tag}")
+                print("\n  [L] Laden   [N] Neu starten (überschreibt Slot)   [Z] Zurück")
+                c = input("\nDeine Wahl: ").strip().lower()
+                if c == "l":
+                    return load_game(slot)
+                elif c == "n":
+                    return _new_game(slot)
+            else:
+                return _new_game(slot)
 
 
 def _offer_ng_plus(player):
@@ -70,22 +113,13 @@ def _handle_defeat(player):
 
 
 def main():
-    clear_screen()
-
-    if save_exists():
-        print("Spielstand gefunden!")
-        choice = input("[L] Laden  [N] Neues Spiel: ").lower()
-        if choice == 'l':
-            player = load_game()
-        else:
-            player = _new_game()
-    else:
-        player = _new_game()
+    player = _slot_menu()
 
     while player.is_alive():
         camp_menu(player)
 
         result = run_dungeon(player)
+        player.shop_stock = []  # Sortiment erneuert sich nach jedem Dungeon
 
         if result == "defeated":
             _handle_defeat(player)
