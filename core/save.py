@@ -95,7 +95,9 @@ def load_game(slot: int = 1):
     player.inventory      = data["inventory"]
     default_stats = {"fights": 0, "kills": 0, "deaths": 0,
                      "damage_dealt": 0, "damage_taken": 0,
-                     "gold_earned": 0, "potions_used": 0}
+                     "gold_earned": 0, "potions_used": 0,
+                     "dungeons_completed": 0, "dungeons_fled": 0,
+                     "zone_kills": {}, "zones_cleared": []}
     player.stats               = {**default_stats, **data.get("stats", {})}
     player.difficulty          = data.get("difficulty", "normal")
     player.fights_until_event  = data.get("fights_until_event", 2)

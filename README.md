@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
 
-**Aktuelle Version: v1.9.7** | Python 3.10+ | Keine externen Pakete
+**Aktuelle Version: v1.9.8** | Python 3.10+ | Keine externen Pakete
 
 ---
 

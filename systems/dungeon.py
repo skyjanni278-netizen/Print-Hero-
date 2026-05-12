@@ -103,10 +103,17 @@ def _create_scaled_enemy(player, forced_rank: int):
     return enemy
 
 
+def _add_zone_kills(player, count: int):
+    zone_id = getattr(player, "current_zone", "wald")
+    zk = player.stats.setdefault("zone_kills", {})
+    zk[zone_id] = zk.get(zone_id, 0) + count
+
+
 def _room_loot(player, enemy_group) -> tuple:
     from core.combat import collect_loot
     player.stats["fights"] += 1
     player.stats["kills"]  += len(enemy_group)
+    _add_zone_kills(player, len(enemy_group))
     gold_before = player.inventory["Gold"]
     loot_lines  = collect_loot(player, enemy_group)
     player.stats["gold_earned"] += player.inventory["Gold"] - gold_before
@@ -301,6 +308,7 @@ def run_dungeon(player) -> str:
         # Zwischen-Raum-Menü (nicht vor Raum 1)
         if i > 0:
             if _between_room_menu(player, room_type) == "flee":
+                player.stats["dungeons_fled"] = player.stats.get("dungeons_fled", 0) + 1
                 clear_screen()
                 print("Du verlässt den Dungeon. Kein Abschluss, kein Loot, keine HP-Heilung.")
                 input("(ENTER)")
@@ -434,6 +442,7 @@ def run_dungeon(player) -> str:
             print_header("🏆 Boss besiegt!")
             player.stats["fights"] += 1
             player.stats["kills"]  += 1
+            _add_zone_kills(player, 1)
             gold_before  = player.inventory["Gold"]
             loot_items   = roll_loot(rank=boss_rank, rolls=boss.loot_rolls)
             msgs         = apply_loot(player, loot_items)
@@ -454,6 +463,11 @@ def run_dungeon(player) -> str:
             input("\n(ENTER)")
 
     # ── Dungeon abgeschlossen ─────────────────────────────────
+    player.stats["dungeons_completed"] = player.stats.get("dungeons_completed", 0) + 1
+    zones_cleared = player.stats.setdefault("zones_cleared", [])
+    if zone_id not in zones_cleared:
+        zones_cleared.append(zone_id)
+
     clear_screen()
     print_header("✅ Dungeon abgeschlossen!")
     print("Du kämpfst dich siegreich aus dem Dungeon heraus.\n")
@@ -461,5 +475,7 @@ def run_dungeon(player) -> str:
     player.energy = player.max_energy
     print(f"💚 HP vollständig wiederhergestellt!      ({player.hp}/{player.max_hp})")
     print(f"⚡ Energie vollständig wiederhergestellt! ({player.energy}/{player.max_energy})")
+    for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
+        print(m)
     input("\n(ENTER)")
     return "completed"
