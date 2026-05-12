@@ -60,6 +60,7 @@ def save_game(player):
         "passive_crit_bonus": getattr(player, "passive_crit_bonus", 0.0),
         "schwarzmarkt_available": getattr(player, "schwarzmarkt_available", True),
         "shop_stock": getattr(player, "shop_stock", []),
+        "zone_progress": getattr(player, "zone_progress", {}),
     }
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
@@ -121,6 +122,11 @@ def load_game(slot: int = 1):
     player.passive_crit_bonus      = data.get("passive_crit_bonus", 0.0)
     player.schwarzmarkt_available  = data.get("schwarzmarkt_available", True)
     player.shop_stock              = data.get("shop_stock", [])
+    _default_zp = {
+        zid: {"dungeons_completed": 0, "boss_defeated": False}
+        for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
+    }
+    player.zone_progress           = {**_default_zp, **data.get("zone_progress", {})}
     player.save_slot               = slot
     print(f"📂 Spielstand {slot} geladen!")
     return player

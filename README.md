@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch Dungeons, sammle Beute und steige bis Level 10 auf.
 
-**Aktuelle Version: v1.9.8** | Python 3.10+ | Keine externen Pakete
+**Aktuelle Version: v1.9.9** | Python 3.10+ | Keine externen Pakete
 
 ---
 
@@ -31,12 +31,15 @@ content/
   classes.py             — Klassen-Definitionen & Startboni
 systems/
   dungeon.py             — Dungeon-Schleife, Raumgenerierung, Raumtypen
-  zones.py               — Zonen-Definitionen, Monster-Pools, Rang-Gewichtung
+  zones.py               — Zonen-Definitionen, Monster-Pools, Boss-Klassen, Rang-Gewichtung
   events.py              — Zufalls-Events zwischen Räumen
+  world_map.py           — Weltkarten-Grundgerüst (Zonen-Status, zone_progress)
   skilltree.py           — Skill-Auswahl & Skill-Effekte
-  achievements.py        — Achievement-System
+  achievements.py        — Achievement-System (20 Errungenschaften)
 saves/
-  savegame.json          — Gespeicherter Spielstand (automatisch erstellt)
+  savegame_1.json        — Spielstand Slot 1 (automatisch erstellt)
+  savegame_2.json        — Spielstand Slot 2
+  savegame_3.json        — Spielstand Slot 3
 ui/
   pause.py               — Lagerfeuer-Menü, Inventar, Verkauf, Skills
   utils.py               — clear_screen, print_header
@@ -210,7 +213,7 @@ Nach Erreichen von **Level 10** kannst du New Game+ starten:
 ---
 
 ### Achievements
-10 freischaltbare Errungenschaften — z.B. für erste Kills, Gold-Meilensteine, Dungeons ohne Tode und mehr.
+20 freischaltbare Errungenschaften in 5 Sektionen: Kampf, Aufstieg, Dungeons & Zonen, Wirtschaft, Meta.
 
 ---
 
@@ -223,8 +226,8 @@ Nach Erreichen von **Level 10** kannst du New Game+ starten:
 
 ## 💾 Speichern & Laden
 
-Spielstand wird in `savegame.json` gespeichert.  
-Beim nächsten Start: vorhandenen Spielstand laden oder neu beginnen.
+Bis zu **3 Spielstände** gleichzeitig in `saves/savegame_1.json` bis `_3.json`.  
+Beim Start: Spielstand-Auswahl mit Klasse, Level und Schwierigkeitsgrad pro Slot.
 
 ---
 

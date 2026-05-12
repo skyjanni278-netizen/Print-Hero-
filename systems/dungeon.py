@@ -83,10 +83,12 @@ def _generate_rooms(player_level: int) -> list:
 
 
 def _create_scaled_enemy(player, forced_rank: int):
-    from core.combat import create_enemy
-    base = create_enemy(player)
-    cls  = base.__class__
-    enemy = cls(rank=forced_rank)
+    from systems.zones import ZONE_DEFS
+    zone_id = getattr(player, "current_zone", "wald")
+    zdef = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
+    classes, weights = zip(*zdef["monsters"])
+    mob_class = random.choices(list(classes), weights=list(weights), k=1)[0]
+    enemy = mob_class(rank=forced_rank)
     diff = getattr(player, "difficulty", "normal")
     if diff != "normal":
         from config import DIFFICULTY_SETTINGS
