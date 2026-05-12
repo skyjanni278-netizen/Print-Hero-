@@ -146,6 +146,34 @@ RARITY_LABEL = {
     "legendary": ("Legendär",    "🟨"),
 }
 
+# Handwerk: Junk → Consumables
+CRAFT_RECIPES = {
+    "antidot": {
+        "output": "Antidot",
+        "output_count": 1,
+        "inputs": {"Knochen": 3},
+        "desc": "3× Knochen → 1× Antidot",
+    },
+    "staerketrank": {
+        "output": "Stärketrank",
+        "output_count": 1,
+        "inputs": {"Trollfell": 2, "Goblinzahn": 1},
+        "desc": "2× Trollfell + 1× Goblinzahn → 1× Stärketrank",
+    },
+    "energie_kristall": {
+        "output": "Energie-Kristall",
+        "output_count": 1,
+        "inputs": {"Schleimklumpen": 3},
+        "desc": "3× Schleimklumpen → 1× Energie-Kristall",
+    },
+    "healing_potion": {
+        "output": "Healing Potion",
+        "output_count": 1,
+        "inputs": {"Wolfspelz": 2, "Lumpen": 1},
+        "desc": "2× Wolfspelz + 1× Lumpen → 1× Healing Potion",
+    },
+}
+
 # Ausrüstungs-Sets: 4 Teile je Set, Boni bei 2/3/4 angelegten Teilen
 SET_DEFS = {
     "Leder-Set": {
