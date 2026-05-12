@@ -113,17 +113,18 @@
 
 ---
 
-## 🔧 v1.9.8 — Balance & Meta-Progression
+## ✅ v1.9.8 — Balance & Meta-Progression
 **Typ:** Balance + Polish
 
-- Vollständiger Balance-Pass: Monster-Stats, Loot-Chancen, XP-Kurven, Preise
-- Achievement-Erweiterung: Zonen- und Klassen-spezifische Achievements
-- NG+ nutzt Dungeon/Zonen-System korrekt
-- Statistiken-Erweiterung: Zonen-Kills, Dungeons abgeschlossen, schnellster Run
+- 10 neue Achievements (20 gesamt): Zonen-Dungeons, Klassen-Level-10, Schlachtveteran, Dungeon-Veteran
+- Achievement-Menü mit Sektionen (Kampf, Aufstieg, Dungeons & Zonen, Wirtschaft, Meta)
+- Stats-Erweiterung: Dungeons abgeschlossen/geflohen, Zone-Kills-Tabelle
+- NG+ Fix: Zone auf Wald zurückgesetzt, Shop und Schwarzmarkt ebenfalls zurückgesetzt
+- Balance: Rang-5 Legendary-Loot 12%→8% (seltener, dafür Epic stärker gewichtet)
 
 ---
 
-## ⬜ v1.9.9 — V2.0 Technische Vorbereitung
+## 🔧 v1.9.9 — V2.0 Technische Vorbereitung
 **Typ:** Refactor
 
 - Dungeon-System für Zonen-Kontext refaktorieren
@@ -158,7 +159,8 @@ v1.9.4   ✅  Klassen-Fähigkeiten
 v1.9.5   ✅  Klassen-Rüstungssets
 v1.9.6   ✅  Story & Lore
 v1.9.7   ✅  Wirtschaft & Crafting
-v1.9.8   🔧  Balance & Meta               ← aktuell
+v1.9.8   ✅  Balance & Meta
+v1.9.9   🔧  V2.0 Tech-Prep               ← aktuell
 v1.9.9   ⬜  V2.0 Tech-Prep
 ─────────────────────────────────────────────
 v2.0     ⬜  Weltkarte & Zones

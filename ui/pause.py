@@ -46,7 +46,7 @@ def camp_menu(player):
         print("  ⚔️  Ausrüstung              🧙 Charakter")
         print("  ─────────────────────      ─────────────────────")
         print(f"  [I] Inventar & Ausrüsten   [F] Fertigkeiten ({player.skill_points} Pkt)")
-        print(f"  [U] Equipment aufwerten    [E] Errungenschaften ({len(player.achievements)}/10)")
+        print(f"  [U] Equipment aufwerten    [E] Errungenschaften ({len(player.achievements)}/20)")
         print(f"  [V] Inventar verkaufen     [T] Statistiken")
         print(f"  [K] Händler besuchen       [Z] Zone wählen  ({zone_line})")
         print(f"  [C] Handwerk (Crafting)")
@@ -86,16 +86,28 @@ def camp_menu(player):
 
 
 def stats_menu(player):
+    from systems.zones import ZONE_DEFS
     clear_screen()
     print_header("Statistiken")
-    s = player.stats
+    s  = player.stats
     kd = f"{s['kills']}/{s['deaths']}" if s['deaths'] > 0 else str(s['kills'])
-    print(f"  ⚔️  Kämpfe gewonnen    : {s['fights']}")
-    print(f"  💀  Kills / Tode       : {kd}")
-    print(f"  🗡️  Schaden ausgeteilt : {s['damage_dealt']}")
-    print(f"  🛡️  Schaden erhalten   : {s['damage_taken']}")
-    print(f"  💰  Gold verdient      : {s['gold_earned']}")
-    print(f"  🧪  Tränke benutzt     : {s['potions_used']}")
+    dc = s.get("dungeons_completed", 0)
+    df = s.get("dungeons_fled", 0)
+    print(f"  ⚔️  Kämpfe gewonnen      : {s['fights']}")
+    print(f"  💀  Kills / Tode         : {kd}")
+    print(f"  🗡️  Schaden ausgeteilt   : {s['damage_dealt']}")
+    print(f"  🛡️  Schaden erhalten     : {s['damage_taken']}")
+    print(f"  💰  Gold verdient        : {s['gold_earned']}")
+    print(f"  🧪  Tränke benutzt       : {s['potions_used']}")
+    print(f"  🏰  Dungeons abgeschl.   : {dc}  (geflohen: {df})")
+    zone_kills = s.get("zone_kills", {})
+    if zone_kills:
+        print(f"\n  Zone-Kills:")
+        for zid, count in zone_kills.items():
+            zdef = ZONE_DEFS.get(zid, {})
+            emoji = zdef.get("emoji", "🗺️")
+            name  = zdef.get("name", zid)
+            print(f"    {emoji} {name:<16} : {count}")
     input("\n(ENTER)")
 
 
