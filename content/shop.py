@@ -1,3 +1,4 @@
+import random
 from ui.utils import clear_screen, print_header
 from core.player import MAX_INVENTORY_SLOTS
 
@@ -38,6 +39,28 @@ SHOP_CATALOGUE = [
     {"name": "Schnellläuferstiefel",   "type": "equipment", "key": "Schnellläuferstiefel",   "price":  80, "min_level": 3, "max_level": 8},
     {"name": "Runenstiefel",           "type": "equipment", "key": "Runenstiefel",           "price": 160, "min_level": 5},
 ]
+
+
+def refresh_shop_stock(player):
+    """Pick 2 consumables + 1 item per equipment slot from level-appropriate catalogue."""
+    from content.loot_tables import EQUIPMENT_DEFS
+    lvl = player.level
+    available = [i for i in SHOP_CATALOGUE if i.get("min_level", 1) <= lvl <= i.get("max_level", 99)]
+
+    consumables = [i for i in available if i["type"] == "consumable"]
+    weapons     = [i for i in available if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "weapon"]
+    chests      = [i for i in available if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "chest"]
+    heads       = [i for i in available if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "head"]
+    feet_items  = [i for i in available if i["type"] == "equipment" and EQUIPMENT_DEFS.get(i["key"], {}).get("slot") == "feet"]
+
+    stock = []
+    stock += random.sample(consumables, min(2, len(consumables)))
+    stock += random.sample(weapons,     min(1, len(weapons)))
+    stock += random.sample(chests,      min(1, len(chests)))
+    stock += random.sample(heads,       min(1, len(heads)))
+    stock += random.sample(feet_items,  min(1, len(feet_items)))
+
+    player.shop_stock = [i["name"] for i in stock]
 
 
 def get_shop_items(player_level: int) -> list:
@@ -95,8 +118,13 @@ def shop_menu(player):
         print(f"Ausrüstet: {w['name']} / {c['name']} / {h['name']} / {f['name']}")
         print("-" * 62)
 
-        active_items = get_shop_items(lvl)
-        next_unlocks = get_next_unlock(lvl)
+        stock = getattr(player, "shop_stock", [])
+        if not stock:
+            refresh_shop_stock(player)
+            stock = player.shop_stock
+        all_lvl_items = get_shop_items(lvl)
+        active_items  = [i for i in all_lvl_items if i["name"] in stock]
+        next_unlocks  = get_next_unlock(lvl)
 
         # Baue flache Liste für Indexierung (in Sections-Reihenfolge)
         flat = []
@@ -161,7 +189,8 @@ def shop_menu(player):
         if not flat:
             print("\n  (Keine Items verfügbar)")
 
-        print(f"\n[0] Verlassen")
+        print(f"\n  🔄 Sortiment wechselt nach jedem Dungeon")
+        print(f"[0] Verlassen")
         choice = input("\nWas möchtest du kaufen? ")
 
         if choice == "0":

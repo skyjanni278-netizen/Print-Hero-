@@ -371,6 +371,7 @@ def zone_menu(player):
                 if zid in unlocked:
                     player.current_zone = zid
                     player.schwarzmarkt_available = True
+                    player.shop_stock = []
                     zdef = ZONE_DEFS[zid]
                     clear_screen()
                     print_header(f"{zdef['emoji']}  {zdef['name']}")

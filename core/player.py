@@ -59,6 +59,7 @@ class Character:
 
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
+        self.shop_stock = []
 
         self.stats = {
             "fights": 0,
