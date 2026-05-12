@@ -284,7 +284,7 @@ def _between_room_menu(player, next_room_type: str) -> str:
 def run_dungeon(player) -> str:
     """
     Vollständiger Dungeon-Durchlauf.
-    Rückgabe: 'completed' | 'fled' | 'defeated'
+    Rückgabe: 'completed' | 'fled' | 'defeat'
     """
     from core.combat import generate_enemy_group, combat
     from systems.events import trigger_event
@@ -328,7 +328,7 @@ def run_dungeon(player) -> str:
             result = combat(player, enemies)
             player.reset_combat_modifiers()
             if result == "defeat":
-                return "defeated"
+                return "defeat"
             if result == "fled":
                 return "fled"
             clear_screen()
@@ -349,7 +349,7 @@ def run_dungeon(player) -> str:
             result = combat(player, [elite])
             player.reset_combat_modifiers()
             if result == "defeat":
-                return "defeated"
+                return "defeat"
             if result == "fled":
                 return "fled"
             clear_screen()
@@ -366,19 +366,19 @@ def run_dungeon(player) -> str:
         elif room_type == "event":
             trigger_event(player)
             if not player.is_alive():
-                return "defeated"
+                return "defeat"
 
         # ── Schrein-Raum ──────────────────────────────────────
         elif room_type == "shrine":
             _shrine_room(player)
             if not player.is_alive():
-                return "defeated"
+                return "defeat"
 
         # ── Fallen-Raum ───────────────────────────────────────
         elif room_type == "trap":
             _trap_room(player)
             if not player.is_alive():
-                return "defeated"
+                return "defeat"
 
         # ── Leerer Raum ───────────────────────────────────────
         elif room_type == "empty":
@@ -392,7 +392,7 @@ def run_dungeon(player) -> str:
             result = combat(player, [miniboss])
             player.reset_combat_modifiers()
             if result == "defeat":
-                return "defeated"
+                return "defeat"
             if result == "fled":
                 return "fled"
             clear_screen()
@@ -435,7 +435,7 @@ def run_dungeon(player) -> str:
             result = combat(player, [boss])
             player.reset_combat_modifiers()
             if result == "defeat":
-                return "defeated"
+                return "defeat"
             if result == "fled":
                 return "fled"
 
