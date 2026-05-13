@@ -1,4 +1,5 @@
 import random
+from config import BLEED_DAMAGE, POISON_DAMAGE, ENERGY_REGEN, LEVEL_HP_GAIN, LEVEL_ATK_GAIN
 
 MAX_INVENTORY_SLOTS = 30  # Jeder einzigartige Stapel (Consumable/Junk) + jedes Equipment = 1 Slot
 
@@ -21,7 +22,7 @@ class Character:
 
         self.max_energy = 30
         self.energy = 15
-        self.energy_regen = 3
+        self.energy_regen = ENERGY_REGEN
 
         # Temporäre Kampf-Boni – werden nach dem Kampf zurückgesetzt
         self.combat_modifiers = {"attack": 0}
@@ -33,6 +34,7 @@ class Character:
 
         self.difficulty          = "normal"
         self.next_fight_xp_mult  = 1.0
+        self.next_fight_atk_mult = 1.0
         self.fights_until_event  = random.randint(2, 3)
 
         self.skill_points  = 0
@@ -227,10 +229,10 @@ class Character:
             self.xp -= self.xp_to_level_up
             mult = XP_MULTIPLIERS.get(self.level - 1, 1.6)
             self.xp_to_level_up = int(self.xp_to_level_up * mult)
-            self.max_hp  += 4
-            self.hp       = self.max_hp
-            self.attack  += 1
-            self.min_attack += 1
+            self.max_hp  += LEVEL_HP_GAIN
+            self.hp       = min(self.max_hp, self.hp + LEVEL_HP_GAIN)
+            self.attack  += LEVEL_ATK_GAIN
+            self.min_attack += LEVEL_ATK_GAIN
             self.skill_points += 1
             print(f"✨ {self.name} ist nun Level {self.level}!")
             print(f"   +1 Skillpunkt! (Gesamt: {self.skill_points})")
@@ -343,18 +345,16 @@ class Character:
 
     def check_bleed(self) -> str:
         if self.bleed_stacks > 0:
-            damage = 3
-            self.hp = max(0, self.hp - damage)
+            self.hp = max(0, self.hp - BLEED_DAMAGE)
             self.bleed_stacks -= 1
-            return f"{self.name} erleidet {damage} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
+            return f"{self.name} erleidet {BLEED_DAMAGE} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
         return ""
 
     def check_poison(self) -> str:
         if self.poison_stacks > 0:
-            damage = 5
-            self.hp = max(0, self.hp - damage)
+            self.hp = max(0, self.hp - POISON_DAMAGE)
             self.poison_stacks -= 1
-            return f"☠️  {self.name} erleidet {damage} Giftschaden! ({self.poison_stacks} Stacks verbleibend)"
+            return f"☠️  {self.name} erleidet {POISON_DAMAGE} Giftschaden! ({self.poison_stacks} Stacks verbleibend)"
         return ""
 
     def use_consumable(self, key: str) -> str:
@@ -506,9 +506,10 @@ class Character:
         self.shield_ready  = False
         self.shield_active = False
 
-        # Events und XP-Buff zurücksetzen
-        self.next_fight_xp_mult = 1.0
-        self.fights_until_event = random.randint(2, 3)
+        # Events und XP/ATK-Buff zurücksetzen
+        self.next_fight_xp_mult  = 1.0
+        self.next_fight_atk_mult = 1.0
+        self.fights_until_event  = random.randint(2, 3)
 
         # Achievements behalten
         self.achievements = kept_achievements

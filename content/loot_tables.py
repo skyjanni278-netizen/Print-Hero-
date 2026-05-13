@@ -372,10 +372,10 @@ LOOT_POOL = {
 
 RANK_LOOT_WEIGHTS = {
     1: {"common": 80, "uncommon": 18, "rare": 2,   "epic": 0,  "legendary": 0},
-    2: {"common": 62, "uncommon": 28, "rare": 9,   "epic": 1,  "legendary": 0},
-    3: {"common": 43, "uncommon": 32, "rare": 21,  "epic": 4,  "legendary": 0},
-    4: {"common": 22, "uncommon": 30, "rare": 32,  "epic": 15, "legendary": 1},
-    5: {"common": 8,  "uncommon": 18, "rare": 32,  "epic": 34, "legendary": 8},
+    2: {"common": 65, "uncommon": 28, "rare": 7,   "epic": 0,  "legendary": 0},
+    3: {"common": 48, "uncommon": 35, "rare": 15,  "epic": 2,  "legendary": 0},
+    4: {"common": 25, "uncommon": 33, "rare": 33,  "epic": 9,  "legendary": 0},
+    5: {"common": 8,  "uncommon": 17, "rare": 33,  "epic": 33, "legendary": 9},
 }
 
 

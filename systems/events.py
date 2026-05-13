@@ -308,15 +308,192 @@ def _old_blacksmith(player):
     input("\n(ENTER)")
 
 
+def _bloody_altar(player):
+    clear_screen()
+    print_header("🩸 Blutiger Altar")
+    print("Ein dunkler Altar aus schwarzem Stein ragt aus dem Boden.")
+    print("Frisches Blut rinnt über die Runen — er verlangt ein Opfer.\n")
+    cost = max(5, int(player.max_hp * 0.15))
+    if player.hp <= cost:
+        print(f"Du bist zu geschwächt für ein Opfer. (Benötigt >{cost} HP)")
+        input("\n(ENTER)")
+        return
+    print(f"  Kosten: {cost} HP  (du hast {player.hp}/{player.max_hp} HP)\n")
+    print("  [A] +30% ATK im nächsten Kampf")
+    print("  [E] Energie vollständig auffüllen")
+    print("  [X] +50% XP im nächsten Kampf")
+    print("  [N] Ablehnen")
+    choice = input("\nDeine Wahl: ").lower()
+    if choice == "n" or choice not in ("a", "e", "x"):
+        print("\nDu wendest dich vom Altar ab.")
+        input("(ENTER)")
+        return
+    player.hp -= cost
+    print(f"\nDu hast {cost} HP geopfert. Der Altar leuchtet blutrot auf. (HP: {player.hp}/{player.max_hp})")
+    if choice == "a":
+        player.next_fight_atk_mult = getattr(player, "next_fight_atk_mult", 1.0) * 1.30
+        print("Ein dunkler Schauer stärkt deinen Arm. +30% ATK im nächsten Kampf!")
+    elif choice == "e":
+        player.energy = player.max_energy
+        print(f"Schwarze Energie strömt in dich. Energie vollständig aufgefüllt! ({player.energy}/{player.max_energy})")
+    elif choice == "x":
+        player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.5)
+        print("Der Altar zeigt dir Visionen vergangener Kämpfe. +50% XP im nächsten Kampf!")
+    input("\n(ENTER)")
+
+
+def _whispering_ghost(player):
+    clear_screen()
+    print_header("👻 Flüsternder Geist")
+    print("Eine schimmernde Gestalt materialisiert sich vor dir.")
+    print("Der Geist des Dungeons flüstert... er kennt die Tiefen dieser Hallen.\n")
+    roll = random.random()
+    if roll < 0.50:
+        bonus = 0.20
+        player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.0 + bonus)
+        heal = max(3, int(player.max_hp * 0.10))
+        healed = min(heal, player.max_hp - player.hp)
+        player.hp = min(player.max_hp, player.hp + heal)
+        print(f"Der Geist legt seine eiskalten Hände auf deine Schultern.")
+        print(f"Eine seltsame Ruhe überkommt dich. +{healed} HP, +{int(bonus*100)}% XP im nächsten Kampf.")
+    elif roll < 0.80:
+        player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.30)
+        print("Der Geist flüstert dir Taktiken und Schwachstellen ins Ohr.")
+        print("+30% XP im nächsten Kampf!")
+    else:
+        dmg = random.randint(5, 12)
+        player.hp = max(1, player.hp - dmg)
+        print(f"Der Geist ist feindseelig! Er reißt Lebensenergie aus dir heraus.")
+        print(f"-{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+    input("\n(ENTER)")
+
+
+def _magic_chest(player):
+    from content.loot_tables import roll_loot, apply_loot
+    clear_screen()
+    print_header("🔮 Magische Schatztruhe")
+    print("Eine leuchtende Truhe schwebt leicht über dem Boden.")
+    print("Runenschrift zieht sich über das Holz — gut oder böse, schwer zu sagen.\n")
+    if random.random() < 0.30:
+        # Verfluchte Truhe
+        dmg = random.randint(10, 20)
+        player.hp = max(1, player.hp - dmg)
+        print(f"Die Truhe explodiert beim Öffnen! Dunkle Magie schlägt dich zurück.")
+        print(f"-{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+        print()
+        # Trotzdem Loot — weniger, aber vorhanden
+        items = roll_loot(rank=2, rolls=1)
+        msgs  = apply_loot(player, items)
+        if msgs:
+            print("Aus den Trümmern rettest du noch etwas:")
+            for m in msgs:
+                print(m)
+        else:
+            print("Und die Truhe war obendrein leer. Einfach kein Glück.")
+    else:
+        # Normaler Inhalt — garantiert gut
+        items = roll_loot(rank=3, rolls=2)
+        msgs  = apply_loot(player, items)
+        print("Die Truhe öffnet sich mit einem sanften Leuchten. Heute hast du Glück!")
+        if msgs:
+            for m in msgs:
+                print(m)
+        else:
+            gold = random.randint(25, 50)
+            player.inventory["Gold"] += gold
+            player.stats["gold_earned"] += gold
+            print(f"+{gold} Gold aus dem Inneren der Truhe.")
+    input("\n(ENTER)")
+
+
+def _dungeon_arms_dealer(player):
+    from content.loot_tables import EQUIPMENT_DEFS, CONSUMABLE_DEFS, RARITY_LABEL
+    from core.player import MAX_INVENTORY_SLOTS
+    clear_screen()
+    print_header("🏪 Haendler im Dungeon")
+    print("Ein schwer bewaffneter Haendler nickt dir zu.")
+    print("\"Keine Zeit fuer Smalltalk. Kaufst du oder nicht?\"\n")
+
+    equip_pool = [k for k, v in EQUIPMENT_DEFS.items()
+                  if v.get("rarity") in ("common", "uncommon", "rare")
+                  and v.get("sell", 0) > 0]
+    cons_pool  = list(CONSUMABLE_DEFS.keys())
+
+    picks = []
+    for key in random.sample(equip_pool, min(2, len(equip_pool))):
+        edef  = EQUIPMENT_DEFS[key]
+        # sell * 2 = ungefährer Kaufpreis, +30% Dungeon-Aufschlag
+        price = max(15, int(edef.get("sell", 10) * 2 * 1.3))
+        picks.append({"key": key, "type": "equipment", "price": price, "edef": edef})
+    for key in random.sample(cons_pool, min(2, len(cons_pool))):
+        cdef  = CONSUMABLE_DEFS[key]
+        price = max(10, int(cdef.get("sell", 8) * 2 * 1.3))
+        picks.append({"key": key, "type": "consumable", "price": price, "cdef": cdef})
+
+    print(f"Gold: {player.inventory['Gold']} Muenzen\n")
+    for i, item in enumerate(picks):
+        affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
+        if item["type"] == "equipment":
+            edef  = item["edef"]
+            emoji = edef.get("emoji", "⚔️")
+            _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
+            slot  = edef.get("slot", "weapon")
+            stat  = f"ATK +{edef['attack']}" if slot == "weapon" else f"DEF +{edef.get('armor',0)}"
+            print(f"  [{i+1}] {rbadge}{emoji} {item['key']:<22} {stat:<10} {item['price']} Gold  {affordable}")
+        else:
+            cdef  = item["cdef"]
+            emoji = cdef.get("emoji", "🧪")
+            desc  = cdef.get("desc", "")
+            print(f"  [{i+1}] {emoji} {item['key']:<22} {desc:<18} {item['price']} Gold  {affordable}")
+    print("\n  [0] Weggehen")
+
+    while True:
+        choice = input("\nWas kaufen? (0 = weggehen) ").strip()
+        if choice == "0" or not choice.isdigit():
+            break
+        idx = int(choice) - 1
+        if not (0 <= idx < len(picks)):
+            print("Ungueltige Auswahl.")
+            continue
+        item = picks[idx]
+        if player.inventory["Gold"] < item["price"]:
+            print("Zu wenig Gold!")
+            continue
+        if item["type"] == "consumable":
+            if not player.add_consumable(item["key"], 1):
+                print("Inventar voll!")
+                continue
+        else:
+            if not player.has_inventory_space():
+                print("Inventar voll!")
+                continue
+            edef = item["edef"]
+            slot = edef.get("slot", "weapon")
+            entry = {"name": item["key"], "type": slot}
+            if slot == "weapon":
+                entry["attack"] = edef["attack"]
+            else:
+                entry["armor"] = edef["armor"]
+            player.inventory["Equipment"].append(entry)
+        player.inventory["Gold"] -= item["price"]
+        print(f"Gekauft! Gold: {player.inventory['Gold']}")
+    input("\n(ENTER)")
+
+
 # Gewichtete Event-Tabelle: (Funktion, Gewicht)
 _EVENTS = [
-    (_wandering_merchant,  20),
-    (_abandoned_shrine,    15),
-    (_poison_trap,         10),
-    (_treasure_chest,      20),
-    (_mysterious_stranger, 15),
-    (_captured_soldier,    12),
-    (_old_blacksmith,       8),
+    (_wandering_merchant,  18),
+    (_abandoned_shrine,    12),
+    (_poison_trap,          8),
+    (_treasure_chest,      15),
+    (_mysterious_stranger, 12),
+    (_captured_soldier,    10),
+    (_old_blacksmith,       7),
+    # v2.0.2 — neue Events
+    (_bloody_altar,        10),
+    (_whispering_ghost,    12),
+    (_magic_chest,         10),
+    (_dungeon_arms_dealer,  6),
 ]
 
 

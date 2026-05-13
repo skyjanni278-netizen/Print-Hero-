@@ -104,7 +104,8 @@ def _print_action_menu(player):
     # Linke Spalte: Basis + Fähigkeit 3
     left.append("[A] Angriff")
     if player.level >= 3: left.append(f"[R] Rundumschlag  {cost_r}E")
-    if not a_used:         left.append(f"[X] {cdef.get('ability_name','?')}")
+    x_cost = " 15E" if pclass == "mage" else ""
+    if not a_used:         left.append(f"[X] {cdef.get('ability_name','?')}{x_cost}")
     if a3_unlock and not a3_used: left.append(_A3.get(pclass, "[2] ?"))
     left.append("[U] Items")
 
@@ -217,6 +218,12 @@ def combat(player, enemy_list):
     specials = player.get_set_specials()
     player.arcane_charges_remaining = 2 if "mage_double_arcane" in specials else 1
 
+    # Einmal-ATK-Buff vom Blutigen Altar o.ä. anwenden
+    if getattr(player, "next_fight_atk_mult", 1.0) != 1.0:
+        bonus = int(player.get_total_attack() * (player.next_fight_atk_mult - 1.0))
+        player.combat_modifiers["attack"] = player.combat_modifiers.get("attack", 0) + bonus
+        player.next_fight_atk_mult = 1.0
+
     round_num = 0
 
     while player.is_alive() and any(e.is_alive() for e in enemy_list):
@@ -260,11 +267,17 @@ def combat(player, enemy_list):
                 extra = " (Eisenfestung: 2 Angriffe!)" if has_2block else ""
                 print(f"  🛡️  Schildwall aktiviert!{extra}")
             elif pclass == "mage":
+                energy_cost = 15
+                if player.energy < energy_cost:
+                    print(f"  Nicht genug Energie! ({player.energy}/{energy_cost})")
+                    input("  ENTER...")
+                    continue
+                player.energy -= energy_cost
                 player.arcane_charges_remaining -= 1
                 if player.arcane_charges_remaining <= 0:
                     player.class_ability_used = True
                 living = [e for e in enemy_list if e.is_alive()]
-                dmg    = random.randint(25, 40)
+                dmg    = random.randint(6 + player.level * 2, 12 + player.level * 3)
                 for e in living:
                     e.hp = max(0, e.hp - dmg)
                 names = ", ".join(e.name for e in living)

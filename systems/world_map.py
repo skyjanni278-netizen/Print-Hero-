@@ -4,10 +4,11 @@ from systems.zones import ZONE_DEFS, ZONE_ORDER, ZONE_FLAVOR, _is_zone_unlocked
 
 ZONE_BOSS_DEFS = {
     "wald": {
-        "name":     "Torg, Wächter des Waldes",
-        "emoji":    "🌿",
-        "hp_mult":  2.25,
-        "atk_mult": 0.9,
+        "name":      "Torg, Wächter des Waldes",
+        "emoji":     "🌿",
+        "hp_mult":   1.95,
+        "atk_mult":  0.85,
+        "loot_rank": 3,
         "intro":   (
             "Aus dem Dunkel des uralten Waldes tritt ein gewaltiger Troll.\n"
             "Torg hat diesen Wald seit Jahrhunderten bewacht — und er kennt\n"
@@ -16,10 +17,11 @@ ZONE_BOSS_DEFS = {
         "victory": "Torg stürzt donnernd zu Boden. Die Bäume erzittern. Zum ersten Mal seit Jahrhunderten herrscht Stille im Wald.",
     },
     "ruinen": {
-        "name":     "Korroth, der Ewige Wächter",
-        "emoji":    "🗿",
-        "hp_mult":  2.25,
-        "atk_mult": 0.9,
+        "name":      "Korroth, der Ewige Wächter",
+        "emoji":     "🗿",
+        "hp_mult":   1.85,
+        "atk_mult":  0.80,
+        "loot_rank": 3,
         "intro":   (
             "Die Ruinen beben. Steine fügen sich zu einer gewaltigen Gestalt.\n"
             "Korroth war einst der Hüter dieser Festung — jetzt ist er verdammt,\n"
@@ -28,10 +30,11 @@ ZONE_BOSS_DEFS = {
         "victory": "Mit einem letzten Knirschen zerfällt Korroth zu Staub. Die Ruinen schweigen endlich.",
     },
     "wueste": {
-        "name":     "Razin, König der Meuchler",
-        "emoji":    "🏜️",
-        "hp_mult":  2.5,
-        "atk_mult": 0.9,
+        "name":      "Razin, König der Meuchler",
+        "emoji":     "🏜️",
+        "hp_mult":   2.05,
+        "atk_mult":  0.82,
+        "loot_rank": 4,
         "intro":   (
             "Ein Schatten löst sich von der Wand.\n"
             "Razin, der Meuchler-König, tritt in das Licht — er hat dich\n"
@@ -40,10 +43,11 @@ ZONE_BOSS_DEFS = {
         "victory": "Razin sinkt in den Sand. Die Meuchler-Gilden sind führerlos. Die Wüste gehört dir.",
     },
     "vulkan": {
-        "name":     "Ignar, der Ewige Drache",
-        "emoji":    "🐉",
-        "hp_mult":  2.7,
-        "atk_mult": 0.9,
+        "name":      "Ignar, der Ewige Drache",
+        "emoji":     "🐉",
+        "hp_mult":   2.2,
+        "atk_mult":  0.83,
+        "loot_rank": 4,
         "intro":   (
             "Die Lava brodelt. Ein Drache — alt wie der Vulkan selbst —\n"
             "entfaltet seine gewaltigen Schwingen. Ignar hat noch keinen\n"
@@ -52,10 +56,11 @@ ZONE_BOSS_DEFS = {
         "victory": "Ignar stürzt in die Lava. Ein letzter Feuersturm erfüllt die Höhle — dann Stille. Du hast den ewigen Drachen bezwungen.",
     },
     "dunkelreich": {
-        "name":     "Malachar, Herr der Finsternis",
-        "emoji":    "💀",
-        "hp_mult":  3.15,
-        "atk_mult": 0.9,
+        "name":      "Malachar, Herr der Finsternis",
+        "emoji":     "💀",
+        "hp_mult":   2.6,
+        "atk_mult":  0.87,
+        "loot_rank": 5,
         "intro":   (
             "Absolute Stille. Dann: Schritte.\n"
             "Malachar, der Herr des Dunkel-Reichs, tritt aus der Finsternis.\n"
@@ -179,8 +184,9 @@ def run_zone_boss(player, zone_id: str) -> str:
     player.stats["kills"]  = player.stats.get("kills", 0) + 1
     player.stats["fights"] = player.stats.get("fights", 0) + 1
 
+    loot_rank   = bdef.get("loot_rank", 5)
     gold_before = player.inventory["Gold"]
-    loot_items  = roll_loot(rank=5, rolls=8)
+    loot_items  = roll_loot(rank=loot_rank, rolls=6)
     loot_msgs   = apply_loot(player, loot_items)
     player.stats["gold_earned"] = player.stats.get("gold_earned", 0) + player.inventory["Gold"] - gold_before
 

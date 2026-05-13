@@ -21,112 +21,119 @@
 
 ---
 
-## ⬜ v2.0.2 — Neue Dungeon-Events
-**Typ:** Content
+## 🔧 v2.0.2 — Events, Balance & Fixes
+**Typ:** Content / Balance
 
-Vier neue Event-Raumtypen für mehr Abwechslung in Ereignis-Räumen:
-
-- **🩸 Blutiger Altar** — HP opfern (−15 %) für einen Einmal-Buff nach Wahl: +30 % ATK, volle Energie oder XP-Bonus
-- **🏪 Wanderhändler im Dungeon** — Kleiner Shop direkt im Dungeon, 2 zufällige Items, leicht erhöhte Preise
-- **💀 Flüsternder Geist** — Enthüllt den Boss-Typ des Dungeon-Bosses; 50 % Chance auf +15 % XP für diesen Dungeon
-- **🔮 Magische Schatztruhe** — Garantierter Item-Drop, aber 30 % Chance auf Fluch (−10 max. HP bis Dungeon-Ende)
+- **4 neue Dungeon-Events:** Blutiger Altar, Wanderhändler im Dungeon, Flüsternder Geist, Magische Schatztruhe
+- **Arkane Entladung** (Magier) gebalanced: Level-skalierender Schaden, 15 Energie-Kosten
+- Zonen-Bosse nochmals gebalanced (Z2–Z5 stärker reduziert), Equipment-Progression verlangsamt
+- Code-Qualität: `config.py` Konstanten, robuste Save/Load-Fehlerbehandlung, fix relativer Pfad
 
 ---
 
-## ⬜ v2.0.3 — Neue Monster
-**Typ:** Content
+## ⬜ v2.0.3 — Content-Pass & Loot-Überarbeitung
+**Typ:** Content / Progression
 
-Drei neue Gegnerklassen, verteilt auf bestehende Zonen:
+### Loot-System: Strukturierte Progression
 
-- **Waldgeist** (Wald): Niedriger HP, heilt sich jede Runde um ~20 % seiner max. HP — muss schnell besiegt werden.  
-  *Boss-Fähigkeit:* Geisterschrei — betäubt den Spieler für 1 Runde
-- **Lich** (Ruinen): Magischer Angreifer, 25 % Chance auf Energie-Drain (−8 Energie beim Spieler).  
-  *Boss-Fähigkeit:* Nekromantie — revitalisiert einen bereits besiegten Gegner mit 30 % HP
-- **Sandwurm** (Wüste): Hohes DEF, immun gegen Blutung/Gift. 20 % Chance, einen Angriff zu verschlucken (Spieler überspringt 1 Runde).  
-  *Boss-Fähigkeit:* Sandsturm — −4 DEF-Debuff auf den Spieler
+Das gesamte Loot-System wird neu gestaltet. Ziel: Der Spieler weiß, **worauf er hinarbeitet**, und sammelt gezielt ein Set für seine aktuelle Zone — anstatt zufällig Legendaries zu bekommen, bevor er Zone 2 betritt.
+
+**Grundprinzip:**
+- Jede Zone hat einen **festen Equipment-Tier** — normale Gegner droppen nur Teile dieses Tiers
+- **Zonen-Bosse** droppen garantiert ein oder zwei Teile des *nächsten* Tiers als Anreiz
+- **Legendäre Items** gibt es ausschließlich aus dem Dunkel-Reich-Boss und dessen Dungeons
+- Sets bleiben das Ziel: Man sammelt 4 Teile eines Sets und schaltet den Bonus frei
+
+**Gear-Progression nach Zone:**
+
+| Zone | Tier | Hauptsets |
+|------|------|-----------|
+| 🌲 Wald | Common / Uncommon | Leder-Set, Eisen-Set |
+| 🏚️ Ruinen | Uncommon / Rare | Stahl-Set, Runen-Panzer *(neu)* |
+| 🏜️ Wüste | Rare | Schatten-Set, Schattentuch *(neu)* |
+| 🌋 Vulkan | Epic | Drachen-Set, Drachenschuppen *(neu)*, Klassen-Sets |
+| 💀 Dunkel-Reich | Epic / Legendary | Licht-Set, Verdammten-Stahl *(neu)* |
+
+**Boss-Drops (garantiert):**
+- Zonen-Boss droppt immer **1–2 Set-Teile des nächsten Tiers** + Gold
+- Dungeon-Bosse droppen **zonenspezifische** Items (kein zufälliger Rang mehr)
+- Schwarzmarkt bietet **gezielt** Epic- und Legendary-Items gegen viel Gold
+
+**Technische Umsetzung:**
+- `LOOT_POOL` wird durch zonengebundene Pools ersetzt (`ZONE_LOOT_POOL["wald"]` usw.)
+- `RANK_LOOT_WEIGHTS` entfällt oder wird nur noch für Konsumables/Gold genutzt
+- `roll_loot()` bekommt `zone_id`-Parameter statt `rank`
+- Boss-Loot via separater `roll_boss_loot(zone_id)` Funktion mit garantierten Set-Drops
 
 ---
 
-## ⬜ v2.0.4 — Neue Waffen
-**Typ:** Content
+**Neue Monster** (3 Gegnerklassen):
+- **Waldgeist** (Wald): Heilt sich ~20 % HP/Runde — muss schnell besiegt werden. *Boss:* Geisterschrei (Betäubung)
+- **Lich** (Ruinen): 25 % Energie-Drain. *Boss:* Nekromantie — belebt besiegten Gegner mit 30 % HP
+- **Sandwurm** (Wüste): Hohes DEF, immun gegen Blutung/Gift, 20 % Angriff verschlucken. *Boss:* Sandsturm (−4 DEF)
 
-Vier neue Waffen mit eigenen Passiveffekten, als klassenspezifische Drops und im Schwarzmarkt:
+**Neue Waffen** (mit Passiveffekten, zonengebunden):
 
-| Waffe | ATK | Passiv |
-|-------|:---:|--------|
-| **Flammenklinge** | +8 | 25 % Chance: 2 Verbrennungsstacks (wirkt wie Gift, 3 Runden) |
-| **Eisaxt** | +10 | 20 % Chance: Gegner eingefroren (1 Runde betäubt) |
-| **Giftklaue** | +5 | Jeder Angriff: garantiert +1 Giftstack |
-| **Runen-Kriegshammer** | +12 / −2 DEF | 30 % Chance: −3 DEF-Debuff beim Gegner |
+| Waffe | Zone | ATK | Passiv |
+|-------|------|:---:|--------|
+| **Giftklaue** | Wald / Wüste | +5 | Jeder Angriff: +1 garantierter Giftstack |
+| **Flammenklinge** | Vulkan | +8 | 25 % Chance: 2 Verbrennungsstacks (3 Runden) |
+| **Eisaxt** | Ruinen / Wüste | +10 | 20 % Chance: Gegner eingefroren (1 Runde betäubt) |
+| **Runen-Kriegshammer** | Ruinen / Schwarzmarkt | +12 / −2 DEF | 30 % Chance: −3 DEF-Debuff beim Gegner |
 
-- Flammenklinge droppt in Vulkan-Zone
-- Eisaxt in Ruinen- und Wüsten-Zone
-- Giftklaue in Wald- und Wüsten-Zone
-- Runen-Kriegshammer in Ruinen-Zone und Schwarzmarkt
-
----
-
-## ⬜ v2.0.5 — Neue Rüstungssets
-**Typ:** Content
-
-Vier neue **neutrale Sets** (für alle Klassen), als Zone-spezifische Drops:
+**Neue Rüstungssets** (neutral, zonengebunden):
 
 | Set | Zone | 4-teiliger Bonus |
 |-----|------|-----------------|
-| **Drachenschuppen** | Vulkan | +12 DEF, 20 % Chance Feuer-Angriffe vollständig ignorieren |
 | **Runen-Panzer** | Ruinen | +8 DEF, +25 max. HP, Blutungsschaden −1/Runde |
-| **Schattentuch** | Wüste | −3 DEF, dafür 15 % Ausweich-Chance (Angriff trifft nicht) |
-| **Verdammten-Stahl** | Dunkel-Reich | +6 ATK, −4 DEF — offensiver High-Risk-Style |
+| **Schattentuch** | Wüste | −3 DEF, +15 % Ausweich-Chance |
+| **Drachenschuppen** | Vulkan | +12 DEF, 20 % Feuer-Immunität |
+| **Verdammten-Stahl** | Dunkel-Reich | +6 ATK, −4 DEF |
 
 ---
 
-## ⬜ v2.0.6 — Rich UI: Kampf & Dungeon
-**Typ:** UI-Overhaul (Teil 1)
+## ⬜ v2.0.4 — Fähigkeiten-Überarbeitung
+**Typ:** Balance / Gameplay
 
-Einführung der `rich`-Library für den Kampf- und Dungeon-Bereich:
+Jede Klasse erhält **4 klassenspezifische Kampffähigkeiten** auf den Tasten `[S]`, `[R]`, `[C]`, `[X]`.  
+Alle generischen Fähigkeiten (Himmelsschlag, Rundumschlag, Cleave) entfallen.  
+Fähigkeiten sind **energie-gebunden und wiederverwendbar** — kein "einmal pro Kampf" mehr, stattdessen Cooldowns.
 
-- `pip install rich` → `requirements.txt`
-- `ui/rich_utils.py` als zentrales Modul für alle Shared-Helpers
-- **Kampf-Screen:** Farbige Panels, echte Unicode-HP-Balken `████░░░░`, Live-Update mit `rich.live` (kein Flackern)
-  - HP-Farbe: grün (>60 %), gelb (>30 %), rot (≤30 %)
-  - Statuseffekte farbig hervorgehoben (rot = Blutung, lila = Gift, grau = Betäubung)
-  - Animierter Schadens-Text beim Treffer
-- **Dungeon-Screen:** Fortschrittsanzeige Raum X/Y mit Rich-Balken, farbige Raumtyp-Icons
+| Klasse | [S] | [R] | [C] | [X] |
+|--------|-----|-----|-----|-----|
+| ⚔️ Krieger | Brutaler Hieb (18E) | Schildwall (10E) | Schildstoß (20E, 3R CD) | Kriegsschrei (25E, 1×/Kampf) |
+| 🗡️ Schurke | Aus dem Schatten (15E) | Giftklinge (12E) | Blendpulver (20E, 4R CD) | Rauchbombe (10E) |
+| 🔮 Magier | Arkane Entladung (15E) | Froststrahl (18E) | Feuerball (22E, 3R CD) | Mana-Schild (0E, 4R CD) |
 
----
-
-## ⬜ v2.0.7 — Rich UI: Menüs & Weltkarte
-**Typ:** UI-Overhaul (Teil 2)
-
-- **Lagerfeuer / Camp-Menü:** Zweispaltige Panel-Ansicht (links Spielerinfo, rechts Aktionen)
-- **Weltkarte:** Rich-Table mit Zone-Status-Spalten, Fortschrittsbalken pro Zone
-- **Inventar:** Tabellen-View mit Spalten (Name · Stats · Menge · Effekt)
-- **Shop:** Übersichtliche Tabelle mit Preisspalte, aktuelles Gold sichtbar
-- **Schwarzmarkt:** Eigener styled Panel mit seltenem Flair
+**Unlock-Level:** Alle [S]/[R] ab LVL 1, [C] ab LVL 3, [X] ab LVL 5.  
+**Cooldown-System:** `player.ability_cooldowns` Dict ersetzt `class_ability_used`-Flags. Cooldown = 0 → unbegrenzt nutzbar, Cooldown = 99 → 1× pro Kampf.  
+**Fähigkeiten-Übersicht:** Neues Menü `[?]` im Kampf und im Lagerfeuer — zeigt alle 4 Klassen-Fähigkeiten mit Name, Taste, Energiekosten, Cooldown und ausführlicher Beschreibung.  
+**Code-Aufräumen:** `heavenstrike()`, `whirlwind()`, `cleave()` aus `player.py` entfernen; `class_ability_used/2/3` und `arcane_charges_remaining` aus `player.py` und `save.py` entfernen.
 
 ---
 
-## ⬜ v2.0.8 — Rich UI: Screens & Boss-Intros
-**Typ:** UI-Overhaul (Teil 3)
+## ⬜ v2.0.5 — Rich UI
+**Typ:** UI-Overhaul
 
-- **Achievement-Screen:** Fortschrittsbalken pro Gruppe, farbige Unlock-Anzeige
-- **Endscreen:** Animierter Text, farbige Stats-Zusammenfassung
-- **Boss-Intros:** Styled Panel mit Intro-Text, Boss-Stats und dramatischem Farbakzent
-- **Slot-Auswahl:** Übersichtlichere Spielstand-Karten beim Start
-- **Level-Up:** Animierter Panel mit neuen Werten
+Einführung der `rich`-Library (`pip install rich`, `requirements.txt`):
+
+- **Kampf-Screen:** Farbige HP-Balken `████░░░░` (grün/gelb/rot), Live-Update ohne Flackern, Statuseffekte farbig
+- **Dungeon-Screen:** Fortschrittsbalken Raum X/Y, farbige Raumtyp-Icons
+- **Lagerfeuer/Menüs:** Zweispaltige Panel-Ansicht, Weltkarte als Rich-Table mit Fortschrittsbalken
+- **Inventar & Shop:** Tabellen-View mit Stats, Preisen und Rarity-Farben
+- **Screens:** Boss-Intros als styled Panel, Level-Up-Animation, Endscreen mit Stats-Zusammenfassung
+- **Slot-Auswahl:** Übersichtliche Spielstand-Karten beim Start
 
 ---
 
-## ⬜ v2.0.9 — UI-Finalisierung & QoL
+## ⬜ v2.0.6 — UI-Finalisierung & QoL
 **Typ:** UI-Polish / QoL
 
-- Vollständige Integration aller Rich-Screens — kein alter `print_header`-Code mehr
-- Konsistente Farbpalette und Rahmenstile überall
-- **QoL:** Aktuelle Zone + Dungeon-Fortschritt sichtbar im Lagerfeuer-Header
-- **QoL:** Nach Dungeon-Sieg direkte Ergebnis-Summary vor Rückkehr ins Lagerfeuer
+- Vollständige Rich-Integration — kein alter `print_header`-Code mehr, konsistente Farbpalette
+- **QoL:** Zone + Dungeon-Fortschritt im Lagerfeuer-Header sichtbar
+- **QoL:** Direkte Ergebnis-Summary nach Dungeon-Sieg
 - **QoL:** Crafting-Menü zeigt fehlende Materialien farbig hervor
-- Save/Load-Fehlerbehandlung robuster (korrupte Saves abfangen, Backup anlegen)
-- Performance: Imports optimieren, redundante `clear_screen`-Aufrufe reduzieren
+- Performance: redundante `clear_screen`-Aufrufe reduzieren
 - Alle bekannten Bugs aus v2.0.x-Feedback beheben
 
 ---
@@ -134,28 +141,24 @@ Einführung der `rich`-Library für den Kampf- und Dungeon-Bereich:
 ## ⬜ v2.1 — Stable Release
 **Typ:** Fixes / Minor Patches
 
-- Letzter Bug-Fix-Pass nach v2.0.9-Feedback
-- Balance-Feinschliff falls nach mehr Spielzeit nötig
+- Letzter Bug-Fix- und Balance-Pass nach v2.0.6-Feedback
 - README und ROADMAP auf finalen Stand bringen
-- GitHub-Release mit Changelog erstellen
+- GitHub-Release mit Changelog
 
 ---
 
 ## Gesamtübersicht
 
 ```
-v2.0     ✅  Weltkarte & Zones          [abgeschlossen]
-─────────────────────────────────────────────────────────
+v2.0     ✅  Weltkarte & Zones             [abgeschlossen]
+──────────────────────────────────────────────────────────
 v2.0.1   ✅  Hotfixes & Balance-Pass
-v2.0.2   ⬜  Neue Dungeon-Events
-v2.0.3   ⬜  Neue Monster
-v2.0.4   ⬜  Neue Waffen
-v2.0.5   ⬜  Neue Rüstungssets
-─────────────────────────────────────────────────────────
-v2.0.6   ⬜  Rich UI: Kampf & Dungeon
-v2.0.7   ⬜  Rich UI: Menüs & Weltkarte
-v2.0.8   ⬜  Rich UI: Screens & Boss-Intros
-v2.0.9   ⬜  UI-Finalisierung & QoL
-─────────────────────────────────────────────────────────
+v2.0.2   🔧  Events, Balance & Fixes
+v2.0.3   ⬜  Content-Pass (Monster, Waffen, Sets)
+v2.0.4   ⬜  Fähigkeiten-Überarbeitung
+──────────────────────────────────────────────────────────
+v2.0.5   ⬜  Rich UI (alle Screens)
+v2.0.6   ⬜  UI-Finalisierung & QoL
+──────────────────────────────────────────────────────────
 v2.1     ⬜  Stable Release
 ```

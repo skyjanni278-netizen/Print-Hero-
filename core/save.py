@@ -2,7 +2,8 @@ import json
 import os
 from core.player import Character
 
-SAVE_DIR = "saves"
+_ROOT    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SAVE_DIR = os.path.join(_ROOT, "saves")
 
 def _slot_path(slot: int) -> str:
     return os.path.join(SAVE_DIR, f"savegame_{slot}.json")
@@ -13,16 +14,21 @@ def get_save_slots() -> list:
     for s in (1, 2, 3):
         path = _slot_path(s)
         if os.path.exists(path):
-            with open(path, "r") as f:
-                d = json.load(f)
-            slots.append({
-                "slot": s, "exists": True,
-                "name": d.get("name", "?"),
-                "level": d.get("level", 1),
-                "player_class": d.get("player_class", "warrior"),
-                "ng_plus": d.get("ng_plus", 0),
-                "difficulty": d.get("difficulty", "normal"),
-            })
+            try:
+                with open(path, "r") as f:
+                    d = json.load(f)
+                slots.append({
+                    "slot": s, "exists": True,
+                    "name": d.get("name", "?"),
+                    "level": d.get("level", 1),
+                    "player_class": d.get("player_class", "warrior"),
+                    "ng_plus": d.get("ng_plus", 0),
+                    "difficulty": d.get("difficulty", "normal"),
+                })
+            except (json.JSONDecodeError, KeyError, TypeError):
+                slots.append({"slot": s, "exists": True, "corrupt": True,
+                               "name": "??? (beschädigt)", "level": 0,
+                               "player_class": "?", "ng_plus": 0, "difficulty": "?"})
         else:
             slots.append({"slot": s, "exists": False})
     return slots
@@ -77,9 +83,21 @@ def load_game(slot: int = 1):
             path = "savegame.json"
         else:
             return None
-    with open(path, "r") as f:
-        data = json.load(f)
-    player = Character(data["name"], data["max_hp"], data["attack"])
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"\n  Spielstand {slot} ist beschaedigt und kann nicht geladen werden.")
+        print(f"  Fehler: {e}")
+        input("  (ENTER)")
+        return None
+    try:
+        player = Character(data["name"], data["max_hp"], data["attack"])
+    except (KeyError, TypeError) as e:
+        print(f"\n  Spielstand {slot} hat ein ungueltiges Format.")
+        print(f"  Fehler: {e}")
+        input("  (ENTER)")
+        return None
     player.hp             = data["hp"]
     player.min_attack     = data["min_attack"]
     player.armor          = data["armor"]
