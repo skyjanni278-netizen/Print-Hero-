@@ -1,4 +1,39 @@
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console
+
+# 4 Fähigkeiten pro Klasse: S(LV1), R(LV1), C(LV3), X(LV5)
+# cd=0 → kein Cooldown, cd=N → N Runden, cd=99 → 1× pro Kampf
+CLASS_ABILITY_DEFS = {
+    "warrior": {
+        "S": {"name": "Brutaler Hieb",  "energy": 18, "cd": 0,  "unlock": 1, "needs_target": True,
+              "desc": "Kraftvoller Angriff. +6 Schaden, 30% der DEF ignoriert."},
+        "R": {"name": "Schildwall",     "energy": 10, "cd": 0,  "unlock": 1, "needs_target": False,
+              "desc": "Blockt den nächsten eingehenden Angriff vollständig."},
+        "C": {"name": "Schildstoß",     "energy": 20, "cd": 3,  "unlock": 3, "needs_target": True,
+              "desc": "Angriff + 50% Betäubungs-Chance. (3 Runden Abklingzeit)"},
+        "X": {"name": "Kriegsschrei",   "energy": 25, "cd": 99, "unlock": 5, "needs_target": False,
+              "desc": "+5 ATK für den gesamten Kampf. (1× pro Kampf)"},
+    },
+    "rogue": {
+        "S": {"name": "Aus dem Schatten", "energy": 15, "cd": 0,  "unlock": 1, "needs_target": False,
+              "desc": "Nächster Angriff: garantierter Krit + ignoriert DEF komplett."},
+        "R": {"name": "Giftklinge",       "energy": 12, "cd": 0,  "unlock": 1, "needs_target": True,
+              "desc": "Angriff + 3 Giftstacks garantiert auf das Ziel."},
+        "C": {"name": "Blendpulver",      "energy": 20, "cd": 4,  "unlock": 3, "needs_target": True,
+              "desc": "Gegner verfehlt seine nächsten 2 Angriffe. (4 Runden CD)"},
+        "X": {"name": "Rauchbombe",       "energy": 10, "cd": 99, "unlock": 5, "needs_target": False,
+              "desc": "Garantierter Rückzug aus dem Kampf. (1× pro Kampf)"},
+    },
+    "mage": {
+        "S": {"name": "Arkane Entladung", "energy": 15, "cd": 0,  "unlock": 1, "needs_target": False,
+              "desc": "Trifft alle Gegner mit magischem Schaden (ignoriert DEF). Skaliert mit Level."},
+        "R": {"name": "Froststrahl",      "energy": 18, "cd": 0,  "unlock": 1, "needs_target": True,
+              "desc": "Eisschaden ignoriert DEF — Gegner ist 1 Runde eingefroren."},
+        "C": {"name": "Feuerball",        "energy": 22, "cd": 3,  "unlock": 3, "needs_target": True,
+              "desc": "Starker Feuerangriff + 3 Verbrennungsstacks. (3 Runden CD)"},
+        "X": {"name": "Mana-Schild",      "energy":  0, "cd": 4,  "unlock": 5, "needs_target": False,
+              "desc": "Absorbiert nächsten Angriff mit Energie statt HP. (4 Runden CD)"},
+    },
+}
 
 CLASS_DEFS = {
     "warrior": {
@@ -48,10 +83,10 @@ def choose_class() -> str:
     print_header("Klasse wählen")
     entries = list(CLASS_DEFS.items())
     for i, (cid, c) in enumerate(entries):
-        print(f"  [{i+1}] {c['emoji']}  {c['name']:<12} — {c['desc']}")
-        print(f"       Bonus:    {c['bonus_desc']}")
-        print(f"       Fähigkeit: {c['ability_name']} — {c['ability_desc']}")
-        print()
+        console.print(f"  [[{i+1}]] [bold]{c['emoji']}  {c['name']:<12}[/bold] — [dim]{c['desc']}[/dim]")
+        console.print(f"       [cyan]Bonus:[/cyan]     {c['bonus_desc']}")
+        console.print(f"       [yellow]Fähigkeit:[/yellow] {c['ability_name']} — [dim]{c['ability_desc']}[/dim]")
+        console.print()
     while True:
         ch = input("Deine Wahl [1/2/3]: ").strip()
         if ch.isdigit() and 1 <= int(ch) <= len(entries):
@@ -71,9 +106,10 @@ def apply_class(player, class_id: str):
     player.max_energy          = c["start_energy"]
     player.energy              = c["start_energy"] // 2
     player.armor               = c["armor"]
-    player.class_ability_used  = False
+    player.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
     player.shadow_strike_ready = False
     player.block_next          = False
+    player.mana_shield_active  = False
 
     # Startitem anlegen (Krieger bekommt Kettenhemd)
     if c["start_item"]:

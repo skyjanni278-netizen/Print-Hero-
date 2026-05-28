@@ -1,4 +1,4 @@
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console
 
 ACHIEVEMENTS = {
     # ── Kampf ──────────────────────────────────────────────────
@@ -61,15 +61,14 @@ def check_all(player, context: dict):
     event  = context.get("event", "")
 
     if event == "victory":
-        enemies     = context.get("enemies", [])
-        potions_in  = context.get("potions_before", 0)
-        potions_out = context.get("potions_after", 0)
+        enemies      = context.get("enemies", [])
+        potions_used = context.get("potions_used", -1)
 
         if kills >= 1:    _try("first_blood")
         if kills >= 10:   _try("slayer_10")
         if kills >= 100:  _try("slayer_100")
         if fights >= 50:  _try("fighter_50")
-        if potions_in == potions_out:
+        if potions_used == 0:
             _try("no_potions")
         if any(getattr(e, "rank", 1) == 5 for e in enemies):
             _try("boss_slayer")
@@ -115,7 +114,7 @@ def achievements_menu(player):
     print_header("Errungenschaften")
     unlocked = len(player.achievements)
     total    = len(ACHIEVEMENTS)
-    print(f"Freigeschaltet: {unlocked}/{total}\n")
+    console.print(f"  Freigeschaltet: [bold cyan]{unlocked}/{total}[/bold cyan]\n")
 
     sections = [
         ("⚔️  Kampf",            ["first_blood", "slayer_10", "slayer_100", "fighter_50", "no_potions", "boss_slayer"]),
@@ -125,11 +124,13 @@ def achievements_menu(player):
         ("⭐ Meta",              ["ng_plus"]),
     ]
     for section_name, ids in sections:
-        print(f"\n{section_name}")
+        console.print(f"\n  [bold]{section_name}[/bold]")
         for aid in ids:
             if aid not in ACHIEVEMENTS:
                 continue
-            a      = ACHIEVEMENTS[aid]
-            status = "✅" if aid in player.achievements else "🔒"
-            print(f"  {status} {a['emoji']} {a['name']:<22} — {a['desc']}")
+            a = ACHIEVEMENTS[aid]
+            if aid in player.achievements:
+                console.print(f"  [green]✅ {a['emoji']} {a['name']:<22}[/green] — {a['desc']}")
+            else:
+                console.print(f"  [dim]🔒 {a['emoji']} {a['name']:<22} — {a['desc']}[/dim]")
     input("\n(ENTER)")

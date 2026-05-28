@@ -58,7 +58,32 @@ EQUIPMENT_DEFS = {
     "Schattenstiefel":      {"slot": "feet",   "armor": 3,   "rarity": "uncommon",  "emoji": "🌑",  "sell": 32,  "desc": "Lautlose Sohlen"},
     # ── EXTRA WAFFEN ─────────────────────────────────────────
     "Sturmklinge":          {"slot": "weapon", "attack": 11, "rarity": "rare",      "emoji": "⚡",  "sell": 90,  "desc": "Züngelnde Blitze"},
-    "Knochensense":         {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Aus Todenochen gefertigt"},
+    "Knochensense":         {"slot": "weapon", "attack": 15, "rarity": "epic",      "emoji": "💀",  "sell": 145, "desc": "Aus Totenknochen gefertigt"},
+    # ── PASSIVE WAFFEN ───────────────────────────────────────
+    "Giftklaue":            {"slot": "weapon", "attack":  5, "rarity": "uncommon",  "emoji": "☠️",  "sell": 40,  "desc": "Jeder Treffer: +1 Giftstack",       "passive": "poison_on_hit"},
+    "Flammenklinge":        {"slot": "weapon", "attack":  8, "rarity": "rare",      "emoji": "🔥",  "sell": 70,  "desc": "25% Chance: 2 Verbrennungsstacks",  "passive": "burn_on_hit"},
+    "Eisaxt":               {"slot": "weapon", "attack": 10, "rarity": "rare",      "emoji": "❄️",  "sell": 85,  "desc": "20% Chance: Einfrieren (1 Runde)",  "passive": "freeze_on_hit"},
+    "Runen-Kriegshammer":   {"slot": "weapon", "attack": 12, "rarity": "rare",      "emoji": "🔨",  "sell": 95,  "desc": "30% Chance: -3 DEF-Debuff",         "passive": "def_debuff_on_hit"},
+    # ── RUNEN-PANZER-SET (Ruinen) ────────────────────────────
+    "Panzerklinge":         {"slot": "weapon", "attack":  9, "rarity": "rare",      "emoji": "🛡️",  "sell": 75,  "desc": "Klinge des Runenpanzers"},
+    "Runen-Platte":         {"slot": "chest",  "armor":   8, "rarity": "rare",      "emoji": "🛡️",  "sell": 75,  "desc": "Gepanzerte Runenrüstung"},
+    "Runen-Visier":         {"slot": "head",   "armor":   4, "rarity": "rare",      "emoji": "🛡️",  "sell": 60,  "desc": "Visier des Runenpanzers"},
+    "Runen-Schritte":       {"slot": "feet",   "armor":   3, "rarity": "rare",      "emoji": "🛡️",  "sell": 50,  "desc": "Schwere Panzerschritte"},
+    # ── SCHATTENTUCH-SET (Wüste) ─────────────────────────────
+    "Mondklinge":           {"slot": "weapon", "attack":  7, "rarity": "rare",      "emoji": "🌙",  "sell": 65,  "desc": "Leichte Klinge für schnelle Züge"},
+    "Schattengewand":       {"slot": "chest",  "armor":   5, "rarity": "rare",      "emoji": "🌙",  "sell": 60,  "desc": "Leichtes Gewand aus Schattenstoff"},
+    "Schattenkapuze":       {"slot": "head",   "armor":   2, "rarity": "rare",      "emoji": "🌙",  "sell": 45,  "desc": "Kapuze aus gewebter Dunkelheit"},
+    "Schattensandale":      {"slot": "feet",   "armor":   1, "rarity": "rare",      "emoji": "🌙",  "sell": 35,  "desc": "Lautlose Sandalen"},
+    # ── DRACHENSCHUPPEN-SET (Vulkan) ─────────────────────────
+    "Schuppenklinge":       {"slot": "weapon", "attack": 14, "rarity": "epic",      "emoji": "🐉",  "sell": 130, "desc": "Klinge aus Drachenschuppen"},
+    "Schuppenpanzer":       {"slot": "chest",  "armor":  12, "rarity": "epic",      "emoji": "🐉",  "sell": 130, "desc": "Panzer aus echten Drachenschuppen"},
+    "Schuppenhelm":         {"slot": "head",   "armor":   7, "rarity": "epic",      "emoji": "🐉",  "sell": 100, "desc": "Helm aus Drachenschädelknochen"},
+    "Schuppenstiefel":      {"slot": "feet",   "armor":   5, "rarity": "epic",      "emoji": "🐉",  "sell": 85,  "desc": "Stiefel aus Drachenhaut"},
+    # ── VERDAMMTEN-STAHL-SET (Dunkel-Reich) ──────────────────
+    "Verdammte Klinge":     {"slot": "weapon", "attack": 18, "rarity": "epic",      "emoji": "💀",  "sell": 175, "desc": "Klinge des Verdammten"},
+    "Verdammte Rüstung":    {"slot": "chest",  "armor":  12, "rarity": "epic",      "emoji": "💀",  "sell": 165, "desc": "Rüstung aus verdammtem Metall"},
+    "Verdammter Helm":      {"slot": "head",   "armor":   7, "rarity": "epic",      "emoji": "💀",  "sell": 125, "desc": "Helm des Verdammten"},
+    "Verdammte Stiefel":    {"slot": "feet",   "armor":   5, "rarity": "epic",      "emoji": "💀",  "sell": 105, "desc": "Stiefel des Verdammten"},
     # ── KLASSEN-RÜSTUNGSSETS ─────────────────────────────────────
     # Eisenfestung (Krieger, epic)
     "Festungsklinge":   {"slot": "weapon", "attack": 15, "rarity": "epic", "emoji": "🏰", "sell": 140, "desc": "Klinge des Festungsritters",  "class_only": "warrior"},
@@ -180,63 +205,100 @@ SET_DEFS = {
         "emoji": "🥋",
         "pieces": {"Kurzschwert", "Lederrüstung", "Lederkappe", "Lederstiefel"},
         "bonuses": {
-            2: {"desc": "+2 DEF",         "atk": 0, "def": 2},
-            3: {"desc": "+2 DEF +1 ATK",  "atk": 1, "def": 2},
-            4: {"desc": "+4 DEF +3 ATK",  "atk": 3, "def": 4},
+            2: {"desc": "+2 DEF",                          "atk": 0, "def": 2},
+            3: {"desc": "+2 DEF +1 ATK",                   "atk": 1, "def": 2},
+            4: {"desc": "+4 DEF +3 ATK — 10% Ausweichen",  "atk": 3, "def": 4, "special": "leder_dodge"},
         },
     },
     "Eisen-Set": {
         "emoji": "⛓️",
         "pieces": {"Langschwert", "Kettenhemd", "Eisenhelm", "Eisenstiefel"},
         "bonuses": {
-            2: {"desc": "+3 DEF",         "atk": 0, "def": 3},
-            3: {"desc": "+3 DEF +2 ATK",  "atk": 2, "def": 3},
-            4: {"desc": "+6 DEF +4 ATK",  "atk": 4, "def": 6},
+            2: {"desc": "+3 DEF",                               "atk": 0, "def": 3},
+            3: {"desc": "+3 DEF +2 ATK",                        "atk": 2, "def": 3},
+            4: {"desc": "+6 DEF +4 ATK — +3 Energie/Runde",     "atk": 4, "def": 6, "special": "eisen_energy_regen"},
         },
     },
     "Stahl-Set": {
         "emoji": "🔩",
         "pieces": {"Kriegshammer", "Plattenpanzer", "Stahlhelm", "Schnellläuferstiefel"},
         "bonuses": {
-            2: {"desc": "+4 DEF",         "atk": 0, "def": 4},
-            3: {"desc": "+4 DEF +3 ATK",  "atk": 3, "def": 4},
-            4: {"desc": "+8 DEF +6 ATK",  "atk": 6, "def": 8},
+            2: {"desc": "+4 DEF",                              "atk": 0, "def": 4},
+            3: {"desc": "+4 DEF +3 ATK",                       "atk": 3, "def": 4},
+            4: {"desc": "+8 DEF +6 ATK — Blutungsimmunität",   "atk": 6, "def": 8, "special": "stahl_bleed_immune"},
         },
     },
     "Schatten-Set": {
         "emoji": "🌑",
         "pieces": {"Schattendolch", "Schattenrüstung", "Schattenhelm", "Schattenstiefel"},
         "bonuses": {
-            2: {"desc": "+4 DEF",         "atk": 0, "def": 4},
-            3: {"desc": "+4 DEF +4 ATK",  "atk": 4, "def": 4},
-            4: {"desc": "+8 DEF +8 ATK",  "atk": 8, "def": 8},
+            2: {"desc": "+4 DEF",                           "atk": 0, "def": 4},
+            3: {"desc": "+4 DEF +4 ATK",                    "atk": 4, "def": 4},
+            4: {"desc": "+8 DEF +8 ATK — +15% Krit-Chance", "atk": 8, "def": 8, "special": "schatten_crit"},
         },
     },
     "Runen-Set": {
         "emoji": "🌀",
         "pieces": {"Runenschwert", "Runenrüstung", "Runenhelm", "Runenstiefel"},
         "bonuses": {
-            2: {"desc": "+6 DEF",          "atk": 0, "def": 6},
-            3: {"desc": "+6 DEF +4 ATK",   "atk": 4, "def": 6},
-            4: {"desc": "+12 DEF +8 ATK",  "atk": 8, "def": 12},
+            2: {"desc": "+6 DEF",                           "atk": 0, "def": 6},
+            3: {"desc": "+6 DEF +4 ATK",                    "atk": 4, "def": 6},
+            4: {"desc": "+12 DEF +8 ATK — +20% XP",         "atk": 8, "def": 12, "special": "runen_xp_bonus"},
         },
     },
     "Drachen-Set": {
         "emoji": "🐉",
         "pieces": {"Drachenzahn", "Drachenschuppen", "Drachenkrone", "Drachenklauen"},
         "bonuses": {
-            2: {"desc": "+8 DEF",           "atk": 0,  "def": 8},
-            3: {"desc": "+8 DEF +6 ATK",    "atk": 6,  "def": 8},
-            4: {"desc": "+15 DEF +12 ATK",  "atk": 12, "def": 15},
+            2: {"desc": "+8 DEF",                                      "atk": 0,  "def": 8},
+            3: {"desc": "+8 DEF +6 ATK",                               "atk": 6,  "def": 8},
+            4: {"desc": "+15 DEF +12 ATK — 15% Angriff vollst. blocken","atk": 12, "def": 15, "special": "drachen_block"},
         },
     },
     "Licht-Set": {
         "emoji": "✨",
         "pieces": {"Göttliche Klinge", "Rüstung des Lichts", "Krone des Ewigen", "Stiefel der Ewigkeit"},
         "bonuses": {
-            2: {"desc": "+12 DEF",          "atk": 0,  "def": 12},
-            3: {"desc": "+12 DEF +10 ATK",  "atk": 10, "def": 12},
-            4: {"desc": "+20 DEF +18 ATK",  "atk": 18, "def": 20},
+            2: {"desc": "+12 DEF",                          "atk": 0,  "def": 12},
+            3: {"desc": "+12 DEF +10 ATK",                  "atk": 10, "def": 12},
+            4: {"desc": "+20 DEF +18 ATK — +3 HP/Runde",    "atk": 18, "def": 20, "special": "licht_hp_regen"},
+        },
+    },
+    # ── NEUE SETS ────────────────────────────────────────────
+    "Runen-Panzer": {
+        "emoji": "🛡️",
+        "pieces": {"Panzerklinge", "Runen-Platte", "Runen-Visier", "Runen-Schritte"},
+        "bonuses": {
+            2: {"desc": "+3 DEF",                                      "atk": 0, "def": 3},
+            3: {"desc": "+5 DEF +2 ATK",                               "atk": 2, "def": 5},
+            4: {"desc": "+8 DEF +5 ATK — Blutungsschaden −1/Stack",    "atk": 5, "def": 8, "special": "panzer_bleed_reduce"},
+        },
+    },
+    "Schattentuch": {
+        "emoji": "🌙",
+        "pieces": {"Mondklinge", "Schattengewand", "Schattenkapuze", "Schattensandale"},
+        "bonuses": {
+            2: {"desc": "+1 DEF",                                "atk": 0, "def":  1},
+            3: {"desc": "+2 DEF +2 ATK",                         "atk": 2, "def":  2},
+            4: {"desc": "−3 DEF +2 ATK — 15% Ausweichen",        "atk": 2, "def": -3, "special": "schattentuch_dodge"},
+        },
+    },
+    "Drachenschuppen": {
+        "emoji": "🐉",
+        "pieces": {"Schuppenklinge", "Schuppenpanzer", "Schuppenhelm", "Schuppenstiefel"},
+        "bonuses": {
+            2: {"desc": "+6 DEF",                                          "atk": 0, "def":  6},
+            3: {"desc": "+9 DEF +4 ATK",                                   "atk": 4, "def":  9},
+            4: {"desc": "+12 DEF +8 ATK — 20% Angriff vollst. blocken",    "atk": 8, "def": 12, "special": "schuppen_block"},
+        },
+    },
+    "Verdammten-Stahl": {
+        "emoji": "💀",
+        "pieces": {"Verdammte Klinge", "Verdammte Rüstung", "Verdammter Helm", "Verdammte Stiefel"},
+        "bonuses": {
+            2: {"desc": "+2 ATK",           "atk":  2, "def":  0},
+            3: {"desc": "+4 ATK −2 DEF",    "atk":  4, "def": -2},
+            4: {"desc": "+6 ATK −4 DEF",    "atk":  6, "def": -4},
         },
     },
     # ── KLASSEN-SETS ─────────────────────────────────────────────
@@ -379,7 +441,149 @@ RANK_LOOT_WEIGHTS = {
 }
 
 
-def roll_loot(rank: int, rolls: int = 2) -> list:
+# ── Zonen-basierte Loot-Pools ────────────────────────────────────────────────
+
+def _e(key, w):  return {"type": "equipment",  "key": key, "weight": w}
+def _c(key, w, mn=1, mx=1): return {"type": "consumable", "key": key, "weight": w, "min": mn, "max": mx}
+def _j(key, w, mn=1, mx=2): return {"type": "junk",       "key": key, "weight": w, "min": mn, "max": mx}
+def _g(w, mn, mx):           return {"type": "gold",        "key": "Gold", "weight": w, "min": mn, "max": mx}
+
+ZONE_LOOT_POOL = {
+    "wald": [
+        _g(22,  3, 12),
+        _c("Healing Potion",   18),
+        _c("Antidot",           8),
+        _c("Energie-Kristall",  6),
+        _j("Altes Seil",       10, 1, 2),
+        _j("Lumpen",            8, 1, 2),
+        _j("Knochen",           7, 1, 2),
+        _j("Schleimklumpen",    6, 1, 2),
+        _j("Wolfspelz",         4, 1, 1),
+        _e("Kurzschwert",       7),
+        _e("Lederrüstung",      6),
+        _e("Lederkappe",        6),
+        _e("Lederstiefel",      6),
+        _e("Eisenstiefel",      4),
+        _e("Eisenhelm",         4),
+        _e("Kettenhemd",        3),
+        _e("Giftklaue",         2),
+    ],
+    "ruinen": [
+        _g(20, 10, 28),
+        _c("Großes Heiltrank", 16),
+        _c("Energie-Kristall",  8),
+        _c("Stärketrank",       6),
+        _c("Antidot",           5),
+        _j("Wolfspelz",         8, 1, 2),
+        _j("Trollfell",         6, 1, 1),
+        _j("Goblinzahn",        5, 1, 2),
+        _j("Banditen-Abzeichen",4, 1, 1),
+        _e("Kriegshammer",      6),
+        _e("Plattenpanzer",     5),
+        _e("Stahlhelm",         5),
+        _e("Schnellläuferstiefel", 4),
+        _e("Schattendolch",     4),
+        _e("Schattenstiefel",   3),
+        _e("Eisaxt",            3),
+        _e("Runen-Kriegshammer",2),
+        _e("Panzerklinge",      3),
+        _e("Runen-Platte",      3),
+        _e("Runen-Visier",      2),
+        _e("Runen-Schritte",    2),
+    ],
+    "wueste": [
+        _g(18, 20, 48),
+        _c("Elixier",          12),
+        _c("Energie-Kristall",  8),
+        _c("Stärketrank",       7),
+        _j("Goblinzahn",        5, 1, 2),
+        _j("Trollfell",         4, 1, 1),
+        _j("Banditen-Abzeichen",4, 1, 1),
+        _e("Runenschwert",      6),
+        _e("Runenrüstung",      5),
+        _e("Runenhelm",         5),
+        _e("Runenstiefel",      4),
+        _e("Schattenrüstung",   4),
+        _e("Schattenhelm",      3),
+        _e("Mondklinge",        4),
+        _e("Schattengewand",    4),
+        _e("Schattenkapuze",    3),
+        _e("Schattensandale",   3),
+        _e("Flammenklinge",     3),
+    ],
+    "vulkan": [
+        _g(16, 40, 80),
+        _c("Elixier",          10),
+        _c("Phönixfeder",       7),
+        _c("Stärketrank",       5),
+        _e("Drachenzahn",       6),
+        _e("Drachenschuppen",   5),
+        _e("Drachenkrone",      5),
+        _e("Drachenklauen",     4),
+        _e("Knochensense",      4),
+        _e("Schuppenklinge",    4),
+        _e("Schuppenpanzer",    4),
+        _e("Schuppenhelm",      3),
+        _e("Schuppenstiefel",   3),
+        _e("Festungsklinge",    2),
+        _e("Festungsplatte",    2),
+        _e("Festungshelm",      2),
+        _e("Festungsstiefel",   2),
+        _e("Hüllendolch",       2),
+        _e("Hüllenpanzer",      2),
+        _e("Hüllenmaske",       2),
+        _e("Hüllenstiefel",     2),
+        _e("Arkaner Stab",      2),
+        _e("Arkane Robe",       2),
+        _e("Arkane Kapuze",     2),
+        _e("Arkane Schuhe",     2),
+    ],
+    "dunkelreich": [
+        _g(14, 80, 150),
+        _c("Elixier",           9),
+        _c("Phönixfeder",       7),
+        _e("Verdammte Klinge",  5),
+        _e("Verdammte Rüstung", 5),
+        _e("Verdammter Helm",   4),
+        _e("Verdammte Stiefel", 4),
+        _e("Göttliche Klinge",  2),
+        _e("Rüstung des Lichts",2),
+        _e("Krone des Ewigen",  2),
+        _e("Stiefel der Ewigkeit", 2),
+    ],
+}
+
+# Boss-Loot: garantierte Set-Teile des NÄCHSTEN Tiers
+BOSS_LOOT_POOL = {
+    "wald":        ["Kriegshammer", "Plattenpanzer", "Stahlhelm", "Schnellläuferstiefel",
+                    "Panzerklinge", "Runen-Platte", "Runen-Visier", "Runen-Schritte"],
+    "ruinen":      ["Runenschwert", "Runenrüstung", "Runenhelm", "Runenstiefel",
+                    "Mondklinge", "Schattengewand", "Schattenkapuze", "Schattensandale"],
+    "wueste":      ["Drachenzahn", "Drachenschuppen", "Drachenkrone", "Drachenklauen",
+                    "Schuppenklinge", "Schuppenpanzer", "Schuppenhelm", "Schuppenstiefel"],
+    "vulkan":      ["Verdammte Klinge", "Verdammte Rüstung", "Verdammter Helm", "Verdammte Stiefel"],
+    "dunkelreich": ["Göttliche Klinge", "Rüstung des Lichts", "Krone des Ewigen", "Stiefel der Ewigkeit"],
+}
+
+
+def roll_zone_loot(zone_id: str, rolls: int = 2) -> list:
+    pool    = ZONE_LOOT_POOL.get(zone_id, ZONE_LOOT_POOL["wald"])
+    weights = [p["weight"] for p in pool]
+    return [random.choices(pool, weights=weights, k=1)[0] for _ in range(rolls)]
+
+
+def roll_boss_loot(zone_id: str) -> list:
+    pool  = BOSS_LOOT_POOL.get(zone_id, [])
+    picks = random.sample(pool, min(2, len(pool))) if pool else []
+    result = [{"type": "equipment", "key": k} for k in picks]
+    gold_ranges = {"wald": (30,60), "ruinen": (50,90), "wueste": (70,120),
+                   "vulkan": (100,160), "dunkelreich": (150,250)}
+    mn, mx = gold_ranges.get(zone_id, (40, 80))
+    result.append({"type": "gold", "key": "Gold", "min": mn, "max": mx})
+    return result
+
+
+def roll_loot(rank: int = 1, rolls: int = 2) -> list:
     weights  = RANK_LOOT_WEIGHTS.get(rank, RANK_LOOT_WEIGHTS[1])
     rarities = list(weights.keys())
     chances  = list(weights.values())
@@ -403,27 +607,27 @@ def apply_loot(player, loot_list: list) -> list:
 
         elif item["type"] == "consumable":
             key    = item["key"]
-            amount = random.randint(item["min"], item["max"])
+            label  = item.get("name", key)
+            amount = random.randint(item.get("min", 1), item.get("max", 1))
             result = player.add_consumable(key, amount)
             cdef   = CONSUMABLE_DEFS.get(key, {})
             emoji  = cdef.get("emoji", "🧪")
             if result > 0:
-                messages.append(f"  {emoji} {result}x {item['name']}")
+                messages.append(f"  {emoji} {result}x {label}")
             if result < amount:
-                lost = amount - result
-                messages.append(f"  ⚠️  {lost}x {item['name']} nicht aufgenommen (Stapel voll / Inventar voll)")
+                messages.append(f"  ⚠️  {amount-result}x {label} nicht aufgenommen (Stapel voll / Inventar voll)")
 
         elif item["type"] == "junk":
             key    = item["key"]
-            amount = random.randint(item["min"], item["max"])
+            label  = item.get("name", key)
+            amount = random.randint(item.get("min", 1), item.get("max", 1))
             result = player.add_junk(key, amount)
             jdef   = JUNK_DEFS.get(key, {})
             emoji  = jdef.get("emoji", "🗑️")
             if result > 0:
-                messages.append(f"  {emoji} {result}x {item['name']}")
+                messages.append(f"  {emoji} {result}x {label}")
             if result < amount:
-                lost = amount - result
-                messages.append(f"  ⚠️  {lost}x {item['name']} nicht aufgenommen (Inventar voll)")
+                messages.append(f"  ⚠️  {amount-result}x {label} nicht aufgenommen (Inventar voll)")
 
         elif item["type"] == "equipment":
             if not player.has_inventory_space():
@@ -455,5 +659,10 @@ def apply_loot(player, loot_list: list) -> list:
 
             player.inventory["Equipment"].append(equip)
             messages.append(f"  {rbadge}{emoji} {item_key} [{rlabel}] ({stat})")
+            if rarity == "legendary":
+                from systems.achievements import check_and_unlock
+                msg = check_and_unlock(player, "got_legendary")
+                if msg:
+                    messages.append(f"  {msg}")
 
     return messages

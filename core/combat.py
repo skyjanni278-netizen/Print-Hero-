@@ -1,6 +1,34 @@
 import random
-from ui.utils import clear_screen, print_header
-from content.loot_tables import roll_loot, apply_loot, CONSUMABLE_DEFS
+from ui.utils import clear_screen, print_header, console, hp_bar, energy_bar
+from rich.markup import escape as _esc
+from rich.table import Table
+from content.loot_tables import roll_loot, roll_zone_loot, apply_loot, CONSUMABLE_DEFS, EQUIPMENT_DEFS
+
+
+def _apply_weapon_passive(player, target, dmg: int):
+    if dmg <= 0:
+        return
+    passive = EQUIPMENT_DEFS.get(player.equipment["weapon"]["name"], {}).get("passive")
+    if not passive:
+        return
+    immune = getattr(target, "immune_to_bleed_poison", False)
+    if passive == "poison_on_hit" and not immune:
+        target.poison_stacks = getattr(target, "poison_stacks", 0) + 1
+        console.print(f"  [magenta]☠️  Giftklaue: +1 Giftstack auf {_esc(target.name)}![/magenta]")
+    elif passive == "burn_on_hit" and not immune and random.random() < 0.25:
+        target.burn_stacks = getattr(target, "burn_stacks", 0) + 2
+        console.print(f"  [orange1]🔥 Flammenklinge: 2 Verbrennungsstacks auf {_esc(target.name)}![/orange1]")
+    elif passive == "freeze_on_hit" and random.random() < 0.20:
+        target.stunned = True
+        console.print(f"  [cyan]❄️  Eisaxt: {_esc(target.name)} ist eingefroren![/cyan]")
+    elif passive == "def_debuff_on_hit" and random.random() < 0.30:
+        target.armor_debuff = getattr(target, "armor_debuff", 0) + 3
+        console.print(f"  [yellow]🔨 Runen-Kriegshammer: {_esc(target.name)} −3 DEF![/yellow]")
+
+
+def _check_swallow(target) -> bool:
+    sc = getattr(target, "swallow_chance", 0)
+    return sc > 0 and random.random() < sc
 
 _W = 58  # Anzeigebreite
 
@@ -14,14 +42,6 @@ def generate_enemy_group(player):
     return [create_zone_enemy(player, zone_id) for _ in range(count)]
 
 
-# ── Hilfs-Renderer ────────────────────────────────────────────────────────────
-
-def _bar(current, maximum, width=16) -> str:
-    ratio  = current / maximum if maximum > 0 else 0
-    filled = int(ratio * width)
-    return "[" + "#" * filled + "-" * (width - filled) + "]"
-
-
 def _print_combat_screen(player, enemy_list, round_num: int):
     from systems.zones import ZONE_DEFS
     from content.classes import CLASS_DEFS
@@ -31,109 +51,94 @@ def _print_combat_screen(player, enemy_list, round_num: int):
     zdef    = ZONE_DEFS.get(zone_id, {})
     cdef    = CLASS_DEFS.get(player.player_class, {})
 
-    print("=" * _W)
-    print(f"  KAMPF  |  {zdef.get('emoji','')} {zdef.get('name','')}  |  Runde {round_num}")
-    print("=" * _W)
+    console.print(f"[bold]{'=' * _W}[/bold]")
+    console.print(f"  [bold]KAMPF[/bold]  |  {_esc(zdef.get('emoji',''))} {_esc(zdef.get('name',''))}  |  Runde {round_num}")
+    console.print(f"[bold]{'=' * _W}[/bold]")
 
     # Spieler-Block
-    hp_bar = _bar(player.hp, player.max_hp)
-    en_bar = _bar(player.energy, player.max_energy)
-    print(f"  {cdef.get('emoji','🧙')} {player.name:<12} LVL {player.level}  "
-          f"XP {player.xp}/{player.xp_to_level_up}")
-    print(f"    HP      {hp_bar} {player.hp}/{player.max_hp}")
-    print(f"    Energie {en_bar} {player.energy}/{player.max_energy}")
+    hp_b = hp_bar(player.hp, player.max_hp)
+    en_b = energy_bar(player.energy, player.max_energy)
+    console.print(f"  {_esc(cdef.get('emoji','🧙'))} [bold]{_esc(player.name):<12}[/bold] LVL {player.level}  XP {player.xp}/{player.xp_to_level_up}")
+    console.print(f"    HP      {hp_b} {player.hp}/{player.max_hp}")
+    console.print(f"    Energie {en_b} {player.energy}/{player.max_energy}")
 
     # Status-Effekte (kompakt, eine Zeile)
     fx = []
-    if player.bleed_stacks > 0:                       fx.append(f"⚠ Blutung×{player.bleed_stacks}")
-    if player.poison_stacks > 0:                      fx.append(f"☠ Gift×{player.poison_stacks}")
-    if player.armor_debuff > 0:                       fx.append(f"🟢 Säure-{player.armor_debuff}")
-    if player.stunned:                                 fx.append("🪨 BETÄUBT")
-    if getattr(player, "block_next", False):          fx.append(f"🛡 Block×{player.block_charges}")
-    if getattr(player, "shield_active", False):       fx.append("🔵 Magieschild")
-    if getattr(player, "mana_shield_active", False):  fx.append("🔮 Mana-Schild")
+    if player.bleed_stacks > 0:                       fx.append(f"[red]⚠ Blutung×{player.bleed_stacks}[/red]")
+    if player.poison_stacks > 0:                      fx.append(f"[purple]☠ Gift×{player.poison_stacks}[/purple]")
+    if getattr(player, "burn_stacks", 0) > 0:         fx.append(f"[orange1]🔥 Verbr×{player.burn_stacks}[/orange1]")
+    if player.armor_debuff > 0:                       fx.append(f"[orange1]🟠 Säure-DEF−{player.armor_debuff}[/orange1]")
+    if player.stunned:                                 fx.append("[bold yellow]🪨 BETÄUBT[/bold yellow]")
+    if getattr(player, "block_next", False):          fx.append(f"[cyan]🛡 Block×{player.block_charges}[/cyan]")
+    if getattr(player, "shield_active", False):       fx.append("[cyan]🔵 Magieschild[/cyan]")
+    if getattr(player, "mana_shield_active", False):  fx.append("[blue]🔮 Mana-Schild[/blue]")
+    if getattr(player, "shadow_strike_ready", False): fx.append("[magenta]🗡️ Schatten-Krit[/magenta]")
     if fx:
-        print(f"    {' | '.join(fx)}")
+        console.print(f"    {' | '.join(fx)}")
 
     # Kurzinventar
     cons = sum(v for v in player.inventory.get("Consumables", {}).values())
     gold = player.inventory.get("Gold", 0)
-    print(f"    💰 {gold} Gold  |  💊 {cons} Items")
+    console.print(f"    💰 {gold} Gold  |  💊 {cons} Items")
 
     # Gegner-Block
-    print(f"\n  {'-' * (_W - 2)}")
+    console.print(f"\n  {'-' * (_W - 2)}")
     for i, e in enumerate(enemy_list):
         if e.is_alive():
-            bar    = _bar(e.hp, e.max_hp)
+            e_hp_b = hp_bar(e.hp, e.max_hp)
             rank   = f"R{e.rank}" if hasattr(e, "rank") else ""
             e_fx   = []
-            if getattr(e, "bleed_stacks", 0) > 0: e_fx.append(f"Blutung{e.bleed_stacks}")
-            if getattr(e, "stunned", False):        e_fx.append("BETAUBT")
+            if getattr(e, "bleed_stacks", 0) > 0:  e_fx.append(f"[red]Blutung×{e.bleed_stacks}[/red]")
+            if getattr(e, "burn_stacks",  0) > 0:   e_fx.append(f"[orange1]🔥Verbr.×{e.burn_stacks}[/orange1]")
+            if getattr(e, "stunned", False):         e_fx.append("[yellow]BETÄUBT[/yellow]")
+            if getattr(e, "blind_turns", 0) > 0:    e_fx.append(f"[cyan]💨Blind×{getattr(e,'blind_turns',0)}[/cyan]")
             fx_str = "  " + " ".join(e_fx) if e_fx else ""
-            print(f"  [{i+1}] {e.name:<18} {rank:<4} {bar}  {e.hp}/{e.max_hp}{fx_str}")
+            console.print(f"  [[{i+1}]] {_esc(e.name):<18} {rank:<4} {e_hp_b}  {e.hp}/{e.max_hp}{fx_str}")
         else:
-            print(f"  [{i+1}] {e.name:<18}  {'x besiegt':>32}")
-    print(f"  {'-' * (_W - 2)}")
+            console.print(f"  [[{i+1}]] {_esc(e.name):<18}  [dim]✗ besiegt[/dim]")
+    console.print(f"  {'-' * (_W - 2)}")
 
 
 def _print_action_menu(player):
-    from content.classes import CLASS_DEFS
+    from content.classes import CLASS_ABILITY_DEFS
 
-    total_red = player._energy_cost_reduction()
-    cost_s    = max(5, 20 - total_red)
-    cost_r    = max(5, 15 - total_red)
-    cost_c    = max(5, 10 - total_red)
+    pclass = player.player_class
+    adefs  = CLASS_ABILITY_DEFS.get(pclass, {})
+    cds    = getattr(player, "ability_cooldowns", {"S": 0, "R": 0, "C": 0, "X": 0})
+    red    = player._energy_cost_reduction()
 
-    pclass    = player.player_class
-    cdef      = CLASS_DEFS.get(pclass, {})
-    a_used    = player.class_ability_used
-    a2_used   = getattr(player, "class_ability2_used", False)
-    a3_used   = getattr(player, "class_ability3_used", False)
-    a2_unlock = player.level >= 4
-    a3_unlock = player.level >= 7
+    def _ab(key) -> str:
+        d       = adefs.get(key, {})
+        name    = d.get("name", "?")
+        e_base  = d.get("energy", 0)
+        cd_max  = d.get("cd", 0)
+        unlock  = d.get("unlock", 1)
+        cur_cd  = cds.get(key, 0)
+        if player.level < unlock:
+            return f"[dim][[{key}]] {_esc(name)}  🔒LV{unlock}[/dim]"
+        cost  = max(0, e_base - red) if e_base > 0 else 0
+        e_str = f"{cost}E" if cost > 0 else " —"
+        if cd_max == 99 and cur_cd:
+            return f"[red][[{key}]] {_esc(name)}  {e_str} ✗1×/K[/red]"
+        elif cur_cd > 0:
+            return f"[yellow][[{key}]] {_esc(name)}  {e_str} ⏳{cur_cd}Rd[/yellow]"
+        return f"[[{key}]] {_esc(name)}  {e_str}"
 
-    _A2 = {"warrior": f"[1] Schildstoß    15E",
-           "rogue":   f"[1] Giftklinge    12E",
-           "mage":    f"[1] Froststrahl   18E"}
-    _A3 = {"warrior": f"[2] Kriegsschrei  20E",
-           "rogue":   f"[2] Rauchbombe    10E",
-           "mage":    f"[2] Mana-Schild"}
+    a_str = ("[[A]] Angriff  [magenta bold]🗡️ Krit bereit![/magenta bold]"
+             if player.shadow_strike_ready else "[[A]] Angriff")
 
-    left, right = [], []
+    t = Table(box=None, padding=(0, 2, 0, 0), show_header=False, expand=False)
+    t.add_column(min_width=32, no_wrap=True)
+    t.add_column()
+    t.add_row(a_str, _ab("S"))
+    t.add_row(_ab("R"), _ab("C"))
+    t.add_row(_ab("X"), "[[U]] Items")
+    console.print(t)
 
-    # Linke Spalte: Basis + Fähigkeit 3
-    left.append("[A] Angriff")
-    if player.level >= 3: left.append(f"[R] Rundumschlag  {cost_r}E")
-    x_cost = " 15E" if pclass == "mage" else ""
-    if not a_used:         left.append(f"[X] {cdef.get('ability_name','?')}{x_cost}")
-    if a3_unlock and not a3_used: left.append(_A3.get(pclass, "[2] ?"))
-    left.append("[U] Items")
-
-    # Rechte Spalte: Spezial + Utility
-    if player.level >= 5: right.append(f"[S] Himmelsschlag {cost_s}E")
-    if player.level >= 2: right.append(f"[C] Cleave         {cost_c}E")
-    if a2_unlock and not a2_used: right.append(_A2.get(pclass, "[1] ?"))
-    if player.shield_ready: right.append("[M] Magieschild")
-    right.append("[F] Fliehen  |  [Q] Ende")
-
-    # Gesperrte Fähigkeiten (einzeilige Notiz)
-    locked = []
-    if player.level < 2: locked.append("Cleave ab LVL 2")
-    if player.level < 3: locked.append("Rundumschlag ab LVL 3")
-    if player.level < 5: locked.append("Himmelsschlag ab LVL 5")
-    if not a2_unlock:    locked.append(f"{_A2.get(pclass,'').split(']',1)[-1].strip().split()[0]} ab LVL 4")
-    if not a3_unlock:    locked.append(f"{_A3.get(pclass,'').split(']',1)[-1].strip().split()[0]} ab LVL 7")
-
-    rows = max(len(left), len(right))
-    for i in range(rows):
-        l = left[i]  if i < len(left)  else ""
-        r = right[i] if i < len(right) else ""
-        print(f"  {l:<27}{r}")
-
-    if locked:
-        print(f"  🔒 {' / '.join(locked)}")
-
-    print("-" * _W)
+    if player.shield_ready:
+        console.print("  [[M]] Magieschild")
+    console.print("  [[F]] Fliehen    [[Q]] Beenden    [[?]] Hilfe")
+    console.print("─" * _W)
 
 
 def _pick_target(enemy_list) -> int:
@@ -145,11 +150,11 @@ def _pick_target(enemy_list) -> int:
         tidx = int(input("  Welchen Gegner? (Nummer): ")) - 1
         if 0 <= tidx < len(enemy_list) and enemy_list[tidx].is_alive():
             return tidx
-        print("  Ungültiges Ziel!")
+        console.print("  [red]Ungültiges Ziel![/red]")
         input("  ENTER...")
         return -1
     except ValueError:
-        print("  Bitte eine gültige Zahl eingeben!")
+        console.print("  [red]Bitte eine gültige Zahl eingeben![/red]")
         input("  ENTER...")
         return -1
 
@@ -157,17 +162,16 @@ def _pick_target(enemy_list) -> int:
 def _result_header(player, enemy_list):
     """Kompakter HP-Block am Anfang des Ergebnis-Screens."""
     clear_screen()
-    print("-" * _W)
-    hp_bar = _bar(player.hp, player.max_hp, width=12)
-    en_bar = _bar(player.energy, player.max_energy, width=8)
-    print(f"  HP {hp_bar} {player.hp}/{player.max_hp}   "
-          f"Energie {en_bar} {player.energy}/{player.max_energy}")
+    console.print("─" * _W)
+    hp_b = hp_bar(player.hp, player.max_hp, width=12)
+    en_b = energy_bar(player.energy, player.max_energy, width=8)
+    console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}   Energie {en_b} {player.energy}/{player.max_energy}")
     alive = [e for e in enemy_list if e.is_alive()]
     if alive:
-        parts = [f"{e.name}: {_bar(e.hp, e.max_hp, width=8)} {e.hp}/{e.max_hp}"
+        parts = [f"{_esc(e.name)}: {hp_bar(e.hp, e.max_hp, width=8)} {e.hp}/{e.max_hp}"
                  for e in alive]
-        print(f"  {' | '.join(parts)}")
-    print("-" * _W)
+        console.print(f"  {' | '.join(parts)}")
+    console.print("─" * _W)
 
 
 # ── Konsumable-Menü ───────────────────────────────────────────────────────────
@@ -183,22 +187,24 @@ def consumable_menu(player) -> str:
         return "Keine Verbrauchsgegenstände vorhanden!"
 
     items_list = list(available.items())
-    hp_bar = _bar(player.hp, player.max_hp, width=12)
-    print(f"  HP {hp_bar} {player.hp}/{player.max_hp}  "
-          f"|  Energie: {player.energy}/{player.max_energy}")
+    hp_b = hp_bar(player.hp, player.max_hp, width=12)
+    en_b = energy_bar(player.energy, player.max_energy, width=8)
+    console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}   Energie {en_b} {player.energy}/{player.max_energy}")
     if player.bleed_stacks > 0:
-        print(f"  ⚠️  Blutung: {player.bleed_stacks} Stacks")
+        console.print(f"  [red]⚠️  Blutung: {player.bleed_stacks} Stacks[/red]")
     if player.poison_stacks > 0:
-        print(f"  ☠️  Gift: {player.poison_stacks} Stacks")
-    print("-" * 42)
+        console.print(f"  [magenta]☠️  Gift: {player.poison_stacks} Stacks[/magenta]")
+    if getattr(player, "burn_stacks", 0) > 0:
+        console.print(f"  [orange1]🔥 Verbrennung: {player.burn_stacks} Stacks[/orange1]")
+    console.print("─" * 42)
 
     for i, (key, count) in enumerate(items_list):
         cdef  = CONSUMABLE_DEFS.get(key, {})
         emoji = cdef.get("emoji", "🧪")
         desc  = cdef.get("desc", "")
-        print(f"  [{i+1}] {emoji} {key:<22} ×{count}  — {desc}")
+        console.print(f"  [[{i+1}]] {_esc(emoji)} {_esc(key):<22} ×{count}  — [dim]{_esc(desc)}[/dim]")
 
-    print(f"\n  [0] Zurück (kein Zug verbraucht)")
+    console.print(f"\n  [[0]] Zurück (kein Zug verbraucht)")
     choice = input("\n  Welches Item benutzen? ").strip()
 
     if choice == "0" or not choice.isdigit():
@@ -215,9 +221,6 @@ def consumable_menu(player) -> str:
 # ── Hauptkampf-Schleife ───────────────────────────────────────────────────────
 
 def combat(player, enemy_list):
-    specials = player.get_set_specials()
-    player.arcane_charges_remaining = 2 if "mage_double_arcane" in specials else 1
-
     # Einmal-ATK-Buff vom Blutigen Altar o.ä. anwenden
     if getattr(player, "next_fight_atk_mult", 1.0) != 1.0:
         bonus = int(player.get_total_attack() * (player.next_fight_atk_mult - 1.0))
@@ -234,7 +237,7 @@ def combat(player, enemy_list):
         # Betäubung: Zug überspringen
         if player.stunned:
             player.stunned = False
-            print("\n  🪨 Du bist betäubt — überspringst diese Runde!")
+            console.print("\n  [yellow]🪨 Du bist betäubt — überspringst diese Runde![/yellow]")
             input("  ENTER...")
             choice = "__stunned__"
         else:
@@ -243,210 +246,202 @@ def combat(player, enemy_list):
         if choice == "__stunned__":
             pass
 
-        elif choice not in ['a', 's', 'r', 'c', 'm', 'x', '1', '2', 'u', 'f', 'q']:
-            print("\n  Ungültige Taste! Bitte eine der angezeigten Optionen wählen.")
+        elif choice not in ('a', 's', 'r', 'c', 'x', 'm', 'u', 'f', 'q', '?'):
+            console.print("\n  [red]Ungültige Taste! Bitte eine der angezeigten Optionen wählen.[/red]")
             input("  ENTER...")
             continue
 
-        # ── [X] Klassenfähigkeit 1 ────────────────────────────
-        elif choice == 'x':
-            if player.class_ability_used:
-                print("  Klassenfähigkeit bereits benutzt!")
+        # ── [?] Fähigkeiten-Hilfe (kein Zug verbraucht) ──────
+        elif choice == '?':
+            from content.classes import CLASS_DEFS, CLASS_ABILITY_DEFS
+            clear_screen()
+            pclass = player.player_class
+            cdef   = CLASS_DEFS.get(pclass, {})
+            adefs  = CLASS_ABILITY_DEFS.get(pclass, {})
+            cds    = getattr(player, "ability_cooldowns", {})
+            red    = player._energy_cost_reduction()
+            print_header(f"{cdef.get('emoji','')} Fähigkeiten — {cdef.get('name','?')}")
+            for k in ("S", "R", "C", "X"):
+                d       = adefs.get(k, {})
+                name    = d.get("name", "?")
+                e_base  = d.get("energy", 0)
+                cd_base = d.get("cd", 0)
+                unlock  = d.get("unlock", 1)
+                desc    = d.get("desc", "")
+                cur_cd  = cds.get(k, 0)
+                cost    = max(0, e_base - red) if e_base > 0 else 0
+                e_str   = f"{cost}E" if cost > 0 else "—"
+                cd_str  = "1×/Kampf" if cd_base == 99 else (f"{cd_base}Rd" if cd_base else "—")
+                if player.level < unlock:
+                    status = f"[dim]🔒 LVL {unlock}[/dim]"
+                    row_c  = "dim"
+                elif cd_base == 99 and cur_cd:
+                    status = "[red]❌ Benutzt[/red]"
+                    row_c  = "red"
+                elif cur_cd > 0:
+                    status = f"[yellow]⏳ {cur_cd}Rd[/yellow]"
+                    row_c  = "yellow"
+                else:
+                    status = "[green]✅ Bereit[/green]"
+                    row_c  = "cyan"
+                console.print(f"  [{row_c}][[{k}]] {_esc(name)}  ({e_str}, CD:{cd_str})[/{row_c}]  {status}")
+                console.print(f"  [dim]    {_esc(desc)}[/dim]")
+                console.print()
+            input("  ENTER...")
+            continue
+
+        # ── [S/R/C/X] Klassen-Fähigkeiten ────────────────────
+        elif choice in ('s', 'r', 'c', 'x'):
+            from content.classes import CLASS_ABILITY_DEFS
+            key    = choice.upper()
+            pclass = player.player_class
+            adefs  = CLASS_ABILITY_DEFS.get(pclass, {})
+            adef   = adefs.get(key, {})
+            unlock = adef.get("unlock", 1)
+            if player.level < unlock:
+                console.print(f"  [dim]🔒 {_esc(adef.get('name', key))} wird bei Level {unlock} freigeschaltet![/dim]")
                 input("  ENTER...")
                 continue
-            from content.classes import CLASS_DEFS
-            pclass = player.player_class
+            cds    = getattr(player, "ability_cooldowns", {"S":0,"R":0,"C":0,"X":0})
+            cur_cd = cds.get(key, 0)
+            if cur_cd > 0:
+                cd_info = "1×/Kampf benutzt" if cur_cd == 99 else f"noch {cur_cd} Runden"
+                console.print(f"  [yellow]⏳ {_esc(adef.get('name', key))} auf Abklingzeit! ({cd_info})[/yellow]")
+                input("  ENTER...")
+                continue
+            # Energie-Vorprüfung
+            e_base = adef.get("energy", 0)
+            e_cost = max(0, e_base - player._energy_cost_reduction()) if e_base > 0 else 0
+            if player.energy < e_cost:
+                console.print(f"  [red]⚡ Nicht genug Energie für {_esc(adef.get('name','?'))}! ({player.energy}/{e_cost})[/red]")
+                input("  ENTER...")
+                continue
+            # Zielauswahl (needs_target kommt aus CLASS_ABILITY_DEFS)
+            needs_t = adef.get("needs_target", False)
+            target  = None
+            if needs_t:
+                tidx = _pick_target(enemy_list)
+                if tidx < 0:
+                    continue
+                target = enemy_list[tidx]
             _result_header(player, enemy_list)
-            print("  🌟 Klassenfähigkeit")
-            print()
+            console.print(f"  [bold magenta]🌟 {_esc(adef.get('name', key))}[/bold magenta]")
+            console.print()
+            # Fähigkeit ausführen
+            living = [e for e in enemy_list if e.is_alive()]
+            res    = None
             if pclass == "warrior":
-                has_2block = "warrior_2block" in player.get_set_specials()
-                player.block_charges  = 2 if has_2block else 1
-                player.block_next     = True
-                player.class_ability_used = True
-                extra = " (Eisenfestung: 2 Angriffe!)" if has_2block else ""
-                print(f"  🛡️  Schildwall aktiviert!{extra}")
+                if key == "S":   res = player.brutaler_hieb(target)
+                elif key == "R": res = player.schildwall()
+                elif key == "C": res = player.schildstoss(target)
+                elif key == "X": res = player.kriegsschrei()
+            elif pclass == "rogue":
+                if key == "S":   res = player.aus_dem_schatten()
+                elif key == "R": res = player.giftklinge(target)
+                elif key == "C": res = player.blendpulver(target)
+                elif key == "X": res = player.rauchbombe()
             elif pclass == "mage":
-                energy_cost = 15
-                if player.energy < energy_cost:
-                    print(f"  Nicht genug Energie! ({player.energy}/{energy_cost})")
-                    input("  ENTER...")
-                    continue
-                player.energy -= energy_cost
-                player.arcane_charges_remaining -= 1
-                if player.arcane_charges_remaining <= 0:
-                    player.class_ability_used = True
-                living = [e for e in enemy_list if e.is_alive()]
-                dmg    = random.randint(6 + player.level * 2, 12 + player.level * 3)
-                for e in living:
-                    e.hp = max(0, e.hp - dmg)
-                names = ", ".join(e.name for e in living)
-                print(f"  ✨ Arkane Entladung! {dmg} Schaden (ignoriert DEF) an: {names}")
-                player.stats["damage_dealt"] += dmg * len(living)
-                if player.arcane_charges_remaining > 0:
-                    print(f"     (Arkane Roben: {player.arcane_charges_remaining} Ladung verbleibend)")
-            elif pclass == "rogue":
-                player.shadow_strike_ready = True
-                player.class_ability_used  = True
-                has_regen = "rogue_shadow_regen" in player.get_set_specials()
-                if has_regen:
-                    player.shadow_recharge_countdown = 3
-                    print("  🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF. (Lädt in 3 Runden neu)")
-                else:
-                    print("  🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.")
-
-        # ── [1] Klassenfähigkeit 2 (LVL 4) ───────────────────
-        elif choice == '1':
-            if player.level < 4:
-                print("  🔒 Fähigkeit wird bei Level 4 freigeschaltet!")
+                if key == "S":   res = player.arkane_entladung(living)
+                elif key == "R": res = player.froststrahl(target)
+                elif key == "C": res = player.feuerball(target)
+                elif key == "X": res = player.mana_schild_aktivieren()
+            # Rauchbombe: garantierter Rückzug
+            if res == "__FLEE__":
+                console.print("  [cyan]💨 Du verschwindest im Rauch...[/cyan]")
                 input("  ENTER...")
-                continue
-            if getattr(player, "class_ability2_used", False):
-                print("  Fähigkeit bereits benutzt!")
-                input("  ENTER...")
-                continue
-            tidx = _pick_target(enemy_list)
-            if tidx < 0:
-                continue
-            target = enemy_list[tidx]
-            player.class_ability2_used = True
-            _result_header(player, enemy_list)
-            print("  🌟 Klassen-Fähigkeit 2")
-            print()
-            pclass = player.player_class
-            if pclass == "warrior":
-                msg, dmg = player.shield_bash(target)
-            elif pclass == "rogue":
-                msg, dmg = player.poison_blade(target)
-            else:
-                msg, dmg = player.frost_ray(target)
-            print(f"  {msg}")
-            player.stats["damage_dealt"] += dmg
-
-        # ── [2] Klassenfähigkeit 3 (LVL 7) ───────────────────
-        elif choice == '2':
-            if player.level < 7:
-                print("  🔒 Fähigkeit wird bei Level 7 freigeschaltet!")
-                input("  ENTER...")
-                continue
-            if getattr(player, "class_ability3_used", False):
-                print("  Fähigkeit bereits benutzt!")
-                input("  ENTER...")
-                continue
-            player.class_ability3_used = True
-            _result_header(player, enemy_list)
-            print("  🌟 Klassen-Fähigkeit 3")
-            print()
-            pclass = player.player_class
-            if pclass == "warrior":
-                print(f"  {player.warcry()}")
-            elif pclass == "rogue":
-                if player.energy >= 10:
-                    player.energy -= 10
-                    print("  💨 Rauchbombe! Du verschwindest im Rauch...")
-                    input("  ENTER...")
-                    return "fled"
-                else:
-                    player.class_ability3_used = False
-                    print(f"  Nicht genug Energie! ({player.energy}/10)")
-                    input("  ENTER...")
-                    continue
-            else:
-                print(f"  {player.activate_mana_shield()}")
+                return "fled"
+            # Ergebnis ausgeben + Waffenpassiv
+            _PHYS_PASSIVES = {
+                "warrior": {"S", "C"},
+                "rogue":   {"R"},
+                "mage":    set(),
+            }
+            if isinstance(res, tuple):
+                msg, dmg = res
+                player.stats["damage_dealt"] += dmg
+                console.print(f"  {msg}")
+                if dmg > 0 and key in _PHYS_PASSIVES.get(pclass, set()) and target:
+                    _apply_weapon_passive(player, target, dmg)
+            elif res:
+                console.print(f"  {res}")
+            # Cooldown setzen
+            cd_val = adef.get("cd", 0)
+            if cd_val > 0:
+                cds[key] = cd_val
 
         # ── [M] Magieschild ───────────────────────────────────
         elif choice == 'm':
             if not player.shield_ready:
-                print("  Magieschild nicht verfügbar!")
+                console.print("  [red]Magieschild nicht verfügbar![/red]")
                 input("  ENTER...")
                 continue
             player.shield_ready  = False
             player.shield_active = True
             _result_header(player, enemy_list)
-            print("  🔵 Magieschild aktiviert! Der nächste Angriff wird geblockt.")
+            console.print("  [blue]🔵 Magieschild aktiviert! Der nächste Angriff wird geblockt.[/blue]")
 
-        # ── [A/S/C] Einzelziel-Angriffe ───────────────────────
-        elif choice in ['a', 's', 'c']:
-            if choice == 's' and player.level < 5:
-                print("  🔒 Himmelsschlag wird bei Level 5 freigeschaltet!")
-                input("  ENTER...")
-                continue
-            if choice == 'c' and player.level < 2:
-                print("  🔒 Cleave wird bei Level 2 freigeschaltet!")
-                input("  ENTER...")
-                continue
+        # ── [A] Angriff ───────────────────────────────────────
+        elif choice == 'a':
             tidx = _pick_target(enemy_list)
             if tidx < 0:
                 continue
             target = enemy_list[tidx]
             _result_header(player, enemy_list)
-            if choice == 'a':
-                print("  ⚔  Angriff")
-            elif choice == 's':
-                print("  ✨ Himmelsschlag")
+            console.print("  [bold]⚔  Angriff[/bold]")
+            console.print()
+            if _check_swallow(target):
+                console.print(f"  [dim]🌪 {_esc(target.name)} verschluckt deinen Angriff![/dim]")
             else:
-                print("  🌀 Cleave")
-            print()
-            if choice == 'a':
                 msg, dmg = player.attack_target(target)
                 player.stats["damage_dealt"] += dmg
-                print(f"  {msg}")
-            elif choice == 's':
-                print(f"  {player.heavenstrike(target)}")
-            else:
-                print(f"  {player.cleave(target)}")
-
-        # ── [R] Rundumschlag ──────────────────────────────────
-        elif choice == 'r':
-            if player.level < 3:
-                print("  🔒 Rundumschlag wird bei Level 3 freigeschaltet!")
-                input("  ENTER...")
-                continue
-            living = [e for e in enemy_list if e.is_alive()]
-            _result_header(player, enemy_list)
-            print("  🌪  Rundumschlag")
-            print()
-            print(f"  {player.whirlwind(living)}")
+                console.print(f"  {msg}")
+                _apply_weapon_passive(player, target, dmg)
 
         # ── [U] Verbrauchsgegenstände ─────────────────────────
         elif choice == 'u':
             result = consumable_menu(player)
             if result == "":
-                continue  # Kein Zug verbraucht
+                continue
             _result_header(player, enemy_list)
-            print("  🧪 Verbrauchsgegenstand")
-            print()
-            print(f"  {result}")
+            console.print("  [bold]🧪 Verbrauchsgegenstand[/bold]")
+            console.print()
+            console.print(f"  {result}")
 
         # ── [F] Fliehen ───────────────────────────────────────
         elif choice == 'f':
-            clear_screen()
-            print("  Du fliehst aus dem Kampf!")
-            return "fled"
+            if player.try_flee():
+                clear_screen()
+                console.print("  [green]Du fliehst erfolgreich aus dem Kampf![/green]")
+                return "fled"
+            _result_header(player, enemy_list)
+            console.print("  [red]Flucht fehlgeschlagen! Der Feind greift an...[/red]")
 
         # ── [Q] Beenden ───────────────────────────────────────
         elif choice == 'q':
             clear_screen()
-            print("  Du verlässt das Spiel. Auf Wiedersehen!")
+            console.print("  [dim]Du verlässt das Spiel. Auf Wiedersehen![/dim]")
             exit()
 
-        # ── Blutungs-Tick (Gegner) ────────────────────────────
+        # ── Status-Ticks (Gegner) ─────────────────────────────
         for e in enemy_list:
             if e.is_alive():
                 bleed_msg = e.check_bleed()
                 if bleed_msg:
-                    print(f"  {bleed_msg}")
+                    console.print(f"  {bleed_msg}")
+                burn_msg = e.check_burn()
+                if burn_msg:
+                    console.print(f"  {burn_msg}")
 
-        # ── Blutungs- & Gift-Tick (Spieler) ──────────────────
-        player_bleed = player.check_bleed()
-        if player_bleed:
-            print(f"  {player_bleed}")
+        # ── Status-Ticks (Spieler) ────────────────────────────
+        player_bleed  = player.check_bleed()
+        if player_bleed:  console.print(f"  {player_bleed}")
         player_poison = player.check_poison()
-        if player_poison:
-            print(f"  {player_poison}")
+        if player_poison: console.print(f"  {player_poison}")
+        player_burn   = player.check_burn()
+        if player_burn:   console.print(f"  {player_burn}")
 
         # ── Gegner-Angriffe ───────────────────────────────────
-        print()
+        console.print()
         for e in enemy_list:
             if not player.is_alive():
                 break
@@ -454,17 +449,22 @@ def combat(player, enemy_list):
                 continue
             if getattr(e, "stunned", False):
                 e.stunned = False
-                print(f"  🪨 {e.name} ist betäubt und überspringt diese Runde!")
+                console.print(f"  🪨 [yellow]{_esc(e.name)} ist betäubt und überspringt diese Runde![/yellow]")
+                continue
+            elif getattr(e, "blind_turns", 0) > 0:
+                e.blind_turns -= 1
+                rem = f"({e.blind_turns} verbleibend)" if e.blind_turns > 0 else "(Blindheit beendet)"
+                console.print(f"  💨 [cyan]{_esc(e.name)} ist geblendet — verfehlt den Angriff! {rem}[/cyan]")
                 continue
             if getattr(player, "block_next", False):
                 player.block_charges -= 1
                 if player.block_charges <= 0:
                     player.block_next = False
                 rem = f" ({player.block_charges} verbleibend)" if player.block_charges > 0 else ""
-                print(f"  🛡️  Schildwall blockt {e.name}s Angriff!{rem}")
+                console.print(f"  🛡️  [bold]Schildwall blockt {_esc(e.name)}s Angriff![/bold]{rem}")
             elif player.shield_active:
                 player.shield_active = False
-                print(f"  🔵 Magieschild blockt den Angriff von {e.name}!")
+                console.print(f"  🔵 [bold]Magieschild blockt den Angriff von {_esc(e.name)}![/bold]")
             elif getattr(player, "mana_shield_active", False):
                 player.mana_shield_active = False
                 raw      = random.randint(max(1, getattr(e, "min_attack", 1)), e.attack)
@@ -475,32 +475,46 @@ def combat(player, enemy_list):
                 if leftover:
                     player.hp = max(0, player.hp - leftover)
                     player.stats["damage_taken"] += leftover
-                    print(f"  🔮 Mana-Schild absorbiert {absorbed} Energie — "
-                          f"{leftover} Restschaden! (HP: {player.hp}/{player.max_hp})")
+                    console.print(f"  🔮 [blue]Mana-Schild absorbiert [cyan]{absorbed}[/cyan] Energie — "
+                                  f"[red]{leftover}[/red] Restschaden! (HP: {player.hp}/{player.max_hp})[/blue]")
                 else:
-                    print(f"  🔮 Mana-Schild absorbiert {dmg} Schaden vollständig! "
-                          f"(Energie: {player.energy}/{player.max_energy})")
+                    console.print(f"  🔮 [blue]Mana-Schild absorbiert [cyan]{dmg}[/cyan] Schaden vollständig! "
+                                  f"(Energie: {player.energy}/{player.max_energy})[/blue]")
             else:
-                msg, dmg = e.attack_target(player)
-                player.stats["damage_taken"] += dmg
-                print(f"  {msg}")
+                dodge = player.dodge_chance
+                if dodge > 0 and random.random() < dodge:
+                    console.print(f"  💨 [green]Du weichst dem Angriff von {_esc(e.name)} aus![/green]")
+                else:
+                    specials   = player.get_set_specials()
+                    block_roll = (0.15 if "drachen_block" in specials else 0) + (0.20 if "schuppen_block" in specials else 0)
+                    if block_roll > 0 and random.random() < block_roll:
+                        console.print(f"  🐉 [bold]Drachenschuppen blockt {_esc(e.name)}s Angriff vollständig![/bold]")
+                    else:
+                        msg, dmg = e.attack_target(player)
+                        player.stats["damage_taken"] += dmg
+                        console.print(f"  {msg}")
             ability_chance = getattr(e, "boss_ability_chance", 0.30)
             if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < ability_chance:
-                print(f"  {e.boss_ability(player)}")
+                console.print(f"  {e.boss_ability(player)}")
+
+        # ── Cooldowns dekrementieren ──────────────────────────
+        cds = getattr(player, "ability_cooldowns", {})
+        for k in list(cds):
+            if 0 < cds[k] < 99:
+                cds[k] -= 1
+                if cds[k] == 0:
+                    from content.classes import CLASS_ABILITY_DEFS
+                    aname = CLASS_ABILITY_DEFS.get(player.player_class, {}).get(k, {}).get("name", k)
+                    console.print(f"  [green]✅ {_esc(aname)} ist wieder bereit! [[{k}]][/green]")
 
         player.regenerate()
 
-        # Aus-dem-Schatten Auflade-Countdown (Schurke)
-        if player.player_class == "rogue" and getattr(player, "shadow_recharge_countdown", 0) > 0:
-            player.shadow_recharge_countdown -= 1
-            if player.shadow_recharge_countdown == 0:
-                player.class_ability_used = False
-                print("\n  🌙 Schattenhülle: Aus dem Schatten ist wieder aufgeladen! [X]")
-
         # Finaler HP-Stand am Ende jeder Runde
-        print()
-        hp_bar = _bar(player.hp, player.max_hp, width=12)
-        print(f"  HP {hp_bar} {player.hp}/{player.max_hp}")
+        console.print()
+        hp_b = hp_bar(player.hp, player.max_hp, width=12)
+        en_b = energy_bar(player.energy, player.max_energy, width=10)
+        console.print(f"  HP {hp_b} [white]{player.hp}/{player.max_hp}[/white]  "
+                      f"EN {en_b} [white]{player.energy}/{player.max_energy}[/white]")
 
         input("\n  Nächste Runde (ENTER)...")
 
@@ -512,13 +526,13 @@ def combat(player, enemy_list):
 # ── Beute-Sammlung ────────────────────────────────────────────────────────────
 
 def collect_loot(player, enemy_group) -> list:
+    zone_id      = getattr(player, "current_zone", "wald")
     all_messages = []
     for enemy in enemy_group:
-        rank       = getattr(enemy, "rank", 1)
         rolls      = getattr(enemy, "loot_rolls", 1)
-        loot_items = roll_loot(rank=rank, rolls=rolls)
+        loot_items = roll_zone_loot(zone_id, rolls=rolls)
         msgs       = apply_loot(player, loot_items)
         if msgs:
-            all_messages.append(f"\n  [{enemy.name}]")
+            all_messages.append(f"\n  [dim]{_esc(enemy.name)}[/dim]")
             all_messages.extend(msgs)
     return all_messages

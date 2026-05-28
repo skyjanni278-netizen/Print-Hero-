@@ -4,6 +4,7 @@ from content.monsters import (
     Zombie, Skeleton, Bandit, VenomSpider,
     Assassin, IceWitch, StoneGolem, DarkKnight,
     Dragon, FireDemon,
+    ForestSpirit, Lich, SandWorm,
 )
 
 ZONE_DEFS = {
@@ -14,7 +15,7 @@ ZONE_DEFS = {
         "unlock_level":  1,
         "rank_weights":  [65, 28,  7,  0,  0],
         "group_size":    (1, 2),
-        "monsters":      [(Slime, 30), (ShadowWolf, 40), (Goblin, 20), (WoodTroll, 10)],
+        "monsters":      [(Slime, 25), (ShadowWolf, 35), (Goblin, 20), (WoodTroll, 10), (ForestSpirit, 10)],
         "boss_class":    WoodTroll,
         "dungeon_count": 3,
     },
@@ -25,7 +26,7 @@ ZONE_DEFS = {
         "unlock_level":  2,
         "rank_weights":  [50, 33, 14,  3,  0],
         "group_size":    (1, 3),
-        "monsters":      [(Zombie, 35), (Skeleton, 35), (Bandit, 20), (WoodTroll, 10)],
+        "monsters":      [(Zombie, 30), (Skeleton, 30), (Bandit, 20), (WoodTroll, 10), (Lich, 10)],
         "boss_class":    StoneGolem,
         "dungeon_count": 4,
     },
@@ -36,7 +37,7 @@ ZONE_DEFS = {
         "unlock_level":  4,
         "rank_weights":  [30, 35, 25,  9,  1],
         "group_size":    (1, 3),
-        "monsters":      [(Bandit, 30), (Assassin, 30), (VenomSpider, 25), (Goblin, 15)],
+        "monsters":      [(Bandit, 25), (Assassin, 25), (VenomSpider, 20), (Goblin, 15), (SandWorm, 15)],
         "boss_class":    Assassin,
         "dungeon_count": 5,
     },
@@ -137,7 +138,7 @@ def create_zone_enemy(player, zone_id: str = None):
 
     ng = getattr(player, "ng_plus", 0)
     if ng > 0:
-        mult       = 1.3 ** ng
+        mult       = min(1.3 ** ng, 3.0)
         mob.max_hp = max(1, int(mob.max_hp * mult))
         mob.hp     = mob.max_hp
         mob.attack = max(1, int(mob.attack * mult))

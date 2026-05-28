@@ -319,8 +319,79 @@ class FireDemon(Character):
     def boss_ability(self, target) -> str:
         dmg = random.randint(20, 35)
         target.hp = max(0, target.hp - dmg)
-        target.poison_stacks += 2
+        target.burn_stacks = getattr(target, "burn_stacks", 0) + 2
         return f"🔥 {self.name}: Inferno! {dmg} Feuerschaden (ignoriert DEF) + 2 Verbrennungsstacks!"
+
+
+class ForestSpirit(Character):
+    """Waldgeist — niedriger HP, heilt sich als Sonderangriff, immun gegen nichts"""
+    BASE_HP     = 15
+    BASE_ATTACK = 7
+    BASE_XP     = 22
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Waldgeist", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 0
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        if random.random() < 0.30:
+            heal = max(3, int(self.max_hp * 0.15))
+            self.hp = min(self.max_hp, self.hp + heal)
+            return f"🌿 {self.name}: Naturheilung! Heilt sich um {heal} HP. (HP: {self.hp}/{self.max_hp})", 0
+        return super().attack_target(target)
+
+    def boss_ability(self, target) -> str:
+        target.stunned = True
+        return f"👻 {self.name}: Geisterschrei! {target.name} ist betäubt und überspringt die nächste Runde!"
+
+
+class Lich(Character):
+    """Lich — magischer Angreifer, entzieht Energie bei Angriffen"""
+    BASE_HP     = 25
+    BASE_ATTACK = 10
+    BASE_XP     = 32
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Lich", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 1
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        msg, dmg = super().attack_target(target)
+        if random.random() < 0.25:
+            drain = min(8, getattr(target, "energy", 0))
+            target.energy = max(0, getattr(target, "energy", 0) - drain)
+            return (f"{msg}\n  💀 Energie-Drain! {target.name} verliert {drain} Energie."
+                    f" (Energie: {target.energy}/{getattr(target,'max_energy',0)})"), dmg
+        return msg, dmg
+
+    def boss_ability(self, target) -> str:
+        dmg   = random.randint(12, 20)
+        drain = min(15, getattr(target, "energy", 0))
+        target.hp     = max(0, target.hp - dmg)
+        target.energy = max(0, getattr(target, "energy", 0) - drain)
+        return (f"💀 {self.name}: Seelenentzug! {dmg} Schaden + {drain} Energie geraubt!"
+                f" (HP: {target.hp}/{target.max_hp})")
+
+
+class SandWorm(Character):
+    """Sandwurm — hohes DEF, immun gegen Blutung/Gift, kann Angriffe verschlucken"""
+    BASE_HP              = 45
+    BASE_ATTACK          = 8
+    BASE_XP              = 38
+    immune_to_bleed_poison = True
+    swallow_chance       = 0.20
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Sandwurm", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 6
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def boss_ability(self, target) -> str:
+        debuff = 4
+        target.armor_debuff = getattr(target, "armor_debuff", 0) + debuff
+        return f"🌪 {self.name}: Sandsturm! -{debuff} DEF-Debuff auf {target.name} für diesen Kampf!"
 
 
 def roll_rank(player_level: int) -> int:

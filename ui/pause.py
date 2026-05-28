@@ -1,7 +1,8 @@
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console, hp_bar as _hp_bar
+from rich.markup import escape as _esc
 from core.save import save_game
 from content.shop import shop_menu
-from core.player import MAX_INVENTORY_SLOTS
+from config import MAX_INVENTORY_SLOTS
 
 
 def camp_menu(player) -> str:
@@ -16,10 +17,6 @@ def camp_menu(player) -> str:
         used_slots = player.inventory_count()
         consumables = player.inventory.get("Consumables", {})
         total_consumables = sum(consumables.values())
-        w = player.equipment['weapon']
-        c = player.equipment['chest']
-        h = player.equipment['head']
-        f = player.equipment['feet']
         from config import DIFFICULTY_SETTINGS
         from content.classes import CLASS_DEFS
         diff_label  = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
@@ -28,20 +25,22 @@ def camp_menu(player) -> str:
         pclass      = getattr(player, "player_class", "warrior")
         class_emoji = CLASS_DEFS.get(pclass, {}).get("emoji", "")
         class_name  = CLASS_DEFS.get(pclass, {}).get("name", "")
-        print(f"Spieler: {player.name} {class_emoji} {class_name} | HP: {player.hp}/{player.max_hp} | Gold: {player.inventory['Gold']} 🪙 | {diff_label}{ng_tag}")
-        print(f"ATK: {player.get_total_attack():<4} | DEF: {player.get_total_armor()}")
-        print(f"Waffe:   {w['name']} (+{w['attack']} ATK)")
-        print(f"Rüstung: {c['name']} (+{c['armor']} DEF)")
-        print(f"Helm:    {h['name']} (+{h['armor']} DEF)")
-        print(f"Schuhe:  {f['name']} (+{f['armor']} DEF)")
+        hp_b = _hp_bar(player.hp, player.max_hp, width=14)
+        console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}{_esc(ng_tag)}")
+        console.print(f"  HP  {hp_b} {player.hp}/{player.max_hp}   💰 {player.inventory['Gold']} Gold")
+        console.print(f"  [cyan]ATK {player.get_total_attack():<5}[/cyan]  [yellow]DEF {player.get_total_armor()}[/yellow]   XP {player.xp}/{player.xp_to_level_up}  (LVL {player.level})")
+        for _slot_key, _slot_label in (("weapon","Waffe  "),("chest","Rüstung"),("head","Helm   "),("feet","Schuhe ")):
+            _up = player.equipment_upgrades.get(_slot_key, 0)
+            _up_tag = f" [cyan](↑{_up})[/cyan]" if _up > 0 else ""
+            console.print(f"  [dim]{_slot_label}[/dim]  {_equip_line(player.equipment[_slot_key])}{_up_tag}")
         from content.loot_tables import get_active_sets
         active_sets = get_active_sets(player)
         if active_sets:
             parts = []
             for sname, sdef, count, bonus in active_sets:
-                star = "✅" if count == 4 else f"{count}/4"
-                parts.append(f"{sdef['emoji']} {sname} {star}: {bonus['desc']}")
-            print("Set:     " + "  |  ".join(parts))
+                star = "[green]✅ VOLL[/green]" if count == 4 else f"{count}/4"
+                parts.append(f"{_esc(sdef['emoji'])} {_esc(sname)} {star}: [dim]{_esc(bonus['desc'])}[/dim]")
+            console.print("  Set:  " + "  |  ".join(parts))
         from systems.zones import ZONE_DEFS
         zone_id    = getattr(player, "current_zone", "wald")
         zdef       = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
@@ -57,20 +56,18 @@ def camp_menu(player) -> str:
         else:
             prog_tag = f"{zone_done}/{zone_req} Dungeons"
         zone_line  = f"{zdef['emoji']} {zdef['name']}  [{prog_tag}]"
-        print(f"🎒 Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  💊 Gegenstände: {total_consumables}  |  🗺️ {zone_line}")
-        print("-" * 50)
-        print("  ⚔️  Ausrüstung              🧙 Charakter")
-        print("  ─────────────────────      ─────────────────────")
-        print(f"  [I] Inventar & Ausrüsten   [F] Fertigkeiten ({player.skill_points} Pkt)")
-        print(f"  [U] Equipment aufwerten    [E] Errungenschaften ({len(player.achievements)}/20)")
-        print(f"  [V] Inventar verkaufen     [T] Statistiken")
-        print(f"  [K] Händler besuchen       [Z] Weltkarte / Zone wählen")
-        print(f"  [C] Handwerk (Crafting)")
-        print("-" * 50)
+        console.print(f"  🎒 {used_slots}/{MAX_INVENTORY_SLOTS} Slots  💊 {total_consumables} Items  🗺️ {_esc(zone_line)}")
+        console.print("─" * 50)
+        console.print(f"  [[I]] Inventar & Ausrüsten   [[F]] Fertigkeiten ({player.skill_points} Pkt)")
+        console.print(f"  [[U]] Equipment aufwerten    [[E]] Errungenschaften ({len(player.achievements)}/20)")
+        console.print(f"  [[V]] Inventar verkaufen     [[T]] Statistiken")
+        console.print(f"  [[K]] Händler besuchen       [[Z]] Weltkarte / Zone wählen")
+        console.print(f"  [[C]] Handwerk (Crafting)")
+        console.print("─" * 50)
         if boss_ready:
             bname = ZONE_BOSS_DEFS[zone_id]["name"]
-            print(f"  [B] 🔥 Zone-Boss: {bname}")
-        print(f"  [W] Dungeon betreten  |  [S] Speichern  |  [Q] Beenden")
+            console.print(f"  [[B]] [bold red]🔥 Zone-Boss: {_esc(bname)}[/bold red]")
+        console.print(f"  [[W]] [bold green]Dungeon betreten[/bold green]  |  [[S]] Speichern  |  [[Q]] Beenden")
 
         choice = input("\nDeine Wahl: ").lower()
         if choice == 'i':
@@ -99,7 +96,7 @@ def camp_menu(player) -> str:
             input("(ENTER)")
         elif choice == 'q':
             clear_screen()
-            print("Du verlässt das Spiel. Auf Wiedersehen!")
+            console.print("  [dim]Du verlässt das Spiel. Auf Wiedersehen![/dim]")
             return "quit"
         elif choice == 'b' and boss_ready:
             return "boss"
@@ -115,21 +112,21 @@ def stats_menu(player):
     kd = f"{s['kills']}/{s['deaths']}" if s['deaths'] > 0 else str(s['kills'])
     dc = s.get("dungeons_completed", 0)
     df = s.get("dungeons_fled", 0)
-    print(f"  ⚔️  Kämpfe gewonnen      : {s['fights']}")
-    print(f"  💀  Kills / Tode         : {kd}")
-    print(f"  🗡️  Schaden ausgeteilt   : {s['damage_dealt']}")
-    print(f"  🛡️  Schaden erhalten     : {s['damage_taken']}")
-    print(f"  💰  Gold verdient        : {s['gold_earned']}")
-    print(f"  🧪  Tränke benutzt       : {s['potions_used']}")
-    print(f"  🏰  Dungeons abgeschl.   : {dc}  (geflohen: {df})")
+    console.print(f"  ⚔️  Kämpfe gewonnen      : [cyan]{s['fights']}[/cyan]")
+    console.print(f"  💀  Kills / Tode         : [cyan]{kd}[/cyan]")
+    console.print(f"  🗡️  Schaden ausgeteilt   : [cyan]{s['damage_dealt']}[/cyan]")
+    console.print(f"  🛡️  Schaden erhalten     : [cyan]{s['damage_taken']}[/cyan]")
+    console.print(f"  💰  Gold verdient        : [yellow]{s['gold_earned']}[/yellow]")
+    console.print(f"  🧪  Tränke benutzt       : [cyan]{s['potions_used']}[/cyan]")
+    console.print(f"  🏰  Dungeons abgeschl.   : [cyan]{dc}[/cyan]  [dim](geflohen: {df})[/dim]")
     zone_kills = s.get("zone_kills", {})
     if zone_kills:
-        print(f"\n  Zone-Kills:")
+        console.print(f"\n  [bold]Zone-Kills:[/bold]")
         for zid, count in zone_kills.items():
-            zdef = ZONE_DEFS.get(zid, {})
+            zdef  = ZONE_DEFS.get(zid, {})
             emoji = zdef.get("emoji", "🗺️")
             name  = zdef.get("name", zid)
-            print(f"    {emoji} {name:<16} : {count}")
+            console.print(f"    {_esc(emoji)} {_esc(name):<16} : [cyan]{count}[/cyan]")
     input("\n(ENTER)")
 
 
@@ -143,9 +140,9 @@ def upgrade_menu(player):
     while True:
         clear_screen()
         print_header("Equipment aufwerten")
-        print(f"Gold: {player.inventory['Gold']} 🪙\n")
-        print(f"{'Slot':<10} {'Item':<24} {'Stufe':<8} {'Bonus':<12} {'Kosten'}")
-        print("-" * 62)
+        console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
+        console.print(f"  {'Slot':<10} {'Item':<24} {'Stufe':<8} {'Bonus':<12} {'Kosten'}")
+        console.print("  " + "─" * 60)
 
         upgradeable = []
         for slot, label in _SLOT_LABELS.items():
@@ -154,30 +151,30 @@ def upgrade_menu(player):
             is_start = item["name"] in _STARTER_ITEMS
 
             if is_start:
-                print(f"  {label:<10} {item['name']:<24} —        (Starter-Item, nicht aufwertbar)")
+                console.print(f"  [dim]{label:<10} {_esc(item['name']):<24} —        (Starter-Item, nicht aufwertbar)[/dim]")
                 continue
 
             if slot == "weapon":
                 bonus_str = f"+{lvl * 2} ATK"
-                next_bonus = f"+{(lvl + 1) * 2} ATK"
             else:
                 bonus_str = f"+{lvl} DEF"
-                next_bonus = f"+{lvl + 1} DEF"
 
             if lvl >= _MAX_UPGRADE_LVL:
-                print(f"  [{len(upgradeable)}] {label:<10} {item['name']:<24} MAX      {bonus_str:<12} —")
+                console.print(f"  [green]✅  {label:<10} {_esc(item['name']):<24} MAX      {bonus_str:<12} —[/green]")
             else:
                 cost = _UPGRADE_COSTS[lvl]
-                affordable = "✅" if player.inventory["Gold"] >= cost else "❌"
-                print(f"  [{len(upgradeable)}] {label:<10} {item['name']:<24} Stufe {lvl}  {bonus_str:<12} {cost} Gold {affordable}")
+                can_afford = player.inventory["Gold"] >= cost
+                afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
+                price_col  = "yellow" if can_afford else "red"
+                console.print(f"  [[{len(upgradeable)}]] {label:<10} {_esc(item['name']):<24} Stufe {lvl}  {bonus_str:<12} [{price_col}]{cost} Gold[/{price_col}] {afford_tag}")
                 upgradeable.append((slot, lvl, cost))
 
         if not upgradeable:
-            print("\nKein Item mehr aufwertbar.")
+            console.print("\n  [dim]Kein Item mehr aufwertbar.[/dim]")
             input("\n(ENTER)")
             break
 
-        print("\n[Z] Zurück")
+        console.print("\n  [[Z]] Zurück")
         choice = input("\nWelches Item aufwerten? ").strip().lower()
 
         if choice == "z":
@@ -185,7 +182,7 @@ def upgrade_menu(player):
         if choice.isdigit() and 0 <= int(choice) < len(upgradeable):
             slot, lvl, cost = upgradeable[int(choice)]
             if player.inventory["Gold"] < cost:
-                print("Zu wenig Gold!")
+                console.print("  [red]Zu wenig Gold![/red]")
                 input("(ENTER)")
                 continue
             player.inventory["Gold"]        -= cost
@@ -196,13 +193,13 @@ def upgrade_menu(player):
                 bonus_desc = f"+{new_lvl * 2} ATK gesamt"
             else:
                 bonus_desc = f"+{new_lvl} DEF gesamt"
-            print(f"\n⬆️  {item['name']} auf Stufe {new_lvl} aufgewertet! ({bonus_desc})")
-            print(f"   Gold verbleibend: {player.inventory['Gold']} 🪙")
+            console.print(f"\n  [bold green]⬆️  {_esc(item['name'])} auf Stufe {new_lvl} aufgewertet![/bold green] ({bonus_desc})")
+            console.print(f"  Gold verbleibend: [yellow]{player.inventory['Gold']} 🪙[/yellow]")
             input("(ENTER)")
 
 
 def _equip_line(item):
-    from content.loot_tables import EQUIPMENT_DEFS, RARITY_LABEL, SET_DEFS
+    from content.loot_tables import EQUIPMENT_DEFS, RARITY_LABEL, SET_DEFS, WEAPON_VARIANT_TO_BASE
     edef    = EQUIPMENT_DEFS.get(item["name"], {})
     emoji   = edef.get("emoji", "⚔️")
     rarity  = edef.get("rarity", "common")
@@ -214,12 +211,20 @@ def _equip_line(item):
         stat = f"ATK +{item.get('attack', 0)}"
     else:
         stat = f"DEF +{item.get('armor', 0)}"
+    # Resolve class variant → base for set lookup
+    base_name = WEAPON_VARIANT_TO_BASE.get(item["name"], item["name"])
     set_tag = ""
     for sname, sdef in SET_DEFS.items():
-        if item["name"] in sdef["pieces"]:
+        if base_name in sdef["pieces"]:
             set_tag = f" {sdef['emoji']}{sname}"
             break
-    return f"{rbadge}{emoji} {item['name']:<24} {stat:<10} [{rlabel}] ({slot_label}){set_tag}"
+    passive = edef.get("passive")
+    passive_icons = {
+        "poison_on_hit": " ☠️+Gift", "burn_on_hit": " 🔥+Verbr.",
+        "freeze_on_hit": " ❄️+Einf.", "def_debuff_on_hit": " 🔨-DEF",
+    }
+    passive_tag = passive_icons.get(passive, "")
+    return f"{rbadge}{emoji} {item['name']:<24} {stat:<10} [{rlabel}] ({slot_label}){set_tag}{passive_tag}"
 
 
 def inventory_menu(player):
@@ -228,45 +233,44 @@ def inventory_menu(player):
         clear_screen()
         print_header("Dein Inventar")
         used_slots = player.inventory_count()
-        print(f"🎒 Slots: {used_slots}/{MAX_INVENTORY_SLOTS}")
-        w = player.equipment['weapon']
-        c = player.equipment['chest']
-        h = player.equipment['head']
-        f = player.equipment['feet']
-        print(f"Angelegt: {player.equipment['weapon']['name']} | {c['name']} | {h['name']} | {f['name']}")
+        console.print(f"  🎒 Slots: [cyan]{used_slots}/{MAX_INVENTORY_SLOTS}[/cyan]")
+        for _slot_key, _slot_label in (("weapon","Waffe  "),("chest","Rüstung"),("head","Helm   "),("feet","Schuhe ")):
+            _up = player.equipment_upgrades.get(_slot_key, 0)
+            _up_tag = f" [cyan](↑{_up})[/cyan]" if _up > 0 else ""
+            console.print(f"  [dim]{_slot_label}[/dim]  {_equip_line(player.equipment[_slot_key])}{_up_tag}")
         active_sets = get_active_sets(player)
         if active_sets:
             for sname, sdef, count, bonus in active_sets:
-                star = "✅ VOLL" if count == 4 else f"{count}/4"
-                print(f"  {sdef['emoji']} {sname} {star} → {bonus['desc']}")
-        print()
+                star = "[green]✅ VOLL[/green]" if count == 4 else f"{count}/4"
+                console.print(f"  {_esc(sdef['emoji'])} {_esc(sname)} {star} → [dim]{_esc(bonus['desc'])}[/dim]")
+        console.print()
 
         # --- Consumables ---
         consumables = player.inventory.get("Consumables", {})
-        print("[ Verbrauchsgegenstände ]")
+        console.print("  [bold][ Verbrauchsgegenstände ][/bold]")
         if consumables:
             for key, count in consumables.items():
                 cdef      = CONSUMABLE_DEFS.get(key, {})
                 emoji     = cdef.get("emoji", "🧪")
                 desc      = cdef.get("desc", "")
                 max_stack = cdef.get("max_stack", 99)
-                print(f"  {emoji} {key:<22} {count}/{max_stack:<3}  — {desc}")
+                console.print(f"  {_esc(emoji)} {_esc(key):<22} {count}/{max_stack:<3}  — [dim]{_esc(desc)}[/dim]")
         else:
-            print("  (keine)")
-        print()
+            console.print("  [dim](keine)[/dim]")
+        console.print()
 
         # --- Junk ---
         junk = player.inventory.get("Junk", {})
-        print("[ Schrott ]")
+        console.print("  [bold][ Schrott ][/bold]")
         if junk:
             for key, count in junk.items():
                 jdef  = JUNK_DEFS.get(key, {})
                 emoji = jdef.get("emoji", "🗑️")
                 sell  = jdef.get("sell", 1)
-                print(f"  {emoji} {key:<22} x{count}  — {sell} Gold/Stk")
+                console.print(f"  {_esc(emoji)} {_esc(key):<22} x{count}  — [dim]{sell} Gold/Stk[/dim]")
         else:
-            print("  (keine)")
-        print()
+            console.print("  [dim](keine)[/dim]")
+        console.print()
 
         # --- Equipment nach Slot gruppiert ---
         equip_items = player.inventory["Equipment"]
@@ -279,29 +283,29 @@ def inventory_menu(player):
         _STARTER = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
 
         # Block 1: Alle angelegten Items auf einen Blick
-        print("[ Angelegt ]")
+        console.print("  [bold][ Angelegt ][/bold]")
         for slot_key, slot_label in SLOT_ORDER:
             equipped = player.equipment[slot_key]
-            print(f"  ★ {slot_label:<12} {_equip_line(equipped)}")
+            console.print(f"  ★ {_esc(slot_label):<12} {_equip_line(equipped)}")
 
         # Block 2: Inventar-Alternativen zum Anlegen
-        print("\n[ Inventar — Nummer zum Anlegen ]")
+        console.print("\n  [bold][ Inventar — Nummer zum Anlegen ][/bold]")
         indexed_items = []
 
         for slot_key, slot_label in SLOT_ORDER:
             inv_for_slot = [it for it in equip_items if it["type"] == slot_key]
             if not inv_for_slot:
                 continue
-            print(f"\n  {slot_label}")
+            console.print(f"\n  {_esc(slot_label)}")
             for item in inv_for_slot:
                 n = len(indexed_items)
                 indexed_items.append(item)
-                print(f"  [{n:>2}] {_equip_line(item)}")
+                console.print(f"  [[{n:>2}]] {_equip_line(item)}")
 
         if not indexed_items:
-            print("  (keine Ausrüstung im Inventar)")
+            console.print("  [dim](keine Ausrüstung im Inventar)[/dim]")
 
-        print(f"\n[Nummer] Anlegen  |  [Z] Zurück")
+        console.print("\n  [Nummer] Anlegen  |  [[Z]] Zurück")
         choice = input("\nDeine Wahl: ").lower()
 
         if choice == 'z':
@@ -318,7 +322,7 @@ def inventory_menu(player):
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
                 player.equipment_upgrades[slot] = 0
-                print(f"\n✅ Du trägst nun {new_item['name']}!")
+                console.print(f"\n  [green]✅ Du trägst nun {_esc(new_item['name'])}![/green]")
                 input("(ENTER)")
 
 
@@ -328,23 +332,36 @@ def craft_menu(player):
         clear_screen()
         print_header("🔨 Handwerk")
         junk = player.inventory.get("Junk", {})
-        print("Materialien:  ", end="")
         if junk:
-            print("  ".join(f"{JUNK_DEFS.get(k,{}).get('emoji','?')} {k} x{v}" for k, v in junk.items() if v > 0))
+            mat_parts = "  ".join(
+                f"{_esc(JUNK_DEFS.get(k,{}).get('emoji','?'))} {_esc(k)} x{v}"
+                for k, v in junk.items() if v > 0
+            )
+            console.print(f"  Materialien:  {mat_parts}")
         else:
-            print("(keine Schrott-Items)")
-        print()
+            console.print("  Materialien:  [dim](keine Schrott-Items)[/dim]")
+        console.print()
 
         craftable = []
         for key, recipe in CRAFT_RECIPES.items():
             can_craft = all(junk.get(mat, 0) >= qty for mat, qty in recipe["inputs"].items())
             cdef  = CONSUMABLE_DEFS.get(recipe["output"], {})
             emoji = cdef.get("emoji", "🧪")
-            mark  = "✅" if can_craft else "❌"
-            print(f"  [{len(craftable)+1}] {mark} {emoji} {recipe['desc']}")
+            mark  = "[green]✅[/green]" if can_craft else "[red]❌[/red]"
+            # Show missing materials in red
+            mat_parts = []
+            for mat, qty in recipe["inputs"].items():
+                have = junk.get(mat, 0)
+                if have >= qty:
+                    mat_parts.append(f"[green]{_esc(mat)} x{qty}[/green]")
+                else:
+                    mat_parts.append(f"[red]{_esc(mat)} x{qty} (fehlt {qty-have})[/red]")
+            mat_str = ", ".join(mat_parts)
+            console.print(f"  [[{len(craftable)+1}]] {mark} {_esc(emoji)} {_esc(recipe['desc'])}")
+            console.print(f"       Materialien: {mat_str}")
             craftable.append((key, recipe, can_craft))
 
-        print("\n  [Z] Zurück")
+        console.print("\n  [[Z]] Zurück")
         choice = input("\nWas herstellen? ").strip().lower()
         if choice == "z":
             break
@@ -355,7 +372,7 @@ def craft_menu(player):
             continue
         rkey, recipe, can_craft = craftable[idx]
         if not can_craft:
-            print("\nNicht genug Materialien!")
+            console.print("\n  [red]Nicht genug Materialien![/red]")
             input("(ENTER)")
             continue
         # Materialien verbrauchen
@@ -368,12 +385,12 @@ def craft_menu(player):
         cdef  = CONSUMABLE_DEFS.get(recipe["output"], {})
         emoji = cdef.get("emoji", "🧪")
         if added:
-            print(f"\n{emoji} {recipe['output_count']}× {recipe['output']} hergestellt!")
+            console.print(f"\n  [green]{_esc(emoji)} {recipe['output_count']}× {_esc(recipe['output'])} hergestellt![/green]")
         else:
             # Rückgabe der Materialien bei vollem Inventar
             for mat, qty in recipe["inputs"].items():
                 player.inventory["Junk"][mat] = player.inventory["Junk"].get(mat, 0) + qty
-            print("\nInventar voll! Crafting abgebrochen.")
+            console.print("\n  [red]Inventar voll! Crafting abgebrochen.[/red]")
         input("(ENTER)")
 
 
@@ -385,57 +402,57 @@ def sell_menu(player):
     while True:
         clear_screen()
         print_header("Inventar verkaufen")
-        print(f"Gold: {player.inventory['Gold']} 🪙  |  Slots: {player.inventory_count()}/{MAX_INVENTORY_SLOTS}")
-        print("-" * 56)
+        console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]  |  Slots: {player.inventory_count()}/{MAX_INVENTORY_SLOTS}")
+        console.print("─" * 56)
 
         sell_list = []
 
         # Consumables
         consumables = player.inventory.get("Consumables", {})
         if consumables:
-            print("[ Verbrauchsgegenstände ]")
+            console.print("  [bold][ Verbrauchsgegenstände ][/bold]")
         for key, count in list(consumables.items()):
             cdef  = CONSUMABLE_DEFS.get(key, {})
             emoji = cdef.get("emoji", "🧪")
             price = cdef.get("sell", 1)
             total = price * count
             idx   = len(sell_list)
-            print(f"  [{idx:>2}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold)")
+            console.print(f"  [[{idx:>2}]] {_esc(emoji)} {_esc(key):<22} x{count}  →  [yellow]{price} Gold/Stk  ({total} Gold)[/yellow]")
             sell_list.append(("consumable", key, price, count))
 
         # Junk
         junk = player.inventory.get("Junk", {})
         if junk:
-            print("\n[ Schrott ]")
+            console.print("\n  [bold][ Schrott ][/bold]")
         for key, count in list(junk.items()):
             jdef  = JUNK_DEFS.get(key, {})
             emoji = jdef.get("emoji", "🗑️")
             price = jdef.get("sell", 1)
             total = price * count
             idx   = len(sell_list)
-            print(f"  [{idx:>2}] {emoji} {key:<22} x{count}  →  {price} Gold/Stk  ({total} Gold)")
+            console.print(f"  [[{idx:>2}]] {_esc(emoji)} {_esc(key):<22} x{count}  →  [yellow]{price} Gold/Stk  ({total} Gold)[/yellow]")
             sell_list.append(("junk", key, price, count))
 
         # Equipment
         equip_items = player.inventory["Equipment"]
         if equip_items:
-            print("\n[ Ausrüstung ]")
+            console.print("\n  [bold][ Ausrüstung ][/bold]")
         for i, item in enumerate(equip_items):
             if item["name"] in _STARTER_ITEMS:
                 continue
             edef  = EQUIPMENT_DEFS.get(item["name"], {})
             price = edef.get("sell", 5)
             idx   = len(sell_list)
-            print(f"  [{idx:>2}] {_equip_line(item)}  →  {price} Gold")
+            console.print(f"  [[{idx:>2}]] {_equip_line(item)}  →  [yellow]{price} Gold[/yellow]")
             sell_list.append(("equipment", item["name"], price, 1))
 
         if not sell_list:
-            print("  Nichts zu verkaufen.")
+            console.print("  [dim]Nichts zu verkaufen.[/dim]")
             input("\n(ENTER)")
             return
 
         total_value = sum(p * c for _, _, p, c in sell_list)
-        print(f"\n[A] Alles verkaufen ({total_value} Gold)  |  [Z] Zurück")
+        console.print(f"\n  [[A]] [bold]Alles verkaufen ({total_value} Gold)[/bold]  |  [[Z]] Zurück")
         choice = input("\nWas verkaufen? ").lower()
 
         if choice == 'z':
@@ -453,15 +470,15 @@ def sell_menu(player):
                 earned += EQUIPMENT_DEFS.get(item["name"], {}).get("sell", 5)
             equip_items.clear()
             player.inventory["Gold"] += earned
-            print(f"\n✅ Alles verkauft! +{earned} Gold.")
-            print(f"   Gold jetzt: {player.inventory['Gold']} 🪙")
+            console.print(f"\n  [green]✅ Alles verkauft! +{earned} Gold.[/green]")
+            console.print(f"  Gold jetzt: [yellow]{player.inventory['Gold']} 🪙[/yellow]")
             input("(ENTER)")
             break
 
         elif choice.isdigit():
             idx = int(choice)
             if not (0 <= idx < len(sell_list)):
-                print("Ungültige Auswahl.")
+                console.print("  [red]Ungültige Auswahl.[/red]")
                 input("ENTER...")
                 continue
 
@@ -474,14 +491,14 @@ def sell_menu(player):
                     input("Nicht mehr vorhanden. ENTER...")
                     continue
                 if cur > 1:
-                    print(f"\nWie viele {key} verkaufen? (1–{cur}, ENTER = alle)")
+                    console.print(f"\n  Wie viele {_esc(key)} verkaufen? (1–{cur}, ENTER = alle)")
                     amt_in = input("> ").strip()
                     if amt_in == "":
                         amount = cur
                     elif amt_in.isdigit() and 1 <= int(amt_in) <= cur:
                         amount = int(amt_in)
                     else:
-                        print("Ungültige Menge.")
+                        console.print("  [red]Ungültige Menge.[/red]")
                         input("ENTER...")
                         continue
                 else:
@@ -491,7 +508,7 @@ def sell_menu(player):
                 if store[key] <= 0:
                     del store[key]
                 player.inventory["Gold"] += earned
-                print(f"\n✅ {amount}x {key} verkauft für {earned} Gold.")
+                console.print(f"\n  [green]✅ {amount}x {_esc(key)} verkauft für {earned} Gold.[/green]")
 
             elif cat == "equipment":
                 real_idx = next((i for i, e in enumerate(equip_items) if e["name"] == key), None)
@@ -500,7 +517,7 @@ def sell_menu(player):
                     continue
                 equip_items.pop(real_idx)
                 player.inventory["Gold"] += price
-                print(f"\n✅ {key} verkauft für {price} Gold.")
+                console.print(f"\n  [green]✅ {_esc(key)} verkauft für {price} Gold.[/green]")
 
-            print(f"   Gold jetzt: {player.inventory['Gold']} 🪙")
+            console.print(f"  Gold jetzt: [yellow]{player.inventory['Gold']} 🪙[/yellow]")
             input("(ENTER)")

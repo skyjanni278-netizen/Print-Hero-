@@ -1,7 +1,8 @@
 import random
-from config import BLEED_DAMAGE, POISON_DAMAGE, ENERGY_REGEN, LEVEL_HP_GAIN, LEVEL_ATK_GAIN
-
-MAX_INVENTORY_SLOTS = 30  # Jeder einzigartige Stapel (Consumable/Junk) + jedes Equipment = 1 Slot
+from config import (
+    BLEED_DAMAGE, POISON_DAMAGE, BURN_DAMAGE, ENERGY_REGEN,
+    LEVEL_HP_GAIN, LEVEL_ATK_GAIN, MAX_INVENTORY_SLOTS, XP_MULTIPLIERS,
+)
 
 
 class Character:
@@ -30,6 +31,7 @@ class Character:
         # Boss-Status-Effekte (nur während Kampf aktiv)
         self.stunned       = False
         self.poison_stacks = 0
+        self.burn_stacks   = 0
         self.armor_debuff  = 0
 
         self.difficulty          = "normal"
@@ -48,16 +50,12 @@ class Character:
         self.achievements = set()
 
         self.player_class        = "warrior"
-        self.class_ability_used  = False
-        self.class_ability2_used      = False
-        self.class_ability3_used      = False
-        self.block_next               = False
-        self.block_charges            = 0
-        self.shadow_strike_ready      = False
-        self.shadow_recharge_countdown = 0
-        self.mana_shield_active       = False
-        self.arcane_charges_remaining = 1
-        self.passive_crit_bonus       = 0.0
+        self.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
+        self.block_next          = False
+        self.block_charges       = 0
+        self.shadow_strike_ready = False
+        self.mana_shield_active  = False
+        self.passive_crit_bonus  = 0.0
 
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
@@ -174,17 +172,14 @@ class Character:
         self.combat_modifiers    = {"attack": 0}
         self.stunned             = False
         self.poison_stacks       = 0
+        self.burn_stacks         = 0
         self.armor_debuff        = 0
         self.shield_active       = False
         self.block_next          = False
+        self.block_charges       = 0
         self.shadow_strike_ready = False
-        self.mana_shield_active       = False
-        self.block_charges            = 0
-        self.shadow_recharge_countdown = 0
-        self.arcane_charges_remaining = 1
-        self.class_ability_used  = False
-        self.class_ability2_used = False
-        self.class_ability3_used = False
+        self.mana_shield_active  = False
+        self.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in self.skills else 0
@@ -213,17 +208,13 @@ class Character:
 
     # Welche Fähigkeiten bei welchem Level freigeschaltet werden
     SKILL_UNLOCKS = {
-        2: ("Cleave (C)",            "10 Energie – Angriff + 3 Blutungsstacks"),
-        3: ("Rundumschlag (R)",      "15 Energie – Trifft alle Gegner"),
-        4: ("Klassen-Fähigkeit [1]", "Klassenspezifisch – Taste [1] im Kampf"),
-        5: ("Himmelsschlag (S)",     "20 Energie – Starker Einzelangriff +5 Schaden"),
-        7: ("Klassen-Fähigkeit [2]", "Klassenspezifisch – Taste [2] im Kampf"),
+        3: ("Klassen-Fähigkeit [C]", "Klassenspezifisch mit Cooldown – Taste [C] im Kampf"),
+        5: ("Klassen-Fähigkeit [X]", "Mächtige Einmal-Fähigkeit – Taste [X] im Kampf"),
     }
 
-    def check_level_up(self):
-        # Dynamischer XP-Multiplikator: frühe Level schnell, spätere langsamer
-        # Lvl 1→2: 30 XP (~1 Kampf), 2→3: ~60, 3→4: ~110, danach ×1.7 pro Stufe
-        XP_MULTIPLIERS = {1: 2.0, 2: 1.85, 3: 1.75, 4: 1.7, 5: 1.65, 6: 1.6, 7: 1.55, 8: 1.5, 9: 1.5}
+    def check_level_up(self) -> list:
+        """Verarbeitet XP, steigt ggf. auf und gibt eine Liste von Rich-Markup-Nachrichten zurück."""
+        msgs = []
         while self.xp >= self.xp_to_level_up:
             self.level += 1
             self.xp -= self.xp_to_level_up
@@ -234,23 +225,24 @@ class Character:
             self.attack  += LEVEL_ATK_GAIN
             self.min_attack += LEVEL_ATK_GAIN
             self.skill_points += 1
-            print(f"✨ {self.name} ist nun Level {self.level}!")
-            print(f"   +1 Skillpunkt! (Gesamt: {self.skill_points})")
+            msgs.append(f"[bold yellow]✨ {self.name} ist nun Level {self.level}![/bold yellow]")
+            msgs.append(f"[yellow]+1 Skillpunkt! (Gesamt: {self.skill_points})[/yellow]")
             if self.level in self.SKILL_UNLOCKS:
                 skill_name, skill_desc = self.SKILL_UNLOCKS[self.level]
-                print(f"🔓 Neue Fähigkeit freigeschaltet: {skill_name}")
-                print(f"   → {skill_desc}")
+                msgs.append(f"[cyan]🔓 Neue Fähigkeit freigeschaltet: {skill_name}[/cyan]")
+                msgs.append(f"[dim]  → {skill_desc}[/dim]")
             # Passive Klassen-Skalierung
             if self.player_class == "warrior" and self.level % 2 == 0:
                 self.armor += 1
-                print(f"⚔️  Krieger-Passiv: +1 Rüstung durch Kampferfahrung! (Rüstung: {self.armor})")
+                msgs.append(f"[cyan]⚔️  Krieger-Passiv: +1 Rüstung durch Kampferfahrung! (Rüstung: {self.armor})[/cyan]")
             elif self.player_class == "mage" and self.level % 2 == 0:
                 self.max_energy += 5
-                print(f"🔮 Magier-Passiv: +5 max. Energie durch Magiestudium! (Max. Energie: {self.max_energy})")
+                msgs.append(f"[cyan]🔮 Magier-Passiv: +5 max. Energie durch Magiestudium! (Max. Energie: {self.max_energy})[/cyan]")
             elif self.player_class == "rogue" and self.level % 3 == 0:
                 self.passive_crit_bonus += 0.05
                 pct = int((0.15 + self.passive_crit_bonus) * 100)
-                print(f"🗡️  Schurken-Passiv: +5% Krit-Chance durch Präzision! (Krit: {pct}%)")
+                msgs.append(f"[cyan]🗡️  Schurken-Passiv: +5% Krit-Chance durch Präzision! (Krit: {pct}%)[/cyan]")
+        return msgs
 
     def is_alive(self):
         return self.hp > 0
@@ -268,10 +260,12 @@ class Character:
             ignore_def  = True
         else:
             # Kritischer Treffer: 15% (+10% Schurke) Chance auf Doppelschaden
-            set_crit    = 0.15 if "rogue_shadow_regen" in self.get_set_specials() else 0.0
-            rogue_bonus = (0.10 + self.passive_crit_bonus + set_crit) if self.player_class == "rogue" else 0
+            specials    = self.get_set_specials()
+            shadow_crit = 0.15 if "rogue_shadow_regen" in specials else 0.0
+            set_crit    = 0.15 if "schatten_crit" in specials else 0.0
+            rogue_bonus = (0.10 + self.passive_crit_bonus + shadow_crit) if self.player_class == "rogue" else 0
             base_crit   = 0.15 if "Kritischer Treffer" in self.skills else 0
-            if random.random() < (base_crit + rogue_bonus):
+            if random.random() < (base_crit + rogue_bonus + set_crit):
                 raw_damage *= 2
                 crit = True
 
@@ -294,14 +288,20 @@ class Character:
         return random.randint(1, 20) >= 10
 
     def regenerate(self):
+        specials    = self.get_set_specials()
+        extra_e     = 3 if "eisen_energy_regen" in specials else 0
         mage_bonus  = 3 if self.player_class == "mage" else 0
-        energy_gain = self.energy_regen + (2 if "Energiefluss" in self.skills else 0) + mage_bonus
+        energy_gain = self.energy_regen + (2 if "Energiefluss" in self.skills else 0) + mage_bonus + extra_e
         self.energy = min(self.get_effective_max_energy(), self.energy + energy_gain)
         msgs = [f"{self.name} regeneriert {energy_gain} Energie."]
         if "Regeneration" in self.skills:
-            hp_gain  = 1
-            self.hp  = min(self.max_hp, self.hp + hp_gain)
+            hp_gain = 1
+            self.hp = min(self.max_hp, self.hp + hp_gain)
             msgs.append(f"+{hp_gain} HP durch Regeneration. (HP: {self.hp}/{self.max_hp})")
+        if "licht_hp_regen" in specials:
+            hp_gain = 3
+            self.hp = min(self.max_hp, self.hp + hp_gain)
+            msgs.append(f"+{hp_gain} HP Licht-Set. (HP: {self.hp}/{self.max_hp})")
         return " ".join(msgs)
 
     def _energy_cost_reduction(self) -> int:
@@ -309,53 +309,53 @@ class Character:
         mage_red = 5 if self.player_class == "mage" else 0
         return fokus + mage_red
 
-    def heavenstrike(self, target):
-        cost = max(5, 20 - self._energy_cost_reduction())
-        if self.energy >= cost:
-            raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack()) + 5
-            real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
-            target.hp = max(0, target.hp - real_damage)
-            self.energy -= cost
-            return f"{self.name} führt einen Himmelsschlag aus und macht {real_damage} Schaden!"
-        return f"{self.name} hat nicht genug Energie für einen Himmelsschlag!"
-
-    def whirlwind(self, enemy_list):
-        cost = max(5, 15 - self._energy_cost_reduction())
-        if self.energy >= cost:
-            self.energy -= cost
-            results = []
-            for enemy in enemy_list:
-                raw_damage  = max(1, random.randint(self.get_effective_min_attack(), self.get_total_attack()) - 2)
-                real_damage = self.apply_armor_reduction(raw_damage, enemy.get_total_armor())
-                enemy.hp = max(0, enemy.hp - real_damage)
-                results.append(f"{enemy.name} (-{real_damage} HP)")
-            return f"🌪️ {self.name} wirbelt herum!\n" + ", ".join(results)
-        return "Nicht genug Energie!"
-
-    def cleave(self, target):
-        cost = max(5, 10 - self._energy_cost_reduction())
-        if self.energy >= cost:
-            self.energy -= cost
-            raw_damage  = random.randint(self.get_effective_min_attack(), self.get_total_attack())
-            real_damage = self.apply_armor_reduction(raw_damage, target.get_total_armor())
-            target.hp = max(0, target.hp - real_damage)
-            target.bleed_stacks += 3
-            return f"{self.name} führt einen Cleave aus und macht {real_damage} Schaden! {target.name} erhält 3 Blutungsstacks!"
-        return "Nicht genug Energie!"
-
     def check_bleed(self) -> str:
         if self.bleed_stacks > 0:
-            self.hp = max(0, self.hp - BLEED_DAMAGE)
+            if getattr(self, "immune_to_bleed_poison", False):
+                self.bleed_stacks = 0
+                return ""
+            specials = self.get_set_specials()
+            if "stahl_bleed_immune" in specials:
+                self.bleed_stacks = 0
+                return ""
+            damage = max(0, BLEED_DAMAGE - (1 if "panzer_bleed_reduce" in specials else 0))
+            self.hp = max(0, self.hp - damage)
             self.bleed_stacks -= 1
-            return f"{self.name} erleidet {BLEED_DAMAGE} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
+            return f"{self.name} erleidet {damage} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
         return ""
 
     def check_poison(self) -> str:
         if self.poison_stacks > 0:
+            if getattr(self, "immune_to_bleed_poison", False):
+                self.poison_stacks = 0
+                return ""
             self.hp = max(0, self.hp - POISON_DAMAGE)
             self.poison_stacks -= 1
             return f"☠️  {self.name} erleidet {POISON_DAMAGE} Giftschaden! ({self.poison_stacks} Stacks verbleibend)"
         return ""
+
+    def check_burn(self) -> str:
+        if self.burn_stacks > 0:
+            if getattr(self, "immune_to_bleed_poison", False):
+                self.burn_stacks = 0
+                return ""
+            self.hp = max(0, self.hp - BURN_DAMAGE)
+            self.burn_stacks -= 1
+            return f"🔥 {self.name} erleidet {BURN_DAMAGE} Verbrennungsschaden! ({self.burn_stacks} Stacks verbleibend)"
+        return ""
+
+    @property
+    def dodge_chance(self) -> float:
+        specials = self.get_set_specials()
+        chance = 0.0
+        if "leder_dodge" in specials:
+            chance += 0.10
+        if "schattentuch_dodge" in specials:
+            chance += 0.15
+        return chance
+
+    def get_xp_bonus_mult(self) -> float:
+        return 1.20 if "runen_xp_bonus" in self.get_set_specials() else 1.0
 
     def use_consumable(self, key: str) -> str:
         from content.loot_tables import CONSUMABLE_DEFS
@@ -398,16 +398,40 @@ class Character:
             if self.poison_stacks > 0:
                 self.poison_stacks = 0
                 msgs.append("Gift entfernt")
+            if self.burn_stacks > 0:
+                self.burn_stacks = 0
+                msgs.append("Verbrennung entfernt")
             if not msgs:
                 msgs.append("keine Statuseffekte vorhanden")
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
 
-    # ── Neue Klassen-Fähigkeiten (Level 4 + 7) ──────────────────
+    # ── v2.0.4 Klassen-Fähigkeiten (S / R / C / X) ──────────────
 
-    def shield_bash(self, target):
-        """Krieger Lv4: Angriff + 50% Betäubungs-Chance"""
-        cost = 15
+    # ── KRIEGER ──
+    def brutaler_hieb(self, target) -> tuple:
+        cost = max(5, 18 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        raw = random.randint(self.get_effective_min_attack(), self.get_total_attack()) + 6
+        dmg = self.apply_armor_reduction(raw, int(target.get_total_armor() * 0.70))
+        target.hp = max(0, target.hp - dmg)
+        return f"⚔️  Brutaler Hieb! {dmg} Schaden (30% Rüstung ignoriert).", dmg
+
+    def schildwall(self) -> str:
+        cost = max(5, 10 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})"
+        self.energy -= cost
+        has_2block = "warrior_2block" in self.get_set_specials()
+        self.block_charges = 2 if has_2block else 1
+        self.block_next = True
+        extra = " (Eisenfestung: 2 Angriffe!)" if has_2block else ""
+        return f"🛡️  Schildwall aktiviert!{extra}"
+
+    def schildstoss(self, target) -> tuple:
+        cost = max(5, 20 - self._energy_cost_reduction())
         if self.energy < cost:
             return f"Nicht genug Energie! ({self.energy}/{cost})", 0
         self.energy -= cost
@@ -419,18 +443,27 @@ class Character:
             return f"🛡️  Schildstoß! {dmg} Schaden — {target.name} ist betäubt!", dmg
         return f"🛡️  Schildstoß! {dmg} Schaden.", dmg
 
-    def warcry(self):
-        """Krieger Lv7: +5 ATK für diesen Kampf"""
-        cost = 20
+    def kriegsschrei(self) -> str:
+        cost = max(5, 25 - self._energy_cost_reduction())
         if self.energy < cost:
             return f"Nicht genug Energie! ({self.energy}/{cost})"
         self.energy -= cost
         self.combat_modifiers["attack"] = self.combat_modifiers.get("attack", 0) + 5
         return f"⚔️  Kriegsschrei! +5 ATK für diesen Kampf. (ATK: {self.get_total_attack()})"
 
-    def poison_blade(self, target):
-        """Schurke Lv4: Angriff + 3 Giftstacks garantiert"""
-        cost = 12
+    # ── SCHURKE ──
+    def aus_dem_schatten(self) -> str:
+        cost = max(5, 15 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})"
+        self.energy -= cost
+        self.shadow_strike_ready = True
+        has_regen = "rogue_shadow_regen" in self.get_set_specials()
+        suffix = " (Schatten-Robe: +15% Krit aktiv)" if has_regen else ""
+        return f"🗡️  Aus dem Schatten! Nächster Angriff: Krit + ignoriert DEF.{suffix}"
+
+    def giftklinge(self, target) -> tuple:
+        cost = max(5, 12 - self._energy_cost_reduction())
         if self.energy < cost:
             return f"Nicht genug Energie! ({self.energy}/{cost})", 0
         self.energy -= cost
@@ -440,9 +473,36 @@ class Character:
         target.poison_stacks = getattr(target, "poison_stacks", 0) + 3
         return f"🗡️  Giftklinge! {dmg} Schaden + 3 Giftstacks auf {target.name}!", dmg
 
-    def frost_ray(self, target):
-        """Magier Lv4: 15-25 Schaden (ignoriert DEF) + Betäubung"""
-        cost = 18
+    def blendpulver(self, target) -> str:
+        cost = max(5, 20 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})"
+        self.energy -= cost
+        target.blind_turns = getattr(target, "blind_turns", 0) + 2
+        return f"💨 Blendpulver! {target.name} ist geblendet und verfehlt 2 Angriffe!"
+
+    def rauchbombe(self) -> str:
+        cost = max(5, 10 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})"
+        self.energy -= cost
+        return "__FLEE__"
+
+    # ── MAGIER ──
+    def arkane_entladung(self, enemy_list) -> tuple:
+        cost = max(5, 15 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        dmg = random.randint(6 + self.level * 2, 12 + self.level * 3)
+        living = [e for e in enemy_list if e.is_alive()]
+        for e in living:
+            e.hp = max(0, e.hp - dmg)
+        names = ", ".join(e.name for e in living)
+        return f"✨ Arkane Entladung! {dmg} Schaden (ignoriert DEF) an: {names}", dmg * len(living)
+
+    def froststrahl(self, target) -> tuple:
+        cost = max(5, 18 - self._energy_cost_reduction())
         if self.energy < cost:
             return f"Nicht genug Energie! ({self.energy}/{cost})", 0
         self.energy -= cost
@@ -451,8 +511,18 @@ class Character:
         target.stunned = True
         return f"❄️  Froststrahl! {dmg} Eisschaden (ignoriert DEF) — {target.name} ist eingefroren!", dmg
 
-    def activate_mana_shield(self):
-        """Magier Lv7: Absorbiert nächsten Angriff mit Energie statt HP"""
+    def feuerball(self, target) -> tuple:
+        cost = max(5, 22 - self._energy_cost_reduction())
+        if self.energy < cost:
+            return f"Nicht genug Energie! ({self.energy}/{cost})", 0
+        self.energy -= cost
+        raw = random.randint(self.get_effective_min_attack(), self.get_total_attack()) + 4
+        dmg = self.apply_armor_reduction(raw, target.get_total_armor())
+        target.hp = max(0, target.hp - dmg)
+        target.burn_stacks = getattr(target, "burn_stacks", 0) + 3
+        return f"🔥 Feuerball! {dmg} Schaden + 3 Verbrennungsstacks auf {target.name}!", dmg
+
+    def mana_schild_aktivieren(self) -> str:
         self.mana_shield_active = True
         return "🔮 Mana-Schild aktiviert! Nächster Angriff wird durch Energie absorbiert."
 
@@ -481,6 +551,7 @@ class Character:
         self.xp_to_level_up = 30
         self.energy        = 15
         self.bleed_stacks  = 0
+        self.burn_stacks   = 0
         self.combat_modifiers = {"attack": 0}
 
         # Ausrüstung zurücksetzen
@@ -522,8 +593,102 @@ class Character:
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
         }
+        self.stats["zones_cleared"]       = []
+        self.stats["dungeons_completed"]  = 0
 
         # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
         from content.classes import apply_class
         apply_class(self, self.player_class)
 
+    # ── Serialisierung ────────────────────────────────────────
+
+    def to_dict(self) -> dict:
+        """Serialisiert den Spieler vollständig als JSON-kompatibles Dict."""
+        return {
+            "name":                   self.name,
+            "hp":                     self.hp,
+            "max_hp":                 self.max_hp,
+            "attack":                 self.attack,
+            "min_attack":             self.min_attack,
+            "armor":                  self.armor,
+            "level":                  self.level,
+            "xp":                     self.xp,
+            "xp_to_level_up":         self.xp_to_level_up,
+            "energy":                 self.energy,
+            "max_energy":             self.max_energy,
+            "inventory":              self.inventory,
+            "equipment":              self.equipment,
+            "stats":                  self.stats,
+            "difficulty":             self.difficulty,
+            "skill_points":           self.skill_points,
+            "skills":                 list(self.skills),
+            "shield_ready":           self.shield_ready,
+            "equipment_upgrades":     self.equipment_upgrades,
+            "fights_until_event":     self.fights_until_event,
+            "next_fight_xp_mult":     self.next_fight_xp_mult,
+            "ng_plus":                self.ng_plus,
+            "achievements":           list(self.achievements),
+            "player_class":           self.player_class,
+            "current_zone":           self.current_zone,
+            "passive_crit_bonus":     self.passive_crit_bonus,
+            "schwarzmarkt_available": self.schwarzmarkt_available,
+            "shop_stock":             self.shop_stock,
+            "zone_progress":          self.zone_progress,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict, slot: int = 1) -> "Character":
+        """Erstellt einen Character aus einem gespeicherten Dict (save.py-Format)."""
+        player = cls(data["name"], data["max_hp"], data["attack"])
+        player.hp              = data["hp"]
+        player.min_attack      = data["min_attack"]
+        player.armor           = data["armor"]
+        player.level           = data["level"]
+        player.xp              = data["xp"]
+        player.xp_to_level_up  = data["xp_to_level_up"]
+        player.energy          = data["energy"]
+        player.max_energy      = data["max_energy"]
+        player.equipment       = data["equipment"]
+
+        # Legacy: type-Feld sicherstellen
+        _slot_types = {"weapon": "weapon", "chest": "chest", "head": "head", "feet": "feet"}
+        for eq_slot, item in player.equipment.items():
+            if "type" not in item:
+                item["type"] = _slot_types[eq_slot]
+
+        player.inventory   = data["inventory"]
+        _default_stats = {
+            "fights": 0, "kills": 0, "deaths": 0,
+            "damage_dealt": 0, "damage_taken": 0,
+            "gold_earned": 0, "potions_used": 0,
+            "dungeons_completed": 0, "dungeons_fled": 0,
+            "zone_kills": {}, "zones_cleared": [],
+        }
+        player.stats               = {**_default_stats, **data.get("stats", {})}
+        player.difficulty          = data.get("difficulty", "normal")
+        player.fights_until_event  = data.get("fights_until_event", 2)
+        player.next_fight_xp_mult  = data.get("next_fight_xp_mult", 1.0)
+        player.skill_points        = data.get("skill_points", 0)
+        player.skills              = set(data.get("skills", []))
+        player.shield_ready        = data.get("shield_ready", False)
+        player.shield_active       = False
+        _default_upgrades          = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
+        player.equipment_upgrades  = {**_default_upgrades, **data.get("equipment_upgrades", {})}
+        player.ng_plus             = data.get("ng_plus", 0)
+        player.achievements        = set(data.get("achievements", []))
+        player.player_class        = data.get("player_class", "warrior")
+        player.current_zone        = data.get("current_zone", "wald")
+        player.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
+        player.block_next          = False
+        player.shadow_strike_ready = False
+        player.mana_shield_active  = False
+        player.passive_crit_bonus      = data.get("passive_crit_bonus", 0.0)
+        player.schwarzmarkt_available  = data.get("schwarzmarkt_available", True)
+        player.shop_stock              = data.get("shop_stock", [])
+        _default_zp = {
+            zid: {"dungeons_completed": 0, "boss_defeated": False}
+            for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
+        }
+        player.zone_progress = {**_default_zp, **data.get("zone_progress", {})}
+        player.save_slot     = slot
+        return player

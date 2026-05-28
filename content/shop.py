@@ -1,6 +1,34 @@
 import random
-from ui.utils import clear_screen, print_header
-from core.player import MAX_INVENTORY_SLOTS
+from ui.utils import clear_screen, print_header, console
+from rich.markup import escape as _esc
+from config import MAX_INVENTORY_SLOTS
+
+_RARITY_COLORS = {
+    "common":    "white",
+    "uncommon":  "green",
+    "rare":      "blue",
+    "epic":      "magenta",
+    "legendary": "yellow",
+}
+
+
+def _resolve_weapon(item_key: str, player_class: str):
+    """Return (resolved_key, edef) using class-specific variant if one exists."""
+    from content.loot_tables import CLASS_WEAPON_MAP, EQUIPMENT_DEFS
+    variant_key = CLASS_WEAPON_MAP.get(item_key, {}).get(player_class)
+    if variant_key and variant_key in EQUIPMENT_DEFS:
+        return variant_key, EQUIPMENT_DEFS[variant_key]
+    return item_key, EQUIPMENT_DEFS.get(item_key, {})
+
+
+def _build_item_to_set() -> dict:
+    """Return {item_key: (set_name, set_emoji)} for every piece in every set."""
+    from content.loot_tables import SET_DEFS
+    result = {}
+    for sname, sdef in SET_DEFS.items():
+        for piece in sdef["pieces"]:
+            result[piece] = (sname, sdef["emoji"])
+    return result
 
 
 SHOP_CATALOGUE = [
@@ -94,6 +122,7 @@ def get_next_unlock(player_level: int) -> dict:
 
 def shop_menu(player):
     from content.loot_tables import CONSUMABLE_DEFS, EQUIPMENT_DEFS, RARITY_LABEL
+    item_to_set = _build_item_to_set()
 
     SECTION_ORDER = [
         ("💊 Verbrauchsgegenstände", "consumable", None),
@@ -110,13 +139,13 @@ def shop_menu(player):
         lvl        = player.level
         used_slots = player.inventory_count()
         w = player.equipment['weapon']
-        c = player.equipment['chest']
+        ch = player.equipment['chest']
         h = player.equipment['head']
         f = player.equipment['feet']
 
-        print(f"Gold: {player.inventory['Gold']} 🪙  |  Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  LVL {lvl}")
-        print(f"Ausrüstet: {w['name']} / {c['name']} / {h['name']} / {f['name']}")
-        print("-" * 62)
+        console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]  |  Inventar: {used_slots}/{MAX_INVENTORY_SLOTS} Slots  |  LVL {lvl}")
+        console.print(f"  Ausgerüstet: [dim]{_esc(w['name'])} / {_esc(ch['name'])} / {_esc(h['name'])} / {_esc(f['name'])}[/dim]")
+        console.print("─" * 62)
 
         stock = getattr(player, "shop_stock", [])
         if not stock:
@@ -157,40 +186,51 @@ def shop_menu(player):
             if not section_items and not upcoming:
                 continue
 
-            print(f"\n{sec_name}")
+            console.print(f"\n  [bold]{_esc(sec_name)}[/bold]")
 
             for item in section_items:
-                idx        = flat.index(item) + 1  # 1-basiert, damit [0] = Verlassen frei bleibt
-                affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
+                idx        = flat.index(item) + 1
+                can_afford = player.inventory["Gold"] >= item["price"]
+                afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
 
                 if item["type"] == "consumable":
                     cur        = player.inventory.get("Consumables", {}).get(item["key"], 0)
                     max_stack  = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
                     has_space  = player.can_add_consumable(item["key"])
-                    warn       = "" if has_space else " 🎒VOLL"
+                    warn       = "" if has_space else " [red]🎒VOLL[/red]"
                     stack_info = f"({cur}/{max_stack})"
-                    line = f"  [{idx:>2}] {item['name']:<24} {stack_info:<8} {item['desc']:<20} {item['price']:>4} Gold  {affordable}{warn}"
+                    price_col  = "yellow" if can_afford else "red"
+                    console.print(f"  [[{idx:>2}]] {_esc(item['name']):<24} {stack_info:<8} [dim]{_esc(item['desc']):<20}[/dim] [{price_col}]{item['price']:>4} Gold[/{price_col}]  {afford_tag}{warn}")
                 else:
-                    edef     = EQUIPMENT_DEFS.get(item["key"], {})
-                    emoji    = edef.get("emoji", "⚔️")
-                    rarity   = edef.get("rarity", "common")
+                    if EQUIPMENT_DEFS.get(item["key"], {}).get("slot") == "weapon":
+                        display_key, edef = _resolve_weapon(item["key"], player.player_class)
+                    else:
+                        display_key = item["key"]
+                        edef = EQUIPMENT_DEFS.get(item["key"], {})
+                    emoji     = edef.get("emoji", "⚔️")
+                    rarity    = edef.get("rarity", "common")
                     _, rbadge = RARITY_LABEL.get(rarity, ("?", "⬜"))
+                    rc        = _RARITY_COLORS.get(rarity, "white")
                     has_space = player.has_inventory_space()
-                    warn     = "" if has_space else " 🎒VOLL"
-                    stat     = f"ATK +{edef['attack']}" if edef.get("slot") == "weapon" else f"DEF +{edef['armor']}"
-                    line = f"  [{idx:>2}] {rbadge}{emoji} {item['name']:<24} {stat:<10} {edef.get('desc',''):<22} {item['price']:>4} Gold  {affordable}{warn}"
-                print(line)
+                    warn      = "" if has_space else " [red]🎒VOLL[/red]"
+                    stat      = f"ATK +{edef['attack']}" if edef.get("slot") == "weapon" else f"DEF +{edef['armor']}"
+                    price_col = "yellow" if can_afford else "red"
+                    set_info  = item_to_set.get(item["key"])
+                    set_tag   = f"  [dim]{set_info[1]} {_esc(set_info[0])}[/dim]" if set_info else ""
+                    console.print(f"  [[{idx:>2}]] {rbadge}[{rc}]{emoji} {_esc(display_key):<24}[/{rc}] {stat:<10} [dim]{_esc(edef.get('desc','')):<22}[/dim] [{price_col}]{item['price']:>4} Gold[/{price_col}]  {afford_tag}{warn}{set_tag}")
 
             # 🔒 Vorschau nächster Unlock
             if upcoming:
                 unlock_name, unlock_lvl = upcoming
-                print(f"  🔒 {unlock_name:<24} (freigeschalten ab LVL {unlock_lvl})")
+                if slot_filter == "weapon":
+                    unlock_name, _ = _resolve_weapon(unlock_name, player.player_class)
+                console.print(f"  [dim]🔒 {_esc(unlock_name):<24} (freigeschaltet ab LVL {unlock_lvl})[/dim]")
 
         if not flat:
-            print("\n  (Keine Items verfügbar)")
+            console.print("\n  [dim](Keine Items verfügbar)[/dim]")
 
-        print(f"\n  🔄 Sortiment wechselt nach jedem Dungeon")
-        print(f"[0] Verlassen")
+        console.print(f"\n  [dim]🔄 Sortiment wechselt nach jedem Dungeon[/dim]")
+        console.print("  [[0]] Verlassen")
         choice = input("\nWas möchtest du kaufen? ")
 
         if choice == "0":
@@ -200,14 +240,14 @@ def shop_menu(player):
 
         display_idx = int(choice)
         if not (1 <= display_idx <= len(flat)):
-            print("Ungültige Auswahl.")
+            console.print("  [red]Ungültige Auswahl.[/red]")
             input("ENTER...")
             continue
 
-        item = flat[display_idx - 1]  # zurück auf 0-basiert
+        item = flat[display_idx - 1]
 
         if player.inventory["Gold"] < item["price"]:
-            print("❌ Nicht genug Gold!")
+            console.print("  [red]❌ Nicht genug Gold![/red]")
             input("ENTER...")
             continue
 
@@ -217,28 +257,32 @@ def shop_menu(player):
                 max_stack = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
                 cur = player.inventory.get("Consumables", {}).get(item["key"], 0)
                 if cur >= max_stack:
-                    print(f"❌ Stapel voll! ({cur}/{max_stack})")
+                    console.print(f"  [red]❌ Stapel voll! ({cur}/{max_stack})[/red]")
                 else:
-                    print(f"🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)")
+                    console.print(f"  [red]🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)[/red]")
                 input("ENTER...")
                 continue
             player.inventory["Gold"] -= item["price"]
-            print(f"✅ Du kaufst {added}x {item['name']}!")
+            console.print(f"  [green]✅ Du kaufst {added}x {_esc(item['name'])}![/green]")
 
         elif item["type"] == "equipment":
             if not player.has_inventory_space():
-                print(f"🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)")
+                console.print(f"  [red]🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)[/red]")
                 input("ENTER...")
                 continue
-            edef = EQUIPMENT_DEFS.get(item["key"], {})
-            slot = edef.get("slot", "weapon")
-            equip = {"name": item["name"], "type": slot}
+            base_edef = EQUIPMENT_DEFS.get(item["key"], {})
+            slot = base_edef.get("slot", "weapon")
+            if slot == "weapon":
+                resolved_key, edef = _resolve_weapon(item["key"], player.player_class)
+            else:
+                resolved_key, edef = item["key"], base_edef
+            equip = {"name": resolved_key, "type": slot}
             if slot == "weapon":
                 equip["attack"] = edef["attack"]
             else:
                 equip["armor"] = edef["armor"]
             player.inventory["Gold"] -= item["price"]
             player.inventory["Equipment"].append(equip)
-            print(f"✅ {item['name']} wurde deinem Inventar hinzugefügt!")
+            console.print(f"  [green]✅ {_esc(resolved_key)} wurde deinem Inventar hinzugefügt![/green]")
 
         input("ENTER...")

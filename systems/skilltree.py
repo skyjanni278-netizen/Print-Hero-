@@ -1,4 +1,4 @@
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console
 
 SKILL_TREE = {
     # Kampf-Baum
@@ -40,41 +40,35 @@ def skill_menu(player):
     while True:
         clear_screen()
         print_header("Skill-Baum")
-        print(f"Verfuegbare Skillpunkte: {player.skill_points}")
-        print(f"Gelernte Skills: {len(player.skills)}/9\n")
+        console.print(f"  Verfügbare Skillpunkte: [bold yellow]{player.skill_points}[/bold yellow]")
+        console.print(f"  Gelernte Skills: [cyan]{len(player.skills)}/9[/cyan]\n")
 
         rows = []
         idx = 0
         for tree_name, skills in _TREE_ORDER.items():
-            print(f"── {tree_name}-Baum " + "─" * (28 - len(tree_name)))
+            console.print(f"  [bold]── {tree_name}-Baum [/bold]" + "─" * (28 - len(tree_name)))
             for skill_name in skills:
-                sdef = SKILL_TREE[skill_name]
+                sdef     = SKILL_TREE[skill_name]
                 unlocked = skill_name in player.skills
                 can, reason = _can_unlock(player, skill_name)
+                tier     = _TIER_LABEL[sdef["tier"]]
 
                 if unlocked:
-                    marker = "✅"
-                    hint   = ""
+                    console.print(f"  [green]✅    {skill_name:<22} — {sdef['desc']:<38} [{tier}][/green]")
                 elif can:
-                    marker = f"[{idx}]"
-                    hint   = f"  ({sdef['cost']} Pkt)"
-                else:
-                    marker = "🔒"
-                    hint   = f"  ({reason})"
-
-                tier = _TIER_LABEL[sdef["tier"]]
-                print(f"  {marker:<5} {skill_name:<22} — {sdef['desc']:<38} [{tier}]{hint}")
-                if can:
+                    console.print(f"  [cyan][[{idx}]]   {skill_name:<22} — {sdef['desc']:<38} [{tier}]  ({sdef['cost']} Pkt)[/cyan]")
                     rows.append(skill_name)
                     idx += 1
-            print()
+                else:
+                    console.print(f"  [dim]🔒    {skill_name:<22} — {sdef['desc']:<38} [{tier}]  ({reason})[/dim]")
+            console.print()
 
         if not rows:
-            print("Keine Skills freischaltbar (keine Punkte oder Voraussetzungen fehlen).")
-            input("\n[Z] Zurueck: ")
+            console.print("  [dim]Keine Skills freischaltbar (keine Punkte oder Voraussetzungen fehlen).[/dim]")
+            input("\n[Z] Zurück: ")
             break
 
-        print("[Z] Zurueck")
+        console.print("  [[Z]] Zurück")
         choice = input("\nWelchen Skill lernen? ").strip().lower()
 
         if choice == "z":
@@ -92,5 +86,5 @@ def skill_menu(player):
             elif skill_name == "Magieschild":
                 player.shield_ready = True
 
-            print(f"\n✨ {skill_name} gelernt! ({sdef['desc']})")
+            console.print(f"\n  [bold green]✨ {skill_name} gelernt![/bold green] ({sdef['desc']})")
             input("(ENTER)")

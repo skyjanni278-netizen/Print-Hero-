@@ -1,5 +1,7 @@
 import random
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console, hp_bar
+from rich.markup import escape as _esc
+from rich.panel import Panel
 from systems.zones import ZONE_DEFS, ZONE_ORDER, ZONE_FLAVOR, _is_zone_unlocked
 
 ZONE_BOSS_DEFS = {
@@ -124,7 +126,7 @@ def run_zone_boss(player, zone_id: str) -> str:
     Rückgabe: 'victory' | 'defeat' | 'fled'
     """
     from core.combat import combat
-    from content.loot_tables import roll_loot, apply_loot
+    from content.loot_tables import roll_boss_loot, apply_loot
     from systems.achievements import check_all
     from config import DIFFICULTY_SETTINGS
 
@@ -147,20 +149,22 @@ def run_zone_boss(player, zone_id: str) -> str:
 
     ng = getattr(player, "ng_plus", 0)
     if ng > 0:
-        mult        = 1.3 ** ng
+        mult        = min(1.3 ** ng, 3.0)
         boss.max_hp = max(1, int(boss.max_hp * mult))
         boss.hp     = boss.max_hp
         boss.attack = max(1, int(boss.attack * mult))
 
     clear_screen()
-    print_header(f"🔥 ZONEN-BOSS  —  {bdef['emoji']} {zdef['name']}")
-    print()
-    for line in bdef["intro"].splitlines():
-        print(f"  {line}")
-    print(f"\n  Boss:  {boss.name}")
-    print(f"  HP:    {boss.max_hp}   |   ATK: {boss.attack}")
-    input("\n⚔️  In den Kampf! (ENTER)")
+    print_header(f"🔥 ZONEN-BOSS  —  {_esc(bdef['emoji'])} {_esc(zdef['name'])}")
+    intro_text = "\n".join(f"  {_esc(line)}" for line in bdef["intro"].splitlines())
+    console.print(Panel(intro_text, border_style="bright_red", expand=False, padding=(0, 1)))
+    hp_b = hp_bar(boss.max_hp, boss.max_hp)
+    console.print(f"\n  [bold]{_esc(boss.name)}[/bold]")
+    console.print(f"  HP {hp_b} {boss.max_hp}   ATK {boss.attack}")
+    console.print("\n  [bold bright_red]⚔️  In den Kampf![/bold bright_red]")
+    input("  (ENTER) ")
 
+    pots_before = player.stats.get("potions_used", 0)
     result = combat(player, [boss])
     player.reset_combat_modifiers()
 
@@ -172,8 +176,8 @@ def run_zone_boss(player, zone_id: str) -> str:
 
     # ── Sieg ──────────────────────────────────────────────────
     clear_screen()
-    print_header(f"🏆 ZONEN-BOSS BESIEGT!  {bdef['emoji']}")
-    print(f"\n  {bdef['victory']}\n")
+    print_header(f"🏆 ZONEN-BOSS BESIEGT!  {_esc(bdef['emoji'])}")
+    console.print(f"\n  [bold green]{_esc(bdef['victory'])}[/bold green]\n")
 
     zp = getattr(player, "zone_progress", {})
     if zone_id not in zp:
@@ -184,25 +188,30 @@ def run_zone_boss(player, zone_id: str) -> str:
     player.stats["kills"]  = player.stats.get("kills", 0) + 1
     player.stats["fights"] = player.stats.get("fights", 0) + 1
 
-    loot_rank   = bdef.get("loot_rank", 5)
     gold_before = player.inventory["Gold"]
-    loot_items  = roll_loot(rank=loot_rank, rolls=6)
+    zone_id     = getattr(player, "current_zone", "wald")
+    loot_items  = roll_boss_loot(zone_id)
     loot_msgs   = apply_loot(player, loot_items)
     player.stats["gold_earned"] = player.stats.get("gold_earned", 0) + player.inventory["Gold"] - gold_before
 
-    total_xp = int(boss.xp_value * player.next_fight_xp_mult)
+    total_xp = int(boss.xp_value * player.next_fight_xp_mult * player.get_xp_bonus_mult())
     player.next_fight_xp_mult = 1.0
     player.xp += total_xp
-    player.check_level_up()
+    lvl_msgs = player.check_level_up()
 
     if loot_msgs:
-        print("💰 Boss-Beute:")
+        console.print("  [bold yellow]💰 Boss-Beute:[/bold yellow]")
         for m in loot_msgs:
-            print(m)
-    print(f"\n+{total_xp} XP")
+            console.print(f"  {m}")
+    for m in lvl_msgs:
+        console.print(f"  {m}")
+    console.print(f"\n  [bold green]+{total_xp} XP[/bold green]")
 
-    for m in check_all(player, {"event": "victory", "enemies": [boss]}):
-        print(m)
+    pots_used = player.stats.get("potions_used", 0) - pots_before
+    for m in check_all(player, {"event": "victory", "enemies": [boss], "potions_used": pots_used}):
+        console.print(f"  {m}")
+    for m in check_all(player, {"event": "level_up", "level": player.level}):
+        console.print(f"  {m}")
 
     # Nächste Zone freigeschaltet?
     idx = ZONE_ORDER.index(zone_id)
@@ -210,9 +219,9 @@ def run_zone_boss(player, zone_id: str) -> str:
         next_zid  = ZONE_ORDER[idx + 1]
         next_zdef = ZONE_DEFS[next_zid]
         if player.level >= next_zdef["unlock_level"]:
-            print(f"\n🗺️  Neue Zone freigeschaltet: {next_zdef['emoji']} {next_zdef['name']}!")
+            console.print(f"\n  [bold cyan]🗺️  Neue Zone freigeschaltet: {_esc(next_zdef['emoji'])} {_esc(next_zdef['name'])}![/bold cyan]")
         else:
-            print(f"\n🗺️  {next_zdef['emoji']} {next_zdef['name']} — ab Level {next_zdef['unlock_level']} zugänglich.")
+            console.print(f"\n  [dim]🗺️  {_esc(next_zdef['emoji'])} {_esc(next_zdef['name'])} — ab Level {next_zdef['unlock_level']} zugänglich.[/dim]")
 
     input("\n(ENTER)")
     return "victory"
@@ -225,12 +234,19 @@ def show_world_map(player):
     """
     _legacy_unlock_fix(player)
 
-    STATUS_ICONS = {
+    _STATUS_ICONS = {
         "locked":      "🔒",
         "available":   "🟢",
         "in_progress": "🔵",
         "boss_ready":  "🔥",
         "completed":   "✅",
+    }
+    _STATUS_COLORS = {
+        "locked":      "dim",
+        "available":   "green",
+        "in_progress": "cyan",
+        "boss_ready":  "bold bright_red",
+        "completed":   "green",
     }
 
     while True:
@@ -244,7 +260,8 @@ def show_world_map(player):
             zdef   = ZONE_DEFS[zid]
             bdef   = ZONE_BOSS_DEFS[zid]
             status = statuses[zid]
-            icon   = STATUS_ICONS[status]
+            icon   = _STATUS_ICONS[status]
+            c      = _STATUS_COLORS[status]
             zp     = getattr(player, "zone_progress", {}).get(zid, {})
             done   = zp.get("dungeons_completed", 0)
             req    = zdef["dungeon_count"]
@@ -256,15 +273,15 @@ def show_world_map(player):
                 lock_info = f"🔒 {prev_boss} besiegen"
                 if player.level < zdef["unlock_level"]:
                     lock_info += f" + Level {zdef['unlock_level']}"
-                print(f"  {icon} [{i+1}]{active} {zdef['emoji']} {zdef['name']:<16} {lock_info}")
+                console.print(f"  [{c}]{icon} [[{i+1}]]{active} {_esc(zdef['emoji'])} {_esc(zdef['name']):<16} {_esc(lock_info)}[/{c}]")
             elif status == "completed":
-                print(f"  {icon} [{i+1}]{active} {zdef['emoji']} {zdef['name']:<16} Boss besiegt ✓")
+                console.print(f"  [{c}]{icon} [[{i+1}]]{active} {_esc(zdef['emoji'])} {_esc(zdef['name']):<16} Boss besiegt ✓[/{c}]")
             elif status == "boss_ready":
-                print(f"  {icon} [{i+1}]{active} {zdef['emoji']} {zdef['name']:<16} 🔥 BOSS BEREIT  ({done}/{req})")
+                console.print(f"  [{c}]{icon} [[{i+1}]]{active} {_esc(zdef['emoji'])} {_esc(zdef['name']):<16} 🔥 BOSS BEREIT  ({done}/{req})[/{c}]")
             else:
-                print(f"  {icon} [{i+1}]{active} {zdef['emoji']} {zdef['name']:<16} {done}/{req} Dungeons")
+                console.print(f"  [{c}]{icon} [[{i+1}]]{active} {_esc(zdef['emoji'])} {_esc(zdef['name']):<16} {done}/{req} Dungeons[/{c}]")
 
-        print("\n  [1-5] Zone wählen   [Z] Zurück")
+        console.print("\n  [[1-5]] Zone wählen   [[Z]] Zurück")
         choice = input("\nDeine Wahl: ").strip().lower()
 
         if choice == "z":
@@ -278,7 +295,7 @@ def show_world_map(player):
         status = statuses[zid]
 
         if status == "locked":
-            print("\n  🔒 Diese Zone ist noch gesperrt.")
+            console.print("\n  [dim]🔒 Diese Zone ist noch gesperrt.[/dim]")
             input("  (ENTER)")
             continue
 
@@ -288,10 +305,10 @@ def show_world_map(player):
             player.shop_stock             = []
             clear_screen()
             zdef = ZONE_DEFS[zid]
-            print_header(f"{zdef['emoji']}  {zdef['name']}")
+            print_header(f"{_esc(zdef['emoji'])}  {_esc(zdef['name'])}")
             for line in ZONE_FLAVOR.get(zid, []):
-                print(f"  {line}")
-            print(f"\n✅ Zone gewechselt zu: {zdef['emoji']} {zdef['name']}")
+                console.print(f"  {_esc(line)}")
+            console.print(f"\n  [green]✅ Zone gewechselt zu: {_esc(zdef['emoji'])} {_esc(zdef['name'])}[/green]")
             input("\n(ENTER)")
         return
 
@@ -305,44 +322,47 @@ def endscreen(player) -> str:
     from systems.achievements import check_all
 
     clear_screen()
-    print("=" * 52)
-    print("    🏆  ALLE ZONEN BEZWUNGEN!  🏆")
-    print("=" * 52)
-    print()
-    print("  Du hast alle 5 Zonen des Reiches bezwungen.")
-    print("  Malachar, der Herr der Finsternis, ist gefallen.")
-    print("  Das Reich ist gerettet — vorerst.\n")
-    print("-" * 52)
+    console.print(Panel(
+        "[bold yellow]🏆  ALLE ZONEN BEZWUNGEN!  🏆[/bold yellow]",
+        border_style="yellow",
+        expand=True,
+        padding=(0, 0),
+    ))
+    console.print()
+    console.print("  [bold]Du hast alle 5 Zonen des Reiches bezwungen.[/bold]")
+    console.print("  Malachar, der Herr der Finsternis, ist gefallen.")
+    console.print("  [dim]Das Reich ist gerettet — vorerst.[/dim]\n")
+    console.print("─" * 52)
 
     s = player.stats
-    print(f"  ⚔️  Kämpfe gewonnen      : {s.get('fights', 0)}")
-    print(f"  💀  Gegner besiegt       : {s.get('kills', 0)}")
-    print(f"  🗡️  Schaden ausgeteilt   : {s.get('damage_dealt', 0)}")
-    print(f"  🛡️  Schaden erhalten     : {s.get('damage_taken', 0)}")
-    print(f"  🏰  Dungeons abgeschl.   : {s.get('dungeons_completed', 0)}")
-    print(f"  💰  Gold verdient        : {s.get('gold_earned', 0)}")
-    print(f"  🧪  Tränke benutzt       : {s.get('potions_used', 0)}")
-    print(f"  📈  Errungenschaften     : {len(getattr(player, 'achievements', set()))}/20")
-    print("-" * 52)
+    console.print(f"  ⚔️  Kämpfe gewonnen      : [cyan]{s.get('fights', 0)}[/cyan]")
+    console.print(f"  💀  Gegner besiegt       : [cyan]{s.get('kills', 0)}[/cyan]")
+    console.print(f"  🗡️  Schaden ausgeteilt   : [cyan]{s.get('damage_dealt', 0)}[/cyan]")
+    console.print(f"  🛡️  Schaden erhalten     : [cyan]{s.get('damage_taken', 0)}[/cyan]")
+    console.print(f"  🏰  Dungeons abgeschl.   : [cyan]{s.get('dungeons_completed', 0)}[/cyan]")
+    console.print(f"  💰  Gold verdient        : [yellow]{s.get('gold_earned', 0)}[/yellow]")
+    console.print(f"  🧪  Tränke benutzt       : [cyan]{s.get('potions_used', 0)}[/cyan]")
+    console.print(f"  📈  Errungenschaften     : [cyan]{len(getattr(player, 'achievements', set()))}/20[/cyan]")
+    console.print("─" * 52)
 
     ng_next = player.ng_plus + 1
-    mult    = round(1.3 ** ng_next, 2)
-    print(f"\n  ⭐ New Game+ Runde {ng_next} — Gegner ×{mult} HP und ATK")
-    print("  Du behältst: Gold + alle legendären Items\n")
-    print("  [J] New Game+ starten")
-    print("  [W] Weiterspielen (freies Erkunden)")
+    mult    = round(min(1.3 ** ng_next, 3.0), 2)
+    console.print(f"\n  [bold yellow]⭐ New Game+ Runde {ng_next} — Gegner ×{mult} HP und ATK[/bold yellow]")
+    console.print("  [dim]Du behältst: Gold + alle legendären Items[/dim]\n")
+    console.print("  [[J]] [bold green]New Game+ starten[/bold green]")
+    console.print("  [[W]] Weiterspielen (freies Erkunden)")
 
     while True:
         c = input("\nDeine Wahl: ").lower()
         if c == "j":
             player.start_ng_plus()
             for m in check_all(player, {"event": "ng_plus"}):
-                print(m)
+                console.print(f"  {m}")
             save_game(player)
             clear_screen()
             print_header("⭐ New Game+ gestartet!")
-            print(f"  Runde {player.ng_plus} beginnt.")
-            print("  Die Zonen-Bosse erwachen stärker als je zuvor...")
+            console.print(f"  [bold]Runde {player.ng_plus} beginnt.[/bold]")
+            console.print("  [dim]Die Zonen-Bosse erwachen stärker als je zuvor...[/dim]")
             input("\n(ENTER)")
             return "ng_plus"
         elif c == "w":

@@ -1,6 +1,7 @@
 import random
 from core.player import Character
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console
+from rich.markup import escape as _esc
 from ui.pause import camp_menu
 from core.save import load_game, get_save_slots
 from systems.dungeon import run_dungeon
@@ -10,13 +11,13 @@ from config import DIFFICULTY_SETTINGS
 
 
 def _choose_difficulty():
-    print("\nWähle deinen Schwierigkeitsgrad:")
-    print("  [E] Einfach  — Gegner schwächer,  +5 Start-HP")
-    print("  [N] Normal   — Standardwerte")
-    print("  [H] Schwer   — Gegner stärker,    -5 Start-HP")
+    console.print("\n  [bold]Wähle deinen Schwierigkeitsgrad:[/bold]")
+    console.print("  [[E]] [green]Einfach[/green]  — Gegner schwächer,  +5 Start-HP")
+    console.print("  [[N]] Normal   — Standardwerte")
+    console.print("  [[H]] [red]Schwer[/red]   — Gegner stärker,    -5 Start-HP")
     mapping = {"e": "easy", "n": "normal", "h": "hard"}
     while True:
-        c = input("Deine Wahl [E/N/H]: ").lower()
+        c = input("  Deine Wahl [E/N/H]: ").lower()
         if c in mapping:
             return mapping[c]
 
@@ -46,12 +47,12 @@ def _slot_menu():
                 pclass  = info.get("player_class", "warrior")
                 emoji   = CLASS_DEFS.get(pclass, {}).get("emoji", "")
                 ng      = info.get("ng_plus", 0)
-                ng_tag  = f" NG+{ng}" if ng > 0 else ""
+                ng_tag  = f" [bold yellow]⭐ NG+{ng}[/bold yellow]" if ng > 0 else ""
                 diff    = DIFFICULTY_SETTINGS.get(info.get("difficulty", "normal"), {}).get("label", "Normal")
-                print(f"  [{s}] Slot {s}:  {emoji} Level {info['level']}{ng_tag}  |  {diff}")
+                console.print(f"  [[{s}]] {_esc(emoji)} [bold]Level {info['level']}[/bold]{ng_tag}  |  {_esc(diff)}")
             else:
-                print(f"  [{s}] Slot {s}:  — Leer —  [Neues Spiel]")
-        print("\n  [Q] Beenden")
+                console.print(f"  [[{s}]] [dim]— Leer —  Neues Spiel[/dim]")
+        console.print("\n  [[Q]] Beenden")
         choice = input("\nDeine Wahl: ").strip().lower()
         if choice == "q":
             exit()
@@ -65,8 +66,8 @@ def _slot_menu():
                 emoji  = CLASS_DEFS.get(pclass, {}).get("emoji", "")
                 ng     = info.get("ng_plus", 0)
                 ng_tag = f" NG+{ng}" if ng > 0 else ""
-                print(f"  {emoji} Level {info['level']}{ng_tag}")
-                print("\n  [L] Laden   [N] Neu starten (überschreibt Slot)   [Z] Zurück")
+                console.print(f"  {_esc(emoji)} Level {info['level']}{_esc(ng_tag)}")
+                console.print("\n  [[L]] Laden   [[N]] Neu starten (überschreibt Slot)   [[Z]] Zurück")
                 c = input("\nDeine Wahl: ").strip().lower()
                 if c == "l":
                     return load_game(slot)
@@ -80,10 +81,10 @@ def _handle_defeat(player):
     player.stats["deaths"] += 1
     clear_screen()
     print_header("💀 Game Over")
-    print(f"\n  {player.name} wurde besiegt.\n")
-    print(f"  Kämpfe gewonnen : {player.stats.get('fights', 0)}")
-    print(f"  Gegner besiegt  : {player.stats.get('kills', 0)}")
-    print(f"  Dungeons fertig : {player.stats.get('dungeons_completed', 0)}")
+    console.print(f"\n  [bold red]{_esc(player.name)} wurde besiegt.[/bold red]\n")
+    console.print(f"  Kämpfe gewonnen : [cyan]{player.stats.get('fights', 0)}[/cyan]")
+    console.print(f"  Gegner besiegt  : [cyan]{player.stats.get('kills', 0)}[/cyan]")
+    console.print(f"  Dungeons fertig : [cyan]{player.stats.get('dungeons_completed', 0)}[/cyan]")
     input("\n(ENTER)")
 
 
@@ -109,7 +110,7 @@ def main():
 
         if result in ("completed", "victory"):
             for m in check_all(player, {"event": "gold_check"}):
-                print(m)
+                console.print(f"  {m}")
 
             if check_all_zones_cleared(player):
                 outcome = endscreen(player)

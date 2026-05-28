@@ -1,5 +1,6 @@
 import random
-from ui.utils import clear_screen, print_header
+from ui.utils import clear_screen, print_header, console, hp_bar, energy_bar
+from rich.markup import escape as _esc
 
 
 _SCHWARZMARKT_CATALOGUE = [
@@ -16,117 +17,145 @@ _SCHWARZMARKT_CATALOGUE = [
 
 def _schwarzmarkt(player):
     from content.loot_tables import EQUIPMENT_DEFS, CONSUMABLE_DEFS, RARITY_LABEL
-    from core.player import MAX_INVENTORY_SLOTS
+    from config import MAX_INVENTORY_SLOTS
     clear_screen()
     print_header("🏴 Schwarzmarkt")
-    print("Der Haendler schaut sich um und zieht eine schwarze Plane beiseite.")
-    print("\"Nur fuer dich, und nur dieses Mal. Sag niemandem, was du hier gesehen hast.\"\n")
+    console.print("  Der Händler schaut sich um und zieht eine schwarze Plane beiseite.")
+    console.print("  [dim]\"Nur für dich, und nur dieses Mal. Sag niemandem, was du hier gesehen hast.\"[/dim]\n")
     picks = random.sample(_SCHWARZMARKT_CATALOGUE, min(4, len(_SCHWARZMARKT_CATALOGUE)))
-    print(f"Gold: {player.inventory['Gold']} Muenzen\n")
+    console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
     for i, item in enumerate(picks):
-        affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
+        can_afford = player.inventory["Gold"] >= item["price"]
+        afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
+        price_col  = "yellow" if can_afford else "red"
         if item["type"] == "equipment":
+            from content.loot_tables import CLASS_WEAPON_MAP
             edef   = EQUIPMENT_DEFS.get(item["key"], {})
+            if edef.get("slot") == "weapon":
+                variant = CLASS_WEAPON_MAP.get(item["key"], {}).get(player.player_class)
+                if variant and variant in EQUIPMENT_DEFS:
+                    display_key, edef = variant, EQUIPMENT_DEFS[variant]
+                else:
+                    display_key = item["key"]
+            else:
+                display_key = item["key"]
             emoji  = edef.get("emoji", "⚔️")
             _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
             stat   = f"ATK +{edef['attack']}" if edef.get("slot") == "weapon" else f"DEF +{edef.get('armor',0)}"
-            print(f"  [{i+1}] {rbadge}{emoji} {item['name']:<24} {stat:<10} {item['price']} Gold  {affordable}")
+            console.print(f"  [[{i+1}]] {rbadge}{_esc(emoji)} {_esc(display_key):<24} {stat:<10} [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
         else:
             cdef  = CONSUMABLE_DEFS.get(item["key"], {})
             emoji = cdef.get("emoji", "🧪")
             desc  = cdef.get("desc", "")
-            print(f"  [{i+1}] {emoji} {item['name']:<24} {desc:<20} {item['price']} Gold  {affordable}")
-    print("\n  [0] Weggehen")
+            console.print(f"  [[{i+1}]] {_esc(emoji)} {_esc(item['name']):<24} [dim]{_esc(desc):<20}[/dim] [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
+    console.print("\n  [[0]] Weggehen")
     choice = input("\nWas kaufen? ").strip()
     if not choice.isdigit() or choice == "0":
-        print("\"Komm wieder, wenn du Geld hast.\"")
+        console.print("  [dim]\"Komm wieder, wenn du Geld hast.\"[/dim]")
         input("(ENTER)")
         return
     idx = int(choice) - 1
     if not (0 <= idx < len(picks)):
-        print("Ungueltige Auswahl.")
+        console.print("  [red]Ungültige Auswahl.[/red]")
         input("(ENTER)")
         return
     item = picks[idx]
     if player.inventory["Gold"] < item["price"]:
-        print("Zu wenig Gold!")
+        console.print("  [red]Zu wenig Gold![/red]")
         input("(ENTER)")
         return
     if item["type"] == "consumable":
         added = player.add_consumable(item["key"], 1)
         if not added:
-            print("Inventar voll oder Stapel bereits voll!")
+            console.print("  [red]Inventar voll oder Stapel bereits voll![/red]")
             input("(ENTER)")
             return
+        player.inventory["Gold"] -= item["price"]
+        console.print(f"\n  [green]✅ {_esc(item['name'])} erworben![/green]  Gold: [yellow]{player.inventory['Gold']}[/yellow]")
     else:
         if not player.has_inventory_space():
-            print("Inventar voll!")
+            console.print("  [red]Inventar voll![/red]")
             input("(ENTER)")
             return
-        edef  = EQUIPMENT_DEFS.get(item["key"], {})
-        slot  = edef.get("slot", "weapon")
-        equip = {"name": item["key"], "type": slot}
+        from content.loot_tables import CLASS_WEAPON_MAP
+        edef = EQUIPMENT_DEFS.get(item["key"], {})
+        slot = edef.get("slot", "weapon")
         if slot == "weapon":
-            equip["attack"] = edef["attack"]
+            variant = CLASS_WEAPON_MAP.get(item["key"], {}).get(player.player_class)
+            if variant and variant in EQUIPMENT_DEFS:
+                resolved_key, edef = variant, EQUIPMENT_DEFS[variant]
+            else:
+                resolved_key = item["key"]
         else:
-            equip["armor"] = edef["armor"]
+            resolved_key = item["key"]
+        equip = {"name": resolved_key, "type": slot}
+        equip["attack" if slot == "weapon" else "armor"] = edef.get("attack" if slot == "weapon" else "armor", 0)
         player.inventory["Equipment"].append(equip)
-    player.inventory["Gold"] -= item["price"]
-    print(f"\n✅ {item['name']} erworben! Gold: {player.inventory['Gold']}")
+        player.inventory["Gold"] -= item["price"]
+        console.print(f"\n  [green]✅ {_esc(resolved_key)} erworben![/green]  Gold: [yellow]{player.inventory['Gold']}[/yellow]")
     input("(ENTER)")
 
 
 def _wandering_merchant(player):
     clear_screen()
-    print_header("Wandernder Haendler")
-    print("Ein Haendler tritt aus dem Gebusch — sein Sortiment wirkt verlockend.")
-    print("Er bietet dir 3 zuefaellige Items zu einem Sonderpreis an!\n")
+    print_header("Wandernder Händler")
+    console.print("  Ein Händler tritt aus dem Gebüsch — sein Sortiment wirkt verlockend.")
+    console.print("  Er bietet dir 3 zufällige Items zu einem Sonderpreis an!\n")
 
-    # 3 zufaellige Consumables aus dem Shop-Sortiment mit 20% Rabatt
     from content.shop import SHOP_CATALOGUE
     available = [item for item in SHOP_CATALOGUE if item.get("type") == "consumable"
                  and item.get("min_level", 1) <= player.level]
     if not available:
-        print("Er hat leider nichts fuer dich.")
+        console.print("  [dim]Er hat leider nichts für dich.[/dim]")
         input("(ENTER)")
         return
 
     from content.loot_tables import CONSUMABLE_DEFS
     picks = random.sample(available, min(3, len(available)))
-    print(f"Gold: {player.inventory['Gold']} Muenzen\n")
-    for i, item in enumerate(picks):
-        discounted = max(1, int(item["price"] * 0.8))
-        emoji = CONSUMABLE_DEFS.get(item["key"], {}).get("emoji", "🧪")
-        print(f"  [{i+1}] {emoji} {item['name']:<22} {discounted} Gold  (statt {item['price']})")
-    print("\n  [0] Weiterziehen")
 
     while True:
+        clear_screen()
+        print_header("Wandernder Händler")
+        console.print("  Ein Händler tritt aus dem Gebüsch — sein Sortiment wirkt verlockend.")
+        console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
+        for i, item in enumerate(picks):
+            discounted = max(1, int(item["price"] * 0.8))
+            emoji      = CONSUMABLE_DEFS.get(item["key"], {}).get("emoji", "🧪")
+            cur        = player.inventory.get("Consumables", {}).get(item["key"], 0)
+            max_stack  = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
+            can_afford = player.inventory["Gold"] >= discounted
+            price_col  = "yellow" if can_afford else "red"
+            afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
+            stack_info = f"({cur}/{max_stack})"
+            console.print(f"  [[{i+1}]] {_esc(emoji)} {_esc(item['name']):<22} {stack_info:<8} [{price_col}]{discounted} Gold[/{price_col}]  [dim](statt {item['price']})[/dim]  {afford_tag}")
+        console.print("\n  [[0]] Weiterziehen")
+
         choice = input("\nWas kaufen? ").strip()
         if choice == "0" or not choice.isdigit():
             break
         idx = int(choice) - 1
         if not (0 <= idx < len(picks)):
-            print("Ungueltige Auswahl.")
+            console.print("  [red]Ungültige Auswahl.[/red]")
+            input("(ENTER)")
             continue
         item = picks[idx]
         discounted = max(1, int(item["price"] * 0.8))
         if player.inventory["Gold"] < discounted:
-            print("Zu wenig Gold!")
+            console.print("  [red]Zu wenig Gold![/red]")
             input("(ENTER)")
-            break
+            continue
         added = player.add_consumable(item["key"], 1)
         if added:
             player.inventory["Gold"] -= discounted
-            print(f"Gekauft! Gold verbleibend: {player.inventory['Gold']}")
+            console.print(f"  [green]✅ Gekauft![/green] Gold verbleibend: [yellow]{player.inventory['Gold']}[/yellow]")
         else:
-            print("Inventar voll oder Stapel bereits voll!")
+            console.print("  [red]Inventar voll oder Stapel bereits voll![/red]")
         input("(ENTER)")
-        break
 
     if getattr(player, "schwarzmarkt_available", True):
-        print("\nDer Haendler schaut sich verschwoeererisch um...")
-        print("\"Psst — ich haette da noch... ein Sonderangebot. Nichts fuer schwache Nerven.\"")
-        c2 = input("[J] Schwarzmarkt besuchen  [N] Ablehnen: ").strip().lower()
+        console.print("\n  [dim]Der Händler schaut sich verschwörerisch um...[/dim]")
+        console.print("  [dim]\"Psst — ich hätte da noch... ein Sonderangebot. Nichts für schwache Nerven.\"[/dim]")
+        c2 = input("  [J] Schwarzmarkt besuchen  [N] Ablehnen: ").strip().lower()
         if c2 == "j":
             player.schwarzmarkt_available = False
             _schwarzmarkt(player)
@@ -135,33 +164,34 @@ def _wandering_merchant(player):
 def _abandoned_shrine(player):
     clear_screen()
     print_header("Verlassener Schrein")
-    print("Du entdeckst einen alten Schrein am Wegesrand.")
-    print("Eine schwache Energie liegt in der Luft...\n")
-    print("  [B] Blutopfer — zahle 10 HP fuer +25% XP im naechsten Kampf")
-    print("  [G] Gratis beten — ungewisser Ausgang")
-    print("  [W] Weitergehen")
+    console.print("  Du entdeckst einen alten Schrein am Wegesrand.")
+    console.print("  [dim]Eine schwache Energie liegt in der Luft...[/dim]\n")
+    console.print("  [[B]] [red]Blutopfer[/red]   — zahle 10 HP für +25% XP im nächsten Kampf")
+    console.print("  [[G]] Gratis beten — ungewisser Ausgang")
+    console.print("  [[W]] Weitergehen")
 
     choice = input("\nDeine Wahl: ").lower()
     if choice == "b":
         if player.hp <= 10:
-            print("Du hast zu wenig HP fuer ein Opfer!")
+            console.print("  [red]Du hast zu wenig HP für ein Opfer![/red]")
         else:
             player.hp -= 10
+            hp_b = hp_bar(player.hp, player.max_hp)
             player.next_fight_xp_mult = 1.25
-            print(f"Du opferst 10 HP. Der Schrein leuchtet auf! (HP: {player.hp}/{player.max_hp})")
-            print("Naechster Kampf: +25% XP")
+            console.print(f"  [red]Du opferst 10 HP. Der Schrein leuchtet auf![/red]")
+            console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
+            console.print("  [yellow]Nächster Kampf: +25% XP[/yellow]")
     elif choice == "g":
         roll = random.random()
         if roll < 0.5:
-            from content.loot_tables import CONSUMABLE_DEFS
             key = random.choice(["Healing Potion", "Energie-Kristall"])
             added = player.add_consumable(key, 1)
             if added:
-                print(f"Der Schrein beschenkt dich mit: {key}!")
+                console.print(f"  [green]Der Schrein beschenkt dich mit: {_esc(key)}![/green]")
             else:
-                print("Der Schrein reagiert... aber dein Inventar ist voll.")
+                console.print("  [dim]Der Schrein reagiert... aber dein Inventar ist voll.[/dim]")
         else:
-            print("Stille. Der Schrein gibt dir nichts.")
+            console.print("  [dim]Stille. Der Schrein gibt dir nichts.[/dim]")
     input("\n(ENTER)")
 
 
@@ -170,11 +200,13 @@ def _poison_trap(player):
     print_header("Giftige Falle")
     avoid_roll = random.random()
     if avoid_roll < 0.40:
-        print("Du bemerkst eine Falle im Boden und weichst geschickt aus!")
+        console.print("  [green]Du bemerkst eine Falle im Boden und weichst geschickt aus![/green]")
     else:
         dmg = random.randint(5, 12)
         player.hp = max(1, player.hp - dmg)
-        print(f"Du trittst in eine vergiftete Falle! -{dmg} HP (HP: {player.hp}/{player.max_hp})")
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print(f"  [red]Du trittst in eine vergiftete Falle! -{dmg} HP[/red]")
+        console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
     input("\n(ENTER)")
 
 
@@ -182,79 +214,83 @@ def _treasure_chest(player):
     from content.loot_tables import roll_loot, apply_loot
     clear_screen()
     print_header("Schatz-Truhe")
-    print("Du entdeckst eine verstaubte Truhe im Dickicht!\n")
+    console.print("  Du entdeckst eine verstaubte Truhe im Dickicht!\n")
     loot_items = roll_loot(rank=2, rolls=2)
     msgs = apply_loot(player, loot_items)
     if msgs:
         for m in msgs:
-            print(m)
+            console.print(f"  {m}")
     else:
-        print("Die Truhe ist leider leer.")
+        console.print("  [dim]Die Truhe ist leider leer.[/dim]")
     input("\n(ENTER)")
 
 
 def _mysterious_stranger(player):
     clear_screen()
-    print_header("Mysterioeoser Fremder")
-    print("Ein vermummter Fremder tritt aus den Schatten.")
-    print("Er sieht dich schweigend an und bietet dir etwas an...\n")
+    print_header("Mysteriöser Fremder")
+    console.print("  Ein vermummter Fremder tritt aus den Schatten.")
+    console.print("  [dim]Er sieht dich schweigend an und bietet dir etwas an...[/dim]\n")
     heal_amt = max(1, player.max_hp // 5)
-    print(f"  [H] Heilung annehmen   — +{heal_amt} HP")
-    print(f"  [G] Gold erhalten      — +20 Gold")
-    print(f"  [A] Ablehnen")
+    console.print(f"  [[H]] [green]Heilung annehmen[/green]   — +{heal_amt} HP")
+    console.print(f"  [[G]] [yellow]Gold erhalten[/yellow]      — +20 Gold")
+    console.print(f"  [[A]] Ablehnen")
 
     choice = input("\nDeine Wahl: ").lower()
     if choice == "h":
         healed = min(heal_amt, player.max_hp - player.hp)
         player.hp = min(player.max_hp, player.hp + heal_amt)
-        print(f"Der Fremde legt seine Hand auf deine Schulter. +{healed} HP (HP: {player.hp}/{player.max_hp})")
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print(f"  [green]Der Fremde legt seine Hand auf deine Schulter. +{healed} HP[/green]")
+        console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
     elif choice == "g":
         player.inventory["Gold"] += 20
         player.stats["gold_earned"] += 20
-        print(f"Der Fremde drueckt dir einen Beutel Gold in die Hand. +20 Gold (Gold: {player.inventory['Gold']})")
+        console.print(f"  [yellow]Der Fremde drückt dir einen Beutel Gold in die Hand. +20 Gold[/yellow]")
+        console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]")
     else:
-        print("Du lehnst ab. Der Fremde nickt und verschwindet.")
+        console.print("  [dim]Du lehnst ab. Der Fremde nickt und verschwindet.[/dim]")
     input("\n(ENTER)")
 
 
 def _captured_soldier(player):
     clear_screen()
     print_header("Gefangener Soldat")
-    print("Hinter einem Gitter liegt ein verwundeter Soldat.")
-    print("Er fleht dich an, ihn zu befreien. Es kostet Zeit — und vielleicht Kraft.\n")
-    print("  [B] Befreien   — nimmst 5 Schaden, erhältst dafür Gold und Loot")
-    print("  [I] Ignorieren — du gehst weiter")
+    console.print("  Hinter einem Gitter liegt ein verwundeter Soldat.")
+    console.print("  [dim]Er fleht dich an, ihn zu befreien. Es kostet Zeit — und vielleicht Kraft.[/dim]\n")
+    console.print("  [[B]] [green]Befreien[/green]   — nimmst 5 Schaden, erhältst dafür Gold und Loot")
+    console.print("  [[I]] Ignorieren — du gehst weiter")
 
     choice = input("\nDeine Wahl: ").lower()
     if choice == "b":
         cost = 5
         player.hp = max(1, player.hp - cost)
-        print(f"\nDu kämpfst das Gitter auf. -{cost} HP  (HP: {player.hp}/{player.max_hp})")
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print(f"\n  [red]Du kämpfst das Gitter auf. -{cost} HP[/red]")
+        console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
         gold = random.randint(20, 45)
         player.inventory["Gold"] += gold
         player.stats["gold_earned"] += gold
-        print(f"Der Soldat drückt dir seinen Reservebeutel in die Hand. +{gold} Gold!")
+        console.print(f"  [yellow]Der Soldat drückt dir seinen Reservebeutel in die Hand. +{gold} Gold![/yellow]")
         if random.random() < 0.60:
             from content.loot_tables import roll_loot, apply_loot
             items = roll_loot(rank=2, rolls=1)
             msgs  = apply_loot(player, items)
             if msgs:
-                print("Er zieht noch etwas aus seinem Mantel hervor:")
+                console.print("  Er zieht noch etwas aus seinem Mantel hervor:")
                 for m in msgs:
-                    print(m)
+                    console.print(f"  {m}")
     else:
-        print("\nDu gehst weiter. Der Soldat verstummt enttäuscht.")
+        console.print("\n  [dim]Du gehst weiter. Der Soldat verstummt enttäuscht.[/dim]")
     input("\n(ENTER)")
 
 
 def _old_blacksmith(player):
     clear_screen()
     print_header("Alter Schmied")
-    print("Ein alter Schmied hockt über seinem tragbaren Amboss.")
-    print("Er schaut kurz auf dein Equipment und nickt bedächtig.\n")
-    print("\"Ich kann das verbessern. Einmal, für umsonst. Such dir was aus.\"\n")
+    console.print("  Ein alter Schmied hockt über seinem tragbaren Amboss.")
+    console.print("  Er schaut kurz auf dein Equipment und nickt bedächtig.\n")
+    console.print("  [dim]\"Ich kann das verbessern. Einmal, für umsonst. Such dir was aus.\"[/dim]\n")
 
-    from content.loot_tables import EQUIPMENT_DEFS
     _STARTER = {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}
     _MAX_UPGRADE_LVL = 3
     _SLOT_LABELS = {"weapon": "Waffe", "chest": "Rüstung", "head": "Helm", "feet": "Schuhe"}
@@ -270,8 +306,8 @@ def _old_blacksmith(player):
         upgradeable.append((slot, label, item, lvl))
 
     if not upgradeable:
-        print("Er schaut sich dein Equipment an und schüttelt den Kopf.")
-        print("\"Alles schon auf dem Höchstlevel. Gut gemacht.\"")
+        console.print("  [dim]Er schaut sich dein Equipment an und schüttelt den Kopf.[/dim]")
+        console.print("  [dim]\"Alles schon auf dem Höchstlevel. Gut gemacht.\"[/dim]")
         input("\n(ENTER)")
         return
 
@@ -280,19 +316,19 @@ def _old_blacksmith(player):
             next_bonus = f"+{(lvl + 1) * 2} ATK"
         else:
             next_bonus = f"+{lvl + 1} DEF"
-        print(f"  [{i+1}] {label:<10} {item['name']:<24} Stufe {lvl} → {lvl+1}  ({next_bonus})")
+        console.print(f"  [[{i+1}]] {_esc(label):<10} {_esc(item['name']):<24} Stufe {lvl} → {lvl+1}  [cyan]({next_bonus})[/cyan]")
 
-    print("\n  [0] Ablehnen")
+    console.print("\n  [[0]] Ablehnen")
     choice = input("\nWas aufwerten? ").strip()
 
     if choice == "0" or not choice.isdigit():
-        print("\nDu lehnst das Angebot ab. Der Schmied zuckt die Schultern.")
+        console.print("\n  [dim]Du lehnst das Angebot ab. Der Schmied zuckt die Schultern.[/dim]")
         input("(ENTER)")
         return
 
     idx = int(choice) - 1
     if not (0 <= idx < len(upgradeable)):
-        print("\nUngültige Auswahl.")
+        console.print("\n  [red]Ungültige Auswahl.[/red]")
         input("(ENTER)")
         return
 
@@ -303,50 +339,55 @@ def _old_blacksmith(player):
         bonus_desc = f"+{new_lvl * 2} ATK gesamt"
     else:
         bonus_desc = f"+{new_lvl} DEF gesamt"
-    print(f"\nDer Schmied arbeitet geschickt. Ein kurzes Hämmern — fertig.")
-    print(f"⬆️  {item['name']} auf Stufe {new_lvl} aufgewertet! ({bonus_desc})")
+    console.print(f"\n  [dim]Der Schmied arbeitet geschickt. Ein kurzes Hämmern — fertig.[/dim]")
+    console.print(f"  [bold green]⬆️  {_esc(item['name'])} auf Stufe {new_lvl} aufgewertet![/bold green] ({bonus_desc})")
     input("\n(ENTER)")
 
 
 def _bloody_altar(player):
     clear_screen()
     print_header("🩸 Blutiger Altar")
-    print("Ein dunkler Altar aus schwarzem Stein ragt aus dem Boden.")
-    print("Frisches Blut rinnt über die Runen — er verlangt ein Opfer.\n")
+    console.print("  Ein dunkler Altar aus schwarzem Stein ragt aus dem Boden.")
+    console.print("  [dim]Frisches Blut rinnt über die Runen — er verlangt ein Opfer.[/dim]\n")
     cost = max(5, int(player.max_hp * 0.15))
     if player.hp <= cost:
-        print(f"Du bist zu geschwächt für ein Opfer. (Benötigt >{cost} HP)")
+        console.print(f"  [red]Du bist zu geschwächt für ein Opfer. (Benötigt >{cost} HP)[/red]")
         input("\n(ENTER)")
         return
-    print(f"  Kosten: {cost} HP  (du hast {player.hp}/{player.max_hp} HP)\n")
-    print("  [A] +30% ATK im nächsten Kampf")
-    print("  [E] Energie vollständig auffüllen")
-    print("  [X] +50% XP im nächsten Kampf")
-    print("  [N] Ablehnen")
+    hp_b = hp_bar(player.hp, player.max_hp)
+    console.print(f"  Kosten: [red]{cost} HP[/red]   Deine HP: {hp_b} {player.hp}/{player.max_hp}\n")
+    console.print("  [[A]] [cyan]+30% ATK im nächsten Kampf[/cyan]")
+    console.print("  [[E]] [blue]Energie vollständig auffüllen[/blue]")
+    console.print("  [[X]] [yellow]+50% XP im nächsten Kampf[/yellow]")
+    console.print("  [[N]] Ablehnen")
     choice = input("\nDeine Wahl: ").lower()
     if choice == "n" or choice not in ("a", "e", "x"):
-        print("\nDu wendest dich vom Altar ab.")
+        console.print("\n  [dim]Du wendest dich vom Altar ab.[/dim]")
         input("(ENTER)")
         return
     player.hp -= cost
-    print(f"\nDu hast {cost} HP geopfert. Der Altar leuchtet blutrot auf. (HP: {player.hp}/{player.max_hp})")
+    hp_b2 = hp_bar(player.hp, player.max_hp)
+    console.print(f"\n  [red]Du hast {cost} HP geopfert. Der Altar leuchtet blutrot auf.[/red]")
+    console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}")
     if choice == "a":
         player.next_fight_atk_mult = getattr(player, "next_fight_atk_mult", 1.0) * 1.30
-        print("Ein dunkler Schauer stärkt deinen Arm. +30% ATK im nächsten Kampf!")
+        console.print("  [cyan]Ein dunkler Schauer stärkt deinen Arm. +30% ATK im nächsten Kampf![/cyan]")
     elif choice == "e":
         player.energy = player.max_energy
-        print(f"Schwarze Energie strömt in dich. Energie vollständig aufgefüllt! ({player.energy}/{player.max_energy})")
+        en_b = energy_bar(player.energy, player.max_energy)
+        console.print(f"  [blue]Schwarze Energie strömt in dich. Energie vollständig aufgefüllt![/blue]")
+        console.print(f"  ⚡ {en_b} {player.energy}/{player.max_energy}")
     elif choice == "x":
         player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.5)
-        print("Der Altar zeigt dir Visionen vergangener Kämpfe. +50% XP im nächsten Kampf!")
+        console.print("  [yellow]Der Altar zeigt dir Visionen vergangener Kämpfe. +50% XP im nächsten Kampf![/yellow]")
     input("\n(ENTER)")
 
 
 def _whispering_ghost(player):
     clear_screen()
     print_header("👻 Flüsternder Geist")
-    print("Eine schimmernde Gestalt materialisiert sich vor dir.")
-    print("Der Geist des Dungeons flüstert... er kennt die Tiefen dieser Hallen.\n")
+    console.print("  Eine schimmernde Gestalt materialisiert sich vor dir.")
+    console.print("  [dim]Der Geist des Dungeons flüstert... er kennt die Tiefen dieser Hallen.[/dim]\n")
     roll = random.random()
     if roll < 0.50:
         bonus = 0.20
@@ -354,17 +395,20 @@ def _whispering_ghost(player):
         heal = max(3, int(player.max_hp * 0.10))
         healed = min(heal, player.max_hp - player.hp)
         player.hp = min(player.max_hp, player.hp + heal)
-        print(f"Der Geist legt seine eiskalten Hände auf deine Schultern.")
-        print(f"Eine seltsame Ruhe überkommt dich. +{healed} HP, +{int(bonus*100)}% XP im nächsten Kampf.")
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print("  [green]Der Geist legt seine eiskalten Hände auf deine Schultern.[/green]")
+        console.print(f"  [green]Eine seltsame Ruhe überkommt dich. +{healed} HP, +{int(bonus*100)}% XP im nächsten Kampf.[/green]")
+        console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
     elif roll < 0.80:
         player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.30)
-        print("Der Geist flüstert dir Taktiken und Schwachstellen ins Ohr.")
-        print("+30% XP im nächsten Kampf!")
+        console.print("  [yellow]Der Geist flüstert dir Taktiken und Schwachstellen ins Ohr.")
+        console.print("  +30% XP im nächsten Kampf![/yellow]")
     else:
         dmg = random.randint(5, 12)
         player.hp = max(1, player.hp - dmg)
-        print(f"Der Geist ist feindseelig! Er reißt Lebensenergie aus dir heraus.")
-        print(f"-{dmg} HP  (HP: {player.hp}/{player.max_hp})")
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print("  [red]Der Geist ist feindselig! Er reißt Lebensenergie aus dir heraus.[/red]")
+        console.print(f"  [red]-{dmg} HP[/red]   HP {hp_b} {player.hp}/{player.max_hp}")
     input("\n(ENTER)")
 
 
@@ -372,47 +416,45 @@ def _magic_chest(player):
     from content.loot_tables import roll_loot, apply_loot
     clear_screen()
     print_header("🔮 Magische Schatztruhe")
-    print("Eine leuchtende Truhe schwebt leicht über dem Boden.")
-    print("Runenschrift zieht sich über das Holz — gut oder böse, schwer zu sagen.\n")
+    console.print("  Eine leuchtende Truhe schwebt leicht über dem Boden.")
+    console.print("  [dim]Runenschrift zieht sich über das Holz — gut oder böse, schwer zu sagen.[/dim]\n")
     if random.random() < 0.30:
-        # Verfluchte Truhe
         dmg = random.randint(10, 20)
         player.hp = max(1, player.hp - dmg)
-        print(f"Die Truhe explodiert beim Öffnen! Dunkle Magie schlägt dich zurück.")
-        print(f"-{dmg} HP  (HP: {player.hp}/{player.max_hp})")
-        print()
-        # Trotzdem Loot — weniger, aber vorhanden
+        hp_b = hp_bar(player.hp, player.max_hp)
+        console.print("  [red]Die Truhe explodiert beim Öffnen! Dunkle Magie schlägt dich zurück.[/red]")
+        console.print(f"  [red]-{dmg} HP[/red]   HP {hp_b} {player.hp}/{player.max_hp}\n")
         items = roll_loot(rank=2, rolls=1)
         msgs  = apply_loot(player, items)
         if msgs:
-            print("Aus den Trümmern rettest du noch etwas:")
+            console.print("  Aus den Trümmern rettest du noch etwas:")
             for m in msgs:
-                print(m)
+                console.print(f"  {m}")
         else:
-            print("Und die Truhe war obendrein leer. Einfach kein Glück.")
+            console.print("  [dim]Und die Truhe war obendrein leer. Einfach kein Glück.[/dim]")
     else:
-        # Normaler Inhalt — garantiert gut
         items = roll_loot(rank=3, rolls=2)
         msgs  = apply_loot(player, items)
-        print("Die Truhe öffnet sich mit einem sanften Leuchten. Heute hast du Glück!")
+        console.print("  [green]Die Truhe öffnet sich mit einem sanften Leuchten. Heute hast du Glück![/green]")
         if msgs:
             for m in msgs:
-                print(m)
+                console.print(f"  {m}")
         else:
             gold = random.randint(25, 50)
             player.inventory["Gold"] += gold
             player.stats["gold_earned"] += gold
-            print(f"+{gold} Gold aus dem Inneren der Truhe.")
+            console.print(f"  [yellow]+{gold} Gold aus dem Inneren der Truhe.[/yellow]")
     input("\n(ENTER)")
 
 
 def _dungeon_arms_dealer(player):
     from content.loot_tables import EQUIPMENT_DEFS, CONSUMABLE_DEFS, RARITY_LABEL
-    from core.player import MAX_INVENTORY_SLOTS
+    from content.shop import _RARITY_COLORS
+    from config import MAX_INVENTORY_SLOTS
     clear_screen()
-    print_header("🏪 Haendler im Dungeon")
-    print("Ein schwer bewaffneter Haendler nickt dir zu.")
-    print("\"Keine Zeit fuer Smalltalk. Kaufst du oder nicht?\"\n")
+    print_header("🏪 Händler im Dungeon")
+    console.print("  Ein schwer bewaffneter Händler nickt dir zu.")
+    console.print("  [dim]\"Keine Zeit für Smalltalk. Kaufst du oder nicht?\"[/dim]\n")
 
     equip_pool = [k for k, v in EQUIPMENT_DEFS.items()
                   if v.get("rarity") in ("common", "uncommon", "rare")
@@ -422,7 +464,6 @@ def _dungeon_arms_dealer(player):
     picks = []
     for key in random.sample(equip_pool, min(2, len(equip_pool))):
         edef  = EQUIPMENT_DEFS[key]
-        # sell * 2 = ungefährer Kaufpreis, +30% Dungeon-Aufschlag
         price = max(15, int(edef.get("sell", 10) * 2 * 1.3))
         picks.append({"key": key, "type": "equipment", "price": price, "edef": edef})
     for key in random.sample(cons_pool, min(2, len(cons_pool))):
@@ -430,22 +471,25 @@ def _dungeon_arms_dealer(player):
         price = max(10, int(cdef.get("sell", 8) * 2 * 1.3))
         picks.append({"key": key, "type": "consumable", "price": price, "cdef": cdef})
 
-    print(f"Gold: {player.inventory['Gold']} Muenzen\n")
+    console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
     for i, item in enumerate(picks):
-        affordable = "✅" if player.inventory["Gold"] >= item["price"] else "❌"
+        can_afford = player.inventory["Gold"] >= item["price"]
+        afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
+        price_col  = "yellow" if can_afford else "red"
         if item["type"] == "equipment":
             edef  = item["edef"]
             emoji = edef.get("emoji", "⚔️")
             _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
+            rc    = _RARITY_COLORS.get(edef.get("rarity", "common"), "white")
             slot  = edef.get("slot", "weapon")
             stat  = f"ATK +{edef['attack']}" if slot == "weapon" else f"DEF +{edef.get('armor',0)}"
-            print(f"  [{i+1}] {rbadge}{emoji} {item['key']:<22} {stat:<10} {item['price']} Gold  {affordable}")
+            console.print(f"  [[{i+1}]] {rbadge}[{rc}]{_esc(emoji)} {_esc(item['key']):<22}[/{rc}] {stat:<10} [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
         else:
             cdef  = item["cdef"]
             emoji = cdef.get("emoji", "🧪")
             desc  = cdef.get("desc", "")
-            print(f"  [{i+1}] {emoji} {item['key']:<22} {desc:<18} {item['price']} Gold  {affordable}")
-    print("\n  [0] Weggehen")
+            console.print(f"  [[{i+1}]] {_esc(emoji)} {_esc(item['key']):<22} [dim]{_esc(desc):<18}[/dim] [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
+    console.print("\n  [[0]] Weggehen")
 
     while True:
         choice = input("\nWas kaufen? (0 = weggehen) ").strip()
@@ -453,19 +497,19 @@ def _dungeon_arms_dealer(player):
             break
         idx = int(choice) - 1
         if not (0 <= idx < len(picks)):
-            print("Ungueltige Auswahl.")
+            console.print("  [red]Ungültige Auswahl.[/red]")
             continue
         item = picks[idx]
         if player.inventory["Gold"] < item["price"]:
-            print("Zu wenig Gold!")
+            console.print("  [red]Zu wenig Gold![/red]")
             continue
         if item["type"] == "consumable":
             if not player.add_consumable(item["key"], 1):
-                print("Inventar voll!")
+                console.print("  [red]Inventar voll![/red]")
                 continue
         else:
             if not player.has_inventory_space():
-                print("Inventar voll!")
+                console.print("  [red]Inventar voll![/red]")
                 continue
             edef = item["edef"]
             slot = edef.get("slot", "weapon")
@@ -476,7 +520,7 @@ def _dungeon_arms_dealer(player):
                 entry["armor"] = edef["armor"]
             player.inventory["Equipment"].append(entry)
         player.inventory["Gold"] -= item["price"]
-        print(f"Gekauft! Gold: {player.inventory['Gold']}")
+        console.print(f"  [green]Gekauft![/green] Gold: [yellow]{player.inventory['Gold']}[/yellow]")
     input("\n(ENTER)")
 
 
