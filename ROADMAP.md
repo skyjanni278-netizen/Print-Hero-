@@ -1,5 +1,31 @@
 # 🗺️ Print-Hero — Entwicklungs-Roadmap
 
+---
+
+## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
+
+**Letzte abgeschlossene Version:** v2.2 — Bugfixes & Set-Features  
+**Nächste Version:** v2.3 — QoL  
+**Danach:** v3.0 — Roguelite Foundation
+
+### ✅ Was ist fertig
+- v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
+- ROADMAP.md angelegt mit vollständigem Plan v2.3 → v3.3
+- Designentscheidungen für v3.0 geklärt (nur Roguelite, fester Segnung-Pool, kein Mythic-Limit)
+
+### 🔧 Nächster Schritt: v2.3 — QoL
+Vier unabhängige Verbesserungen, keine Abhängigkeiten untereinander:
+
+1. **Autosave** — `systems/dungeon.py`: `save_game(player)` nach `return "completed"` einfügen
+2. **Upgrade per Item** — `core/player.py` + `ui/pause.py`: Item-Dict bekommt `"upgrade": N`-Feld
+3. **Kompakter Kampf-Log** — `core/combat.py`: Status-Ticks zusammenfassen, ENTER reduzieren
+4. **Death-Screen** — `main.py`: `_handle_defeat()` zu vollständiger Run-Zusammenfassung ausbauen
+
+### 📋 Offene Entscheidungen
+*Keine — alle Designfragen für v3.0 sind geklärt.*
+
+---
+
 ## Versionierungs-Prinzip
 
 ```
