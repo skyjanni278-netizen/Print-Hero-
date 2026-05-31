@@ -13,7 +13,7 @@
 - ROADMAP.md angelegt mit vollständigem Plan v2.3 → v3.3
 - Designentscheidungen für v3.0 geklärt (nur Roguelite, fester Segnung-Pool, kein Mythic-Limit)
 
-### 🔧 Nächster Schritt: v2.3 — QoL
+### 🔧 Nächster Schritt: Refactoring (vor v2.3)
 Vier unabhängige Verbesserungen, keine Abhängigkeiten untereinander:
 
 1. **Autosave** — `systems/dungeon.py`: `save_game(player)` nach `return "completed"` einfügen
@@ -23,6 +23,56 @@ Vier unabhängige Verbesserungen, keine Abhängigkeiten untereinander:
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
+
+---
+
+## Refactoring *(vor v2.3 — kein eigenes Release)*
+
+Zwei Refactors die vor dem ersten Update sinnvoll sind.
+Kein Release, nur Commits. Ändern keine Spiellogik.
+
+### Refactor 1 — `core/abilities.py` (God Class aufbrechen)
+
+**Problem:** `Character` in `core/player.py` ist eine God Class mit 700 Zeilen.
+Die 12 Klassen-Fähigkeiten (Zeilen 410–530) sind Kampflogik, kein Charakterzustand.
+In v3.0 müssen Segnungen in diese Abilities einhaken — das ist sauberer in einer eigenen Datei.
+
+**Lösung:** Abilities als Standalone-Funktionen nach `core/abilities.py` auslagern.
+
+```
+core/player.py      700 → ~530 Zeilen  (Abilities entfernt)
+core/abilities.py   NEU ~180 Zeilen   (alle 12 Ability-Funktionen)
+```
+
+Aufruf ändert sich von `player.brutaler_hieb(target)` zu `brutaler_hieb(player, target)`.
+Einzige betroffene Aufrufstelle: `core/combat.py` (Ability-Dispatcher, ~15 Zeilen).
+
+**Geänderte Dateien:** `core/player.py`, `core/combat.py`, `core/abilities.py` (neu)
+
+---
+
+### Refactor 2 — `content/loot_tables.py` splitten (Fat Module)
+
+**Problem:** 668 Zeilen, drei logisch getrennte Datengruppen in einer Datei.
+Wächst mit v3.1 (Mythic-Tier, neue Sets) auf ~900+ Zeilen.
+
+**Lösung:** Aufteilen in drei fokussierte Module:
+
+```
+content/items.py   EQUIPMENT_DEFS, CONSUMABLE_DEFS, JUNK_DEFS,
+                   CLASS_WEAPON_MAP, WEAPON_VARIANT_TO_BASE,
+                   RARITY_LABEL, CRAFT_RECIPES
+
+content/sets.py    SET_DEFS, get_active_sets(), get_set_specials()
+
+content/loot.py    LOOT_POOL, ZONE_LOOT_POOL, BOSS_LOOT_POOL,
+                   RANK_LOOT_WEIGHTS, roll_*(), apply_loot()
+```
+
+Imports in allen anderen Dateien werden angepasst (ca. 8 Dateien betroffen).
+`from content.loot_tables import X` → `from content.items import X` etc.
+
+**Geänderte Dateien:** alle Dateien die `loot_tables` importieren
 
 ---
 
