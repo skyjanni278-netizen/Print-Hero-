@@ -10,10 +10,12 @@
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
+- Refactoring: core/abilities.py (God Class aufgebrochen), loot_tables.py aufgeteilt
+- v2.3: Autosave, Upgrade-per-Item, kompakterer Kampf-Log, erweiterter Death-Screen
 - ROADMAP.md angelegt mit vollständigem Plan v2.3 → v3.3
 - Designentscheidungen für v3.0 geklärt (nur Roguelite, fester Segnung-Pool, kein Mythic-Limit)
 
-### 🔧 Nächster Schritt: Refactoring (vor v2.3)
+### 🔧 Nächster Schritt: v3.0 — Roguelite Foundation
 Vier unabhängige Verbesserungen, keine Abhängigkeiten untereinander:
 
 1. **Autosave** — `systems/dungeon.py`: `save_game(player)` nach `return "completed"` einfügen
@@ -504,7 +506,7 @@ systems/meta_save.py      aktive Siegel für laufenden Run speichern
 | Version | Inhalt | Status |
 |---------|--------|--------|
 | v2.2 | Bugfixes (8 Bugs behoben) | ✅ released |
-| **v2.3** | QoL: Autosave, Upgrade/Item, Kampf-Log | 🔲 geplant |
+| **v2.3** | QoL: Autosave, Upgrade/Item, Kampf-Log, Death-Screen | ✅ released |
 | **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | 🔲 geplant |
 | **v3.1** | Equipment-Rebalancing + Mythic-Tier | 🔲 geplant |
 | **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | 🔲 geplant |

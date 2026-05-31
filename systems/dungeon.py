@@ -550,5 +550,9 @@ def run_dungeon(player) -> str:
 
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
         console.print(f"  {m}")
+
+    from core.save import save_game
+    save_game(player)
+
     input("\n(ENTER)")
     return "completed"

@@ -78,13 +78,42 @@ def _slot_menu():
 
 
 def _handle_defeat(player):
+    from content.items import EQUIPMENT_DEFS, RARITY_LABEL
+    from systems.zones import ZONE_DEFS
+
     player.stats["deaths"] += 1
     clear_screen()
     print_header("💀 Game Over")
-    console.print(f"\n  [bold red]{_esc(player.name)} wurde besiegt.[/bold red]\n")
-    console.print(f"  Kämpfe gewonnen : [cyan]{player.stats.get('fights', 0)}[/cyan]")
-    console.print(f"  Gegner besiegt  : [cyan]{player.stats.get('kills', 0)}[/cyan]")
-    console.print(f"  Dungeons fertig : [cyan]{player.stats.get('dungeons_completed', 0)}[/cyan]")
+    console.print(f"\n  [bold red]{_esc(player.name)} wurde besiegt.[/bold red]")
+
+    zone_id   = getattr(player, "current_zone", "wald")
+    zone_name = ZONE_DEFS.get(zone_id, {}).get("name", zone_id)
+    zone_emoji= ZONE_DEFS.get(zone_id, {}).get("emoji", "")
+    console.print(f"  Gefallen in: {_esc(zone_emoji)} {_esc(zone_name)}  |  Level {player.level}\n")
+
+    console.print("─" * 46)
+    s = player.stats
+    console.print(f"  ⚔️  Kämpfe gewonnen      : [cyan]{s.get('fights', 0)}[/cyan]")
+    console.print(f"  💀  Gegner besiegt       : [cyan]{s.get('kills', 0)}[/cyan]")
+    console.print(f"  🗡️  Schaden ausgeteilt   : [cyan]{s.get('damage_dealt', 0)}[/cyan]")
+    console.print(f"  🛡️  Schaden erhalten     : [cyan]{s.get('damage_taken', 0)}[/cyan]")
+    console.print(f"  🏰  Dungeons fertig      : [cyan]{s.get('dungeons_completed', 0)}[/cyan]")
+    console.print(f"  💰  Gold verdient        : [yellow]{s.get('gold_earned', 0)}[/yellow]")
+    console.print(f"  🧪  Tränke benutzt       : [cyan]{s.get('potions_used', 0)}[/cyan]")
+
+    all_equip = list(player.inventory.get("Equipment", [])) + list(player.equipment.values())
+    best = max(
+        (e for e in all_equip if e["name"] not in {"Fäuste", "Lumpen", "Kein Helm", "Keine Schuhe"}),
+        key=lambda e: EQUIPMENT_DEFS.get(e["name"], {}).get("attack", 0) + EQUIPMENT_DEFS.get(e["name"], {}).get("armor", 0),
+        default=None,
+    )
+    if best:
+        edef = EQUIPMENT_DEFS.get(best["name"], {})
+        _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
+        console.print(f"\n  Bestes Item: {rbadge} {_esc(edef.get('emoji','⚔️'))} {_esc(best['name'])}")
+
+    console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/20[/cyan]")
+    console.print("─" * 46)
     input("\n(ENTER)")
 
 

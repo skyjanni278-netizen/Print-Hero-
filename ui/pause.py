@@ -189,6 +189,7 @@ def upgrade_menu(player):
             player.equipment_upgrades[slot] += 1
             new_lvl = player.equipment_upgrades[slot]
             item    = player.equipment[slot]
+            item["upgrade"] = new_lvl
             if slot == "weapon":
                 bonus_desc = f"+{new_lvl * 2} ATK gesamt"
             else:
@@ -300,7 +301,9 @@ def inventory_menu(player):
             for item in inv_for_slot:
                 n = len(indexed_items)
                 indexed_items.append(item)
-                console.print(f"  [[{n:>2}]] {_equip_line(item)}")
+                up     = item.get("upgrade", 0)
+                up_tag = f" [cyan](↑{up})[/cyan]" if up > 0 else ""
+                console.print(f"  [[{n:>2}]] {_equip_line(item)}{up_tag}")
 
         if not indexed_items:
             console.print("  [dim](keine Ausrüstung im Inventar)[/dim]")
@@ -319,10 +322,13 @@ def inventory_menu(player):
                 slot     = new_item["type"]
                 old_item = player.equipment[slot]
                 if old_item["name"] not in _STARTER:
+                    old_item["upgrade"] = player.equipment_upgrades.get(slot, 0)
                     equip_items.append(old_item)
                 player.equipment[slot] = new_item
-                player.equipment_upgrades[slot] = 0
-                console.print(f"\n  [green]✅ Du trägst nun {_esc(new_item['name'])}![/green]")
+                new_lvl = new_item.get("upgrade", 0)
+                player.equipment_upgrades[slot] = new_lvl
+                suffix = f" [cyan](↑{new_lvl})[/cyan]" if new_lvl > 0 else ""
+                console.print(f"\n  [green]✅ Du trägst nun {_esc(new_item['name'])}!{suffix}[/green]")
                 input("(ENTER)")
 
 

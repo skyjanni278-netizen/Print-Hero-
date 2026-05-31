@@ -163,7 +163,7 @@ class Character:
 
     def get_total_attack(self):
         skill_bonus   = 2 if "Scharfe Klingen" in self.skills else 0
-        upgrade_bonus = self.equipment_upgrades.get("weapon", 0) * 2
+        upgrade_bonus = self.equipment["weapon"].get("upgrade", self.equipment_upgrades.get("weapon", 0)) * 2
         set_bonus     = self.get_set_bonus()["atk"]
         return self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus + upgrade_bonus + set_bonus
 
@@ -183,7 +183,11 @@ class Character:
 
     def get_total_armor(self):
         skill_bonus = 3 if "Eisenhaut" in self.skills else 0
-        upgrade_def = self.equipment_upgrades.get("chest", 0) + self.equipment_upgrades.get("head", 0) + self.equipment_upgrades.get("feet", 0)
+        upgrade_def = (
+            self.equipment["chest"].get("upgrade", self.equipment_upgrades.get("chest", 0))
+            + self.equipment["head"].get("upgrade", self.equipment_upgrades.get("head", 0))
+            + self.equipment["feet"].get("upgrade", self.equipment_upgrades.get("feet", 0))
+        )
         set_bonus   = self.get_set_bonus()["def"]
         return max(0, self.armor
                    + self.equipment["chest"]["armor"]

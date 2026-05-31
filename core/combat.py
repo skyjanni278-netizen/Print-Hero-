@@ -430,23 +430,14 @@ def combat(player, enemy_list):
         # ── Status-Ticks (Gegner) ─────────────────────────────
         for e in enemy_list:
             if e.is_alive():
-                bleed_msg = e.check_bleed()
-                if bleed_msg:
-                    console.print(f"  {bleed_msg}")
-                poison_msg = e.check_poison()
-                if poison_msg:
-                    console.print(f"  {poison_msg}")
-                burn_msg = e.check_burn()
-                if burn_msg:
-                    console.print(f"  {burn_msg}")
+                tick_msgs = [m for m in (e.check_bleed(), e.check_poison(), e.check_burn()) if m]
+                if tick_msgs:
+                    console.print(f"  {'  |  '.join(tick_msgs)}")
 
         # ── Status-Ticks (Spieler) ────────────────────────────
-        player_bleed  = player.check_bleed()
-        if player_bleed:  console.print(f"  {player_bleed}")
-        player_poison = player.check_poison()
-        if player_poison: console.print(f"  {player_poison}")
-        player_burn   = player.check_burn()
-        if player_burn:   console.print(f"  {player_burn}")
+        player_ticks = [m for m in (player.check_bleed(), player.check_poison(), player.check_burn()) if m]
+        if player_ticks:
+            console.print(f"  {'  |  '.join(player_ticks)}")
 
         # ── Gegner-Angriffe ───────────────────────────────────
         console.print()

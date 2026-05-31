@@ -335,6 +335,7 @@ def _old_blacksmith(player):
     slot, label, item, lvl = upgradeable[idx]
     player.equipment_upgrades[slot] = lvl + 1
     new_lvl = player.equipment_upgrades[slot]
+    player.equipment[slot]["upgrade"] = new_lvl
     if slot == "weapon":
         bonus_desc = f"+{new_lvl * 2} ATK gesamt"
     else:
