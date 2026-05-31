@@ -411,18 +411,15 @@ systems/meta_save.py      aktive Siegel für laufenden Run speichern
 
 ---
 
-## Offene Designfragen *(vor v3.0 klären)*
+## Designentscheidungen *(geklärt)*
 
-1. **Klassisch-Modus behalten?**
-   Sollen die alten 3 Speicherslots als optionaler Modus neben dem Roguelite existieren,
-   oder ist Roguelite das einzige Spielprinzip?
+1. **Nur Roguelite** — kein Klassisch-Modus. Altes 3-Slot-System fliegt komplett raus.
 
-2. **Segnungen-Pool wachsen lassen?**
-   Rein zufällig aus dem festen Pool, oder wächst der Pool mit freigeschalteten Runen?
-   (Letzteres: näher an Hades, stärkeres Progressions-Gefühl)
+2. **Fester Segnungen-Pool** — alle ~30 Segnungen von Beginn an verfügbar.
+   Zufälligkeit und Synergien sorgen für Abwechslung, kein Freischalt-Aufwand nötig.
 
-3. **Mythic-Items: max. 1 pro Run?**
-   Damit das Item besonders bleibt und nicht gestapelt wird.
+3. **Mythic-Items ohne Limit** — Drop-Chance ist so gering dass kein Hard-Cap nötig ist.
+   Weniger Sonderfalllogik im Code.
 
 ---
 
