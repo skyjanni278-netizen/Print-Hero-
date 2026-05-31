@@ -428,6 +428,9 @@ def combat(player, enemy_list):
                 bleed_msg = e.check_bleed()
                 if bleed_msg:
                     console.print(f"  {bleed_msg}")
+                poison_msg = e.check_poison()
+                if poison_msg:
+                    console.print(f"  {poison_msg}")
                 burn_msg = e.check_burn()
                 if burn_msg:
                     console.print(f"  {burn_msg}")

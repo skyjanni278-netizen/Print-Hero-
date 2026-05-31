@@ -317,7 +317,7 @@ SET_DEFS = {
         "bonuses": {
             2: {"desc": "+3 DEF",                                        "atk": 0, "def": 3},
             3: {"desc": "+5 DEF +4 ATK",                                 "atk": 4, "def": 5},
-            4: {"desc": "+8 DEF +5 ATK +15% Krit — Schatten lädt alle 3R", "atk": 5, "def": 8, "special": "rogue_shadow_regen"},
+            4: {"desc": "+8 DEF +5 ATK — Aus dem Schatten: +15% Krit-Chance", "atk": 5, "def": 8, "special": "rogue_shadow_regen"},
         },
     },
     "Arkane Roben": {
@@ -631,7 +631,7 @@ def apply_loot(player, loot_list: list) -> list:
 
         elif item["type"] == "equipment":
             if not player.has_inventory_space():
-                messages.append(f"  ⚠️  Inventar voll! {item['name']} verloren.")
+                messages.append(f"  ⚠️  Inventar voll! {item.get('name', item.get('key', '?'))} verloren.")
                 continue
             item_key  = item["key"]
             raw_edef  = EQUIPMENT_DEFS.get(item_key, {})

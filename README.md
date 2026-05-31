@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch 5 Zonen, besiege Zonen-Bosse und rette das Reich.
 
-**Aktuelle Version: v2.1** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v2.2** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -200,8 +200,8 @@ Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 | Set | Klasse | 4-teiliger Bonus | Spezial |
 |-----|--------|-----------------|---------|
 | Eisenfestung | ⚔️ Krieger | +10 DEF, +5 ATK | Schildwall blockt 2 Angriffe |
-| Schattenhülle | 🗡️ Schurke | +8 DEF, +5 ATK, +15 % Krit | "Aus dem Schatten" lädt alle 3 Runden neu |
-| Arkane Roben | 🔮 Magier | +8 DEF, +4 ATK, +20 Energie | Arkane Entladung 2× pro Kampf |
+| Schattenhülle | 🗡️ Schurke | +8 DEF, +5 ATK, +15 % Krit | +15 % Krit-Chance bei "Aus dem Schatten" |
+| Arkane Roben | 🔮 Magier | +8 DEF, +4 ATK, +20 Energie | Arkane Entladung trifft 2× (doppelter Schaden) |
 
 ---
 
@@ -262,6 +262,17 @@ Beim Start: Auswahl mit Klasse, Level, Schwierigkeit und NG+-Runde pro Slot.
 ---
 
 ## 📋 Changelog
+
+### v2.2
+- Bugfix: Gegner nahmen keinen Giftschaden (check_poison fehlte im Status-Tick)
+- Bugfix: KeyError bei vollem Inventar während Equipment-Drop behoben
+- Bugfix: Schurke passive_crit_bonus wird bei NG+ korrekt zurückgesetzt
+- Bugfix: Level-Up-Meldung zeigte falsche Krit-Basis (15% statt 10%) für Schurken
+- Bugfix: Energie-Tränke respektieren jetzt den Set-Bonus-Cap (Arkane Roben)
+- Bugfix: Dungeon-Händler zeigt jetzt klassenspezifische Waffennamen
+- Bugfix: Verlassener Schrein überschreibt keinen höheren XP-Buff mehr
+- Feature: Arkane Roben 4-Set-Effekt (mage_double_arcane) implementiert — Arkane Entladung trifft 2× 
+- Fix: Schattenhülle Set-Beschreibung korrigiert (tatsächlicher Effekt: +15% Krit)
 
 ### v2.1
 - Shop und Schwarzmarkt zeigen klassenspezifische Waffennamen (Rogue sieht Spitzdolch, Magier sieht Novizenstab)

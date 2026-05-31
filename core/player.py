@@ -240,7 +240,7 @@ class Character:
                 msgs.append(f"[cyan]🔮 Magier-Passiv: +5 max. Energie durch Magiestudium! (Max. Energie: {self.max_energy})[/cyan]")
             elif self.player_class == "rogue" and self.level % 3 == 0:
                 self.passive_crit_bonus += 0.05
-                pct = int((0.15 + self.passive_crit_bonus) * 100)
+                pct = int((0.10 + self.passive_crit_bonus) * 100)
                 msgs.append(f"[cyan]🗡️  Schurken-Passiv: +5% Krit-Chance durch Präzision! (Krit: {pct}%)[/cyan]")
         return msgs
 
@@ -380,9 +380,10 @@ class Character:
             self.hp = min(self.max_hp, self.hp + value)
             return f"{emoji} {self.name} benutzt {key} und heilt {healed} HP! (HP: {self.hp}/{self.max_hp})"
         elif effect == "energy":
-            gained = min(value, self.max_energy - self.energy)
-            self.energy = min(self.max_energy, self.energy + value)
-            return f"{emoji} {self.name} benutzt {key} und erhält {gained} Energie! (Energie: {self.energy}/{self.max_energy})"
+            eff_max = self.get_effective_max_energy()
+            gained = min(value, eff_max - self.energy)
+            self.energy = min(eff_max, self.energy + value)
+            return f"{emoji} {self.name} benutzt {key} und erhält {gained} Energie! (Energie: {self.energy}/{eff_max})"
         elif effect == "attack":
             self.combat_modifiers["attack"] = self.combat_modifiers.get("attack", 0) + value
             return f"{emoji} {self.name} benutzt {key}! ATK +{value} für diesen Kampf. (ATK: {self.get_total_attack()})"
@@ -494,12 +495,15 @@ class Character:
         if self.energy < cost:
             return f"Nicht genug Energie! ({self.energy}/{cost})", 0
         self.energy -= cost
+        double = "mage_double_arcane" in self.get_set_specials()
+        hits = 2 if double else 1
         dmg = random.randint(6 + self.level * 2, 12 + self.level * 3)
         living = [e for e in enemy_list if e.is_alive()]
         for e in living:
-            e.hp = max(0, e.hp - dmg)
+            e.hp = max(0, e.hp - dmg * hits)
         names = ", ".join(e.name for e in living)
-        return f"✨ Arkane Entladung! {dmg} Schaden (ignoriert DEF) an: {names}", dmg * len(living)
+        suffix = " (Arkane Roben: 2× Treffer!)" if double else ""
+        return f"✨ Arkane Entladung! {dmg * hits} Schaden (ignoriert DEF) an: {names}{suffix}", dmg * hits * len(living)
 
     def froststrahl(self, target) -> tuple:
         cost = max(5, 18 - self._energy_cost_reduction())
@@ -595,6 +599,8 @@ class Character:
         }
         self.stats["zones_cleared"]       = []
         self.stats["dungeons_completed"]  = 0
+
+        self.passive_crit_bonus = 0.0
 
         # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
         from content.classes import apply_class

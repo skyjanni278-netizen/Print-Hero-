@@ -177,7 +177,7 @@ def _abandoned_shrine(player):
         else:
             player.hp -= 10
             hp_b = hp_bar(player.hp, player.max_hp)
-            player.next_fight_xp_mult = 1.25
+            player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.25)
             console.print(f"  [red]Du opferst 10 HP. Der Schrein leuchtet auf![/red]")
             console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
             console.print("  [yellow]Nächster Kampf: +25% XP[/yellow]")
@@ -477,13 +477,20 @@ def _dungeon_arms_dealer(player):
         afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
         price_col  = "yellow" if can_afford else "red"
         if item["type"] == "equipment":
+            from content.loot_tables import CLASS_WEAPON_MAP
             edef  = item["edef"]
+            slot  = edef.get("slot", "weapon")
+            display_key = item["key"]
+            if slot == "weapon":
+                variant = CLASS_WEAPON_MAP.get(item["key"], {}).get(player.player_class)
+                if variant and variant in EQUIPMENT_DEFS:
+                    display_key = variant
+                    edef = EQUIPMENT_DEFS[variant]
             emoji = edef.get("emoji", "⚔️")
             _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
             rc    = _RARITY_COLORS.get(edef.get("rarity", "common"), "white")
-            slot  = edef.get("slot", "weapon")
             stat  = f"ATK +{edef['attack']}" if slot == "weapon" else f"DEF +{edef.get('armor',0)}"
-            console.print(f"  [[{i+1}]] {rbadge}[{rc}]{_esc(emoji)} {_esc(item['key']):<22}[/{rc}] {stat:<10} [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
+            console.print(f"  [[{i+1}]] {rbadge}[{rc}]{_esc(emoji)} {_esc(display_key):<22}[/{rc}] {stat:<10} [{price_col}]{item['price']} Gold[/{price_col}]  {afford_tag}")
         else:
             cdef  = item["cdef"]
             emoji = cdef.get("emoji", "🧪")
@@ -511,9 +518,16 @@ def _dungeon_arms_dealer(player):
             if not player.has_inventory_space():
                 console.print("  [red]Inventar voll![/red]")
                 continue
+            from content.loot_tables import CLASS_WEAPON_MAP
             edef = item["edef"]
             slot = edef.get("slot", "weapon")
-            entry = {"name": item["key"], "type": slot}
+            resolved_key = item["key"]
+            if slot == "weapon":
+                variant = CLASS_WEAPON_MAP.get(item["key"], {}).get(player.player_class)
+                if variant and variant in EQUIPMENT_DEFS:
+                    resolved_key = variant
+                    edef = EQUIPMENT_DEFS[variant]
+            entry = {"name": resolved_key, "type": slot}
             if slot == "weapon":
                 entry["attack"] = edef["attack"]
             else:
