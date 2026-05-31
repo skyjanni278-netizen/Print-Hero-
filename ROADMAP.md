@@ -1,396 +1,397 @@
 # 🗺️ Print-Hero — Entwicklungs-Roadmap
 
-> Ziel: Umbau zu einem vollwertigen Roguelite (Hades/Dead Cells inspiriert).
-> Jeder Durchgang ist einzigartig. Der erste Run ist nicht schaffbar — Metaprogression
-> macht dich stärker bis der Endboss fällt.
+## Versionierungs-Prinzip
+
+```
+MAJOR.MINOR.PATCH
+  │      │     └─ Bugfix (v2.2.1)
+  │      └─────── Neues Feature / Erweiterung (v2.3, v3.1)
+  └────────────── Kompletter Umbau / Breaking Change (v3.0)
+```
+
+**Eine Versionsnummer = ein spielbares, stabiles Release.**
+Die Entwicklungsschritte innerhalb einer Version sind gewöhnliche Commits,
+bekommen aber keine eigene Versionsnummer. Erst wenn das Gesamtfeature
+vollständig und spielbar ist, wird die Version getaggt und gepusht.
 
 ---
 
-## Übersicht
-
-| Version | Thema | Aufwand |
-|---------|-------|---------|
-| **v3.0** | Roguelite Foundation — Kernsystem | ████████ groß |
-| **v3.1** | Segnungen — Run-Variation (Hades-Boons) | █████░░ mittel |
-| **v3.2** | Der Spiegel — Metaprogression | █████░░ mittel |
-| **v3.3** | Runen — Blueprints & Startkits | ████░░░ mittel |
-| **v3.4** | Equipment-Rebalancing | ████████ groß |
-| **v3.5** | QoL — Spielbarkeitsverbesserungen | ██░░░░░ klein |
-| **v3.6** | Content-Erweiterung | ██████░ mittel |
-| **v3.7** | Dunkelsiegel — Schwierigkeitsmodi | ██░░░░░ klein |
+## Aktuelle Version: v2.2 ✅
 
 ---
 
-## v3.0 — Roguelite Foundation
+## v2.3 — QoL (Quality of Life)
 
-### Ziel
-Das Spielsystem grundlegend umbauen: weg von persistenten Speicherslots,
-hin zu einem Run-basierten System mit separater Meta-Datei.
+> Kleine Verbesserungen die sofort die Spielbarkeit erhöhen.
+> Kann unabhängig vom Roguelite-Umbau umgesetzt werden.
 
-### Kern-Änderungen
+**Autosave nach jedem Dungeon**
+- Nach Dungeon-Abschluss automatisch in den aktiven Slot speichern
+- Kein Fortschrittsverlust bei unerwartetem Programmabbruch
+- Datei: `systems/dungeon.py`
+
+**Upgrade per Item statt per Slot**
+- Item-Dict bekommt optionales `"upgrade": N`-Feld
+- Beim Ablegen bleibt der Upgrade-Stand am Item erhalten
+- Beim Anlegen eines Items wird dessen eigenes Upgrade-Level verwendet
+- Dateien: `core/player.py`, `ui/pause.py`
+
+**Kompakterer Kampf-Log**
+- Status-Ticks in einer Zeile zusammenfassen:
+  `⚠ Blutung −3 HP  |  ☠ Gift −5 HP` statt zwei getrennte Zeilen
+- ENTER-Prompts reduzieren: nur noch am Rundenende, nicht nach jeder Meldung
+- Datei: `core/combat.py`
+
+**Run-Zusammenfassung beim Tod**
+- Dedizierter Death-Screen: Erreichte Zone, Gegner getötet, bestes Item, XP, Schaden
+- Ersetzt den aktuellen minimalen Game-Over-Screen
+- Datei: `main.py`
+
+---
+
+## v3.0 — Das Roguelite *(größtes Update)*
+
+> Kompletter Umbau des Spielprinzips.
+> Inspiriert von Hades (Boons, Mirror) und Dead Cells (Blueprints, Startkits).
+>
+> **Ziel:** Erster Run ist nicht schaffbar. Nach 8–12 Runs hat man genug
+> Metaprogression um Zone 5 und den Endboss zu bezwingen.
+
+---
+
+### Entwicklungsphase 1 — Roguelite Foundation
 
 **Neues Speichersystem:**
 ```
-meta_save.json    — permanent (Runenessenz, Spiegel, freigeschaltete Runen)
-run_save.json     — aktueller Run (wird bei Tod gelöscht, bei Quit behalten)
+meta_save.json   — permanent: Runenessenz, Spiegel-Stand, freigeschaltete Runen
+run_save.json    — aktueller Run (wird bei Tod gelöscht, bei Quit behalten)
 ```
-Die 3 alten Save-Slots entfallen. `core/save.py` wird komplett umgeschrieben.
+Die 3 alten Speicher-Slots entfallen komplett. `core/save.py` wird neu geschrieben.
 
 **Run-Ablauf:**
 ```
-Hub → Run starten → Klasse wählen → Dungeons → Tod/Sieg → Hub
+Hub → Klasse + Startkit wählen → Run → Dungeons → Tod oder Sieg → Hub
 ```
-Bei Tod: Run-Save löschen, Runenessenz aus dem Run gutschreiben, Hub zeigen.
-Bei Quit: Run-Save bleibt erhalten, beim nächsten Start wird der Run fortgesetzt.
+- Bei Tod: `run_save.json` löschen, Runenessenz gutschreiben, Hub zeigen
+- Bei Quit: `run_save.json` bleibt, beim nächsten Start wird der Run fortgesetzt
+- Bei Sieg: Bonus-Runenessenz, `run_save.json` löschen, Hub zeigen
 
 **Runenessenz — Metawährung:**
 - Pro abgeschlossenem Dungeon: 15–25 Runenessenz
 - Pro besiegtem Zonen-Boss: 50–80 Runenessenz
-- Bei Tod: alles aus diesem Run wird ausbezahlt (kein Verlust)
-- Motivation: auch ein früher Tod bringt immer etwas
+- Wird auch bei Tod ausbezahlt (kein Verlust motiviert zum Pushen)
 
 **Basis-Balancing (erste Runs sollen scheitern):**
 - Gegner-HP Basis: +20% gegenüber v2.2
 - Gegner-ATK Basis: +15% gegenüber v2.2
 - Zone 3+ ohne Metaupgrades kaum schaffbar
-- Zone 5 erfordert ~8–12 Runs
+- Zone 5 setzt 8–12 Runs voraus
 
 **Neue/geänderte Dateien:**
 ```
-core/save.py            — Komplett neu: meta_save + run_save Logik
-systems/hub.py          — NEU: Hub-Menü zwischen Runs
-systems/meta_save.py    — NEU: Metadaten laden/speichern
-main.py                 — Hauptschleife angepasst (Run-Loop statt Slot-Menü)
-config.py               — Neue Konstanten: RUNENESSENZ_*, BASE_DIFFICULTY_MULT
+core/save.py              komplett neu: meta_save + run_save Logik
+systems/hub.py            NEU: Hub-Menü zwischen Runs
+systems/meta_save.py      NEU: Metadaten laden/speichern/initialisieren
+main.py                   Run-Loop statt Slot-Menü
+config.py                 RUNENESSENZ_*, BASE_DIFFICULTY_MULT
 ```
 
 ---
 
-## v3.1 — Segnungen (Hades Boon-System)
+### Entwicklungsphase 2 — Segnungen (Hades Boon-System)
 
-### Ziel
 Nach jedem abgeschlossenen Dungeon wählt man **eine von drei zufälligen Segnungen**.
-Sie gelten nur für diesen Run, können aber zu starken Build-Synergien führen.
+Sie gelten nur für den laufenden Run, können aber zu starken Builds kombiniert werden.
 
-### Segnung-Pool (~30 Segnungen geplant)
+```
+✨ Wähle eine Segnung — Zone 1, Dungeon 1 abgeschlossen:
 
-**Kampf:**
+[1] 🩸 Blutdurst         — Kills heilen 3 HP
+[2] ⚡ Seelenernte        — Kritische Treffer geben sofort 8 Energie zurück
+[3] 💀 Lebensraub         — Gegner unter 20% HP nehmen 2× Schaden
+```
+
+**Segnung-Pool (~30 Segnungen):**
+
 | Segnung | Effekt |
 |---------|--------|
 | Blutdurst | Kills heilen 3 HP |
-| Finstere Klinge | 10% Chance: normaler Angriff wiederholt sich kostenlos |
+| Finstere Klinge | 10% Chance: Angriff wiederholt sich kostenlos |
 | Lebensraub | Gegner unter 20% HP nehmen 2× Schaden |
-| Raserei | Nach 3 Kills in Folge: nächster Angriff trifft alle Gegner |
-| Eisige Präsenz | Beim Betreten eines Raums: alle Gegner 1 Runde betäubt |
-| Seelenernte | Kritische Treffer geben sofort 8 Energie zurück |
-
-**Status/Effekte:**
-| Segnung | Effekt |
-|---------|--------|
-| Giftmeister | Gift-Stacks lösen sich nicht auf — halten bis Kampfende |
-| Glut-Entfesselung | Verbrennung-Stacks verursachen beim Ablaufen einmalig 3× Schaden |
-| Blutfluss | Eigene Blutungsimmunität (alle Quellen) |
-| Vergeltung | Beim Erleiden von Statuseffekten: Angreifer bekommt denselben Effekt (50%) |
-
-**Überlebensfähigkeit:**
-| Segnung | Effekt |
-|---------|--------|
-| Schattenform | Erste Runde jedes Kampfes: 100% Ausweich-Chance |
+| Raserei | Nach 3 Kills in Folge: nächster Angriff trifft alle |
+| Eisige Präsenz | Raumbetreten: alle Gegner 1 Runde betäubt |
+| Seelenernte | Kritischer Treffer: sofort +8 Energie |
+| Giftmeister | Giftstacks lösen sich nicht auf bis Kampfende |
+| Glut-Entfesselung | Verbrennung-Ablauf: einmaliger 3×-Burst |
+| Schattenform | Erste Runde jedes Kampfes: 100% Ausweichen |
+| Vergeltung | Erlittener Statuseffekt: Angreifer bekommt ihn auch (50%) |
+| Letzter Wille | Bei ≤10% HP: +30% ATK |
 | Eisenhaut+ | +5 DEF für diesen Run |
 | Zähigkeit+ | +15 max HP für diesen Run |
-| Letzter Wille | Bei ≤10% HP: +30% ATK |
 
-**Klassen-spezifisch (erscheinen nur mit passender Klasse):**
+**Klassen-spezifische Segnungen:**
+
 | Segnung | Klasse | Effekt |
 |---------|--------|--------|
-| Schatten-Reflex | Schurke | Aus dem Schatten lädt sich bei Kill sofort neu |
-| Arkane Überladung | Magier | Arkane Entladung trifft 3 Gegner zufällig extra |
-| Unerschütterlich | Krieger | Schildwall blockt automatisch den ersten Angriff jedes Kampfes |
+| Schatten-Reflex | Schurke | Aus dem Schatten lädt bei Kill sofort neu |
+| Arkane Überladung | Magier | Arkane Entladung trifft 3 Gegner extra |
+| Unerschütterlich | Krieger | Schildwall blockt automatisch ersten Angriff |
 
-**Synergien (2 passende Segnungen = Bonus):**
+**Synergien (2 passende Segnungen = Bonus-Effekt):**
 ```
-Giftmeister + Lebensraub     → Vergiftete Gegner unter 20% HP nehmen 3× Schaden
-Blutdurst + Raserei          → Kill-Kette heilt 6 HP statt 3
-Eisige Präsenz + Seelenernte → Betäubungs-Kill: +15 Energie
+Giftmeister + Lebensraub       → vergiftete Gegner <20% HP nehmen 3× Schaden
+Blutdurst + Raserei            → Kill-Kette heilt 6 HP statt 3
+Eisige Präsenz + Seelenernte   → Betäubungs-Kill: +15 Energie
 ```
 
-### Implementierung
-
+**Neue/geänderte Dateien:**
 ```
-systems/segnungen.py     — NEU: SEGNUNGEN_POOL, choose_segnung(), apply_segnung()
-core/player.py           — active_segnungen: list, check_segnungen_synergies()
-systems/dungeon.py       — Nach Dungeon-Abschluss: segnung_choice(player) aufrufen
-core/combat.py           — Segnung-Effekte in Kampfphasen prüfen
-ui/segnungen_ui.py       — NEU: Auswahlmenü (3 Optionen anzeigen)
+systems/segnungen.py      NEU: SEGNUNGEN_POOL, choose_segnung(), synergy-Check
+ui/segnungen_ui.py        NEU: Auswahlmenü (3 Optionen)
+core/player.py            active_segnungen: list
+systems/dungeon.py        nach Dungeon-Abschluss: segnung_choice() aufrufen
+core/combat.py            Segnung-Hooks in Kampfphasen
 ```
 
 ---
 
-## v3.2 — Der Spiegel (Hades Mirror of Night)
+### Entwicklungsphase 3 — Der Spiegel (Hades Mirror of Night)
 
-### Ziel
 Permanente Metaupgrades mit Runenessenz kaufen.
-**Jedes Upgrade hat zwei Versionen (A oder B)** — du entscheidest dich für einen Spielstil.
-
-### Spiegel-Upgrades
-
-| Upgrade | Version A | Version B |
-|---------|-----------|-----------|
-| **Zähigkeit** | +15 max HP | Starte jeden Run mit vollen HP |
-| **Kriegserfahrung** | +1 ATK permanent | Erster Kampf jedes Dungeons: +50% Schaden |
-| **Glück** | +15% Gold-Drop | Einmal pro Run: Item-Qualität +1 Stufe |
-| **Zweites Leben** | 1× pro Run: nicht sterben (Death Defiance) | Bei Tod im Dungeon: behalte alle Items dieses Dungeons |
-| **Seelenbindung** | +8% XP-Gain | Level-Ups geben +1 Skillpunkt extra |
-| **Händlerglück** | Wandernder Händler erscheint 1× öfter pro Run | Händler-Preise permanent −15% |
-| **Dunkelresistenz** | Statuseffekte dauern 1 Runde kürzer | Immunität gegen einen zufälligen Statuseffekt pro Run |
-
-Kosten: 60–150 Runenessenz pro Upgrade, skalierend.
-A↔B-Wechsel kostet 30% des ursprünglichen Preises.
-
-### Implementierung
+**Jedes Upgrade hat zwei Versionen (A oder B)** — man entscheidet sich für einen Spielstil.
 
 ```
-ui/spiegel.py            — NEU: Spiegel-Menü, A/B Auswahl, Fortschritt anzeigen
-systems/meta_save.py     — spiegel_state speichern: {slot: "A"/"B"/None}
-core/player.py           — apply_spiegel_effects(meta) beim Run-Start aufrufen
-systems/hub.py           — [S] Spiegel-Option im Hub
+╔══════════════ Der Spiegel ══════════════╗
+║ Runenessenz: 240                        ║
+╠═════════════════════════════════════════╣
+║ Zähigkeit      [A] +15 max HP           ║
+║                [B] Starte mit vollen HP ║
+║                ── Kosten: 60  [0/1] ──  ║
+║ Kriegserfahrung [A] +1 ATK permanent    ║
+║                 [B] 1. Kampf/Dungeon +50%DMG ║
+║                ── Kosten: 80  [0/1] ──  ║
+║ ...                                     ║
+╚═════════════════════════════════════════╝
+```
+
+**Spiegel-Upgrades (A / B):**
+
+| Upgrade | A | B | Kosten |
+|---------|---|---|--------|
+| Zähigkeit | +15 max HP | Starte mit vollen HP | 60 |
+| Kriegserfahrung | +1 ATK permanent | 1. Kampf/Dungeon: +50% Schaden | 80 |
+| Glück | +15% Gold-Drop | 1× pro Run: Item-Qualität +1 Stufe | 70 |
+| Zweites Leben | 1× pro Run nicht sterben | Bei Tod im Dungeon: Items behalten | 120 |
+| Seelenbindung | +8% XP-Gain | Level-Ups: +1 Skillpunkt extra | 90 |
+| Händlerglück | Wandernder Händler 1× öfter | Händler-Preise −15% | 75 |
+| Dunkelresistenz | Statuseffekte −1 Runde | Immunität gg. 1 zufälligen Effekt/Run | 100 |
+
+A↔B-Wechsel kostet 30% des Originalpreises.
+
+**Neue/geänderte Dateien:**
+```
+ui/spiegel.py             NEU: Spiegel-Menü, A/B Auswahl, Fortschritt
+systems/meta_save.py      spiegel_state: {slot_id: "A"/"B"/None}
+core/player.py            apply_spiegel_effects(meta) beim Run-Start
+systems/hub.py            [S] Spiegel-Option
 ```
 
 ---
 
-## v3.3 — Runen (Dead Cells Blueprint-System)
+### Entwicklungsphase 4 — Runen (Dead Cells Blueprint-System)
 
-### Ziel
 Seltene Drops aus Gegnern und Bossen schalten dauerhaft neue Dinge frei.
-Jede Rune erscheint nur einmal — danach ist sie dauerhaft freigeschaltet.
+Jede Rune erscheint genau einmal — danach permanent freigeschaltet.
 
-### Rune-Kategorien
+**Rune-Kategorien:**
 
-**Startkits** (wählbar vor Run-Start):
+*Startkits* — vor dem Run wählbar, sobald Rune freigeschaltet:
 ```
-Rune: Kriegers Vermächtnis   → Startkit: Kettenhemd + Streitaxt + 60 Gold
-Rune: Schurken-Einsteiger    → Startkit: Giftklaue + 2× Antidot + 30 Gold
-Rune: Magier-Erbe            → Startkit: Novizenstab + volle Energie + 1 Stärketrank
-Rune: Überlebender           → Startkit: 3× Healing Potion + 1× Phönixfeder + 80 Gold
-```
-
-**Klassen-Varianten** (nach 5 Runs mit einer Klasse):
-```
-Rune: Berserker-Erbe         → Neue Klasse: Berserker (−10 HP, +6 ATK, kein Schildwall)
-Rune: Meuchler-Erbe          → Neue Klasse: Meuchler (15 HP, 18 ATK, Flucht immer erfolgreich)
+Kriegers Vermächtnis    Kettenhemd + Streitaxt + 60 Gold
+Schurken-Einsteiger     Giftklaue + 2× Antidot + 30 Gold
+Magier-Erbe             Novizenstab + volle Energie + 1 Stärketrank
+Überlebender            3× Healing Potion + 1× Phönixfeder + 80 Gold
 ```
 
-**Hub-NPCs** (erscheinen dauerhaft im Hub):
+*Klassen-Varianten* — neue Startoptionen nach mehreren Runs:
 ```
-Rune: Schmiedegeheimnis      → Schmied im Hub: kostenloser Upgrade vor jedem Run
-Rune: Händlernetzwerk        → Händlerin im Hub: kaufe Items für Runenessenz
-Rune: Orakelwissen           → Orakel im Hub: zeigt nächste Zone-Boss-Stats vorab
+Berserker-Erbe     Krieger-Variante: −10 HP, +6 ATK, kein Schildwall
+Meuchler-Erbe      Schurken-Variante: 15 HP, 18 ATK, Flucht immer erfolgreich
+```
+
+*Hub-NPCs* — erscheinen dauerhaft im Hub nachdem die Rune gefunden wurde:
+```
+Schmiedegeheimnis       Schmied im Hub: 1 kostenloses Upgrade vor jedem Run
+Händlernetzwerk         Händlerin: kaufe Verbrauchsgüter für Runenessenz
+Orakelwissen            Orakel: zeigt Zone-Boss-Stats des nächsten Bosses vorab
 ```
 
 **Drop-Chancen:**
-- Zonen-Boss: 100% (eine garantierte Rune, pro Boss nur einmal)
+- Zonen-Boss: 100% (pro Boss nur einmal in der gesamten Meta)
 - Dungeon-Boss (Rang 5): 25%
-- Elite-Gegner (Rang 3+): 5%
-- Truhen-Events: 15%
+- Elite-Gegner: 5%
+- Truhen-Event: 15%
 
-### Implementierung
-
+**Neue/geänderte Dateien:**
 ```
-systems/runen.py         — NEU: RUNE_DEFS, check_rune_drop(), apply_rune_unlock()
-systems/meta_save.py     — unlocked_runen: list speichern
-ui/hub.py                — [R] Runen-Übersicht, freigeschaltete Startkits anzeigen
-systems/world_map.py     — Boss-Rune-Drop nach Sieg
-core/combat.py           — Enemy-Rune-Drop nach Kill
+systems/runen.py          NEU: RUNE_DEFS, check_rune_drop(), apply_rune_unlock()
+systems/meta_save.py      unlocked_runen: list
+ui/hub.py                 [R] Runen-Übersicht + Startkit-Auswahl
+systems/world_map.py      Boss-Rune-Drop nach Sieg
+core/combat.py            Enemy-Rune-Drop-Check nach Kill
 ```
 
 ---
 
-## v3.4 — Equipment-Rebalancing
+### v3.0 Release-Kriterien
 
-### Problem
-Progression zu schnell: bereits in Zone 3-4 ist man vollständig ausgerüstet.
-Zone 5 bietet keine echten Equipment-Entdeckungen mehr.
+Alle vier Entwicklungsphasen vollständig umgesetzt und stabil:
+- [ ] Run-basiertes Speichersystem funktioniert
+- [ ] Segnungen erscheinen nach jedem Dungeon, Synergien funktionieren
+- [ ] Spiegel kaufbar, Effekte greifen im Run
+- [ ] Runen droppen, Hub-NPCs erscheinen
+- [ ] Basis-Balancing: erster Run erreicht nicht Zone 5
 
-### Lösung: Fünf-Zonen-Equipmentkurve
+---
 
-Jede Zone soll **eigene, exklusive Items** haben. Epische und legendäre Items
-dürfen nur in den letzten Zonen auftauchen. Klassen-Sets werden über Zonen 3–5 gestreckt.
+## v3.1 — Equipment-Rebalancing
 
-**Neue Rarity-Verteilung:**
+> Progression verlangsamen. Zone 5 soll noch echte Überraschungen bieten.
 
-| Zone | Rarity-Schwerpunkt | Max verfügbare Rarity |
-|------|-------------------|----------------------|
+**Problem:** Zu wenige Items pro Zone, Progression zu schnell.
+Epic-Items erscheinen bereits ab Zone 3, Zone 5 bietet kaum Neues.
+
+### Fünf-Zonen-Equipment-Kurve
+
+| Zone | Rarity-Schwerpunkt | Max erlaubte Rarity |
+|------|-------------------|---------------------|
 | 1 Wald | Common | Uncommon (selten) |
 | 2 Ruinen | Uncommon | Rare (sehr selten) |
 | 3 Wüste | Rare | Epic (sehr selten, nur Einzelteile) |
 | 4 Vulkan | Epic | Legendary (selten) |
 | 5 Dunkel-Reich | Legendary | Mythic (sehr selten) |
 
-**Klassen-Sets über Zonen strecken:**
+### Klassen-Sets strecken (Zone 3–5 statt alle Zone 4)
+
 ```
-Aktuell: Alle Klassen-Set-Teile ab Zone 4 (Vulkan)
+Aktuell: Alle Klassen-Set-Teile ab Zone 4
 Neu:
-  - 1-2 Teile eines Klassen-Sets: Zone 3 (Wüste)
-  - Restliche 2-3 Teile: Zone 4 (Vulkan)
-  → Vollständiges Set erst in Zone 4-5 machbar
+  2 Teile eines Klassen-Sets → Zone 3 (Wüste)
+  2 Teile                    → Zone 4 (Vulkan)
+  → Vollständiges Set erst in Zone 4–5 möglich
 ```
 
-**Neue Items:**
+### Neue Sets
 
-*Totenritter-Set* (Epic, Zone 4-5 — überbrückt Verdammten-Stahl → Licht):
+**Totenritter-Set** *(Epic, Zone 4–5 — überbrückt Verdammten-Stahl → Licht)*
 ```
-Totenklinge       weapon  ATK +16  epic
-Totenrüstung      chest   DEF +14  epic
-Totenschädel      head    DEF +9   epic
-Totenstiefel      feet    DEF +7   epic
-4-Set-Bonus: Bei ≤25% HP → +50% ATK, +20% Ausweichen
+Totenklinge      weapon  ATK +16  epic
+Totenrüstung     chest   DEF +14  epic
+Totenschädel     head    DEF +9   epic
+Totenstiefel     feet    DEF +7   epic
+4-Set: Bei ≤25% HP → +50% ATK und +20% Ausweichen
 Special: totenritter_berserker
 ```
 
-*Abyssal-Set* (Legendary, Zone 5 exklusiv):
+**Abyssal-Set** *(Legendary, Zone 5 exklusiv)*
 ```
-Abyssalklinge     weapon  ATK +22  legendary
-Abyssalrobe       chest   DEF +18  legendary
-Abyssalhelm       head    DEF +12  legendary
-Abyssalsohlen     feet    DEF +10  legendary
-4-Set-Bonus: Erleidest du Schaden → alle Gegner nehmen 30% davon als Rückstoß
+Abyssalklinge    weapon  ATK +22  legendary
+Abyssalrobe      chest   DEF +18  legendary
+Abyssalhelm      head    DEF +12  legendary
+Abyssalsohlen    feet    DEF +10  legendary
+4-Set: Erleidest du Schaden → alle Gegner nehmen 30% davon als Rückstoß
 Special: abyssal_thorns
 ```
 
-*Mythic-Tier* (neue höchste Rarity, Zone 5, sehr seltene Einzeldrops):
+**Mythic-Tier** *(neue höchste Rarity, Zone 5, Einzeldrops, sehr selten)*
 ```
-Götterspeer       weapon  ATK +28  mythic  — trifft immer kritisch wenn Gegner unter 30% HP
-Seelenpanzer      chest   DEF +22  mythic  — absorbiert ersten Angriff jedes Kampfes
-Krone der Götter  head    DEF +16  mythic  — +3 Skillpunkte zu Beginn des Runs
+Götterspeer      weapon  ATK +28  mythic  — trifft immer kritisch wenn Gegner <30% HP
+Seelenpanzer     chest   DEF +22  mythic  — absorbiert ersten Angriff jedes Kampfes
+Krone der Götter head    DEF +16  mythic  — +3 Skillpunkte zu Run-Beginn
 ```
-
-**ZONE_LOOT_POOL Anpassungen:**
-- Rare Items aus Zone 1-2 entfernen
-- Epic Items aus Zone 1-3 entfernen
-- Zone 5: Legendary-Pool erweitern (Abyssal-Set hinzufügen)
-- Mythic-Pool: eigene sehr seltene Gewichtung in Zone 5
 
 **Geänderte Dateien:**
 ```
-content/loot_tables.py   — EQUIPMENT_DEFS, SET_DEFS, ZONE_LOOT_POOL, BOSS_LOOT_POOL
-README.md                — Equipment-Tabellen aktualisieren
-CLAUDE.md                — Item-Referenz aktualisieren
+content/loot_tables.py    EQUIPMENT_DEFS, SET_DEFS, ZONE_LOOT_POOL, BOSS_LOOT_POOL
+README.md                 Equipment-Tabellen aktualisieren
 ```
 
 ---
 
-## v3.5 — QoL (Quality of Life)
-
-### Autosave
-- Nach jedem Dungeon-Abschluss automatisch speichern (run_save.json)
-- Kein Fortschrittsverlust bei unerwartetem Programmabbruch
-- Änderung in: `systems/dungeon.py`
-
-### Upgrade per Item (nicht per Slot)
-- Equipment-Dict bekommt optionales `"upgrade": N`-Feld
-- Beim Anlegen wird das Item-eigene Upgrade-Level behalten
-- Beim Ablegen bleibt das Upgrade am Item erhalten
-- Änderung in: `core/player.py`, `ui/pause.py`
-
-### Kompakterer Kampf-Log
-- Status-Ticks werden in einer Zeile zusammengefasst:
-  `⚠ Blutung -3 HP | ☠ Gift -5 HP` statt zwei separate Zeilen
-- ENTER nur noch am Rundenende, nicht nach jeder Aktion
-- Änderung in: `core/combat.py`
-
-### Run-Zusammenfassung beim Tod
-- Beim Tod: dedizierter Screen mit Run-Statistiken
-  (Erreichte Zone, Gegner getötet, bestes Item, Schaden, Runenessenz verdient)
-- Änderung in: `main.py`, neue Funktion `_run_summary(player, runenessenz)`
-
-### Flucht-Feedback
-- Beim Flüchten aus Dungeon: kurze Anzeige was man verpasst hat
-  (erwarteter Loot dieser Zone, verpasste XP)
-- Änderung in: `systems/dungeon.py`
-
----
-
-## v3.6 — Content-Erweiterung
+## v3.2 — Content-Erweiterung
 
 ### 3 neue Monster
 
-**Knochengoliat** (Zone 2-3, hohe HP, selbstheilend):
+**Knochengoliat** *(Zone 2–3, hohe HP, selbstheilend)*
 ```python
 class BoneColossus(Character):
     BASE_HP, BASE_ATTACK, BASE_XP = 60, 9, 42
-    # boss_ability: heilt 20% max HP, setzt Blutungsstacks auf Spieler
+    # boss_ability: heilt 20% max HP + setzt Blutungsstacks
 ```
 
-**Wüstenschakal** (Zone 3, schnell, niedrige HP, Rudeltier):
+**Wüstenschakal** *(Zone 3, schnell, Rudeltier)*
 ```python
 class DesertJackal(Character):
     BASE_HP, BASE_ATTACK, BASE_XP = 10, 12, 26
-    # Erscheint immer zu 2-3, hohe Ausweich-Chance
+    # Erscheint zu 2–3, hohe Ausweich-Chance per attack_target-Override
 ```
 
-**Dunkelmagierin** (Zone 5, Energie-Drain, Flüche):
+**Dunkelmagierin** *(Zone 5, Energie-Drain, Flüche)*
 ```python
 class DarkSorceress(Character):
     BASE_HP, BASE_ATTACK, BASE_XP = 35, 14, 58
-    # boss_ability: legt random Debuff + entzieht Energie
+    # boss_ability: zufälliger Debuff + Energie-Drain
 ```
 
 ### 4 neue Events
 
-**Verfallene Bibliothek:**
+**Verfallene Bibliothek**
 ```
-Wähle ein altes Buch:
 [W] Waffenkunde   → +2 ATK für diesen Run
 [R] Runen-Lore    → +15% XP für diesen Run
-[M] Magiebuch     → Zufällige Segnung sofort erhalten
-[?] Unlesbares Buch → unbekannter Effekt
+[M] Magiebuch     → sofort eine zufällige Segnung erhalten
+[?] Unlesbares Buch → unbekannter Effekt (gut oder schlecht)
 ```
 
-**Gefallener Held:**
+**Gefallener Held**
 ```
-Du findest die Leiche eines mächtigen Kriegers.
-[N] Ausrüstung nehmen → zufälliges Epic-Item, aber -10 max HP permanent (dieser Run)
+[N] Ausrüstung nehmen → zufälliges Epic-Item, aber −10 max HP (dieser Run)
 [R] Ruhe lassen       → nichts passiert
-[B] Bestatten         → +20% XP nächster Kampf + kleine Chance auf Rune
+[B] Bestatten         → +20% XP nächster Kampf + 15% Rune-Drop-Chance
 ```
 
-**Händler-Auktion:**
+**Händler-Auktion**
 ```
-3 Gegner bieten auf ein seltenes Item — du kannst mitbieten.
-Überbiete jeden Gegner: zahle meistbietend, Item gehört dir.
-Zu wenig Gold: Gegner nimmt es. Nächster Raum: dieser Gegner ist verstärkt.
-```
-
-**Zeitkapsel:**
-```
-Du findest einen versiegelten Behälter.
-Enthält: zufälliges Item aus deinem letzten Run (aus dem Run-Save der vorherigen Session)
+3 Gegner bieten auf ein seltenes Item.
+Überbiete alle → Item gehört dir.
+Verlierst → dieser Gegner erscheint verstärkt im nächsten Raum.
 ```
 
-### 10 neue Achievements (Roguelite-spezifisch)
-
+**Zeitkapsel**
 ```
-Erster Schritt        — 5 Runs abgeschlossen
-Spiegel-Meister       — Alle Spiegel-Upgrades gekauft
-Rune-Sammler          — 10 verschiedene Runen freigeschaltet
-Synergist             — 2 Segnung-Synergien gleichzeitig aktiv
-Unberührt             — Dungeon ohne Schaden abgeschlossen
-Todesverächter        — Zweites Leben genutzt und Run trotzdem gewonnen
-Gilden-Gründer        — Alle Hub-NPCs freigeschaltet
-Mythisch              — Mythic-Item gefunden
-Siegel-Träger         — Run mit allen 3 Dunkelsiegeln abgeschlossen
-Ewige Legende         — Spiel mit allen 3 Klassen durchgespielt
+Enthält ein zufälliges Item aus dem letzten Run
+(gelesen aus dem gelöschten run_save.json-Snapshot).
+```
+
+### 10 neue Achievements *(Roguelite-spezifisch)*
+```
+Erster Schritt        5 Runs abgeschlossen
+Spiegel-Meister       Alle Spiegel-Upgrades freigeschaltet
+Rune-Sammler          10 verschiedene Runen gefunden
+Synergist             2 Segnung-Synergien gleichzeitig aktiv
+Unberührt             Dungeon ohne Schaden zu nehmen abgeschlossen
+Todesverächter        Zweites Leben genutzt und Run dennoch gewonnen
+Gilden-Gründer        Alle Hub-NPCs freigeschaltet
+Mythisch              Mythic-Item gefunden
+Ewige Legende         Spiel mit allen Klassen durchgespielt
+Verdammter Held       Run mit allen 3 Dunkelsiegeln abgeschlossen
 ```
 
 ---
 
-## v3.7 — Dunkelsiegel (Difficulty Modifiers)
+## v3.3 — Dunkelsiegel
 
-### Ziel
-Optionale Schwierigkeitsmodifikatoren vor dem Run-Start.
-Hohes Risiko, hohe Belohnung. Für Spieler die das Spiel beherrschen.
-
-### Siegel
+> Optionale Schwierigkeitsmodifikatoren für Spieler, die das Spiel beherrschen.
 
 | Siegel | Malus | Runenessenz-Bonus |
 |--------|-------|-------------------|
@@ -398,68 +399,40 @@ Hohes Risiko, hohe Belohnung. Für Spieler die das Spiel beherrschen.
 | 💀 Siegel II — Stille | Kein Shop, kein Wandernder Händler | +60% |
 | 💀 Siegel III — Verhängnis | Zweites Leben deaktiviert | +80% |
 
-Siegel sind stackbar. Alle 3 aktiv = +180% Runenessenz, aber extrem schwerer Run.
+Siegel sind stackbar. Alle 3 aktiv = +180% Runenessenz, aber extrem schwer.
+Sonderbedingung: Alle 3 Siegel + Sieg = Cosmetic-Unlock im Hub.
 
-**Sonderbedingung:** Wer einen Run mit allen 3 Siegeln abschließt schaltet ein
-einzigartiges Cosmetic frei (z.B. Titelzeile im Lagerfeuer: "☠ Verdammter Held").
-
-### Implementierung
-
+**Neue/geänderte Dateien:**
 ```
-systems/dunkelsiegel.py  — NEU: SIEGEL_DEFS, siegel_menu(), apply_siegel_effects()
-systems/hub.py           — [D] Dunkelsiegel-Option vor Run-Start
-systems/meta_save.py     — aktive Siegel für laufenden Run speichern
+systems/dunkelsiegel.py   NEU: SIEGEL_DEFS, siegel_menu(), apply_siegel()
+systems/hub.py            [D] Dunkelsiegel-Option vor Run-Start
+systems/meta_save.py      aktive Siegel für laufenden Run speichern
 ```
 
 ---
 
-## Implementierungs-Reihenfolge
+## Offene Designfragen *(vor v3.0 klären)*
 
-```
-v3.0  → v3.4  → v3.5  → v3.1  → v3.2  → v3.3  → v3.6  → v3.7
-```
+1. **Klassisch-Modus behalten?**
+   Sollen die alten 3 Speicherslots als optionaler Modus neben dem Roguelite existieren,
+   oder ist Roguelite das einzige Spielprinzip?
 
-**Begründung:**
-1. **v3.0 zuerst** — ohne das Fundament funktioniert nichts anderes
-2. **v3.4 direkt danach** — Equipment-Balancing muss vor dem Testen der neuen
-   Systeme stimmen, sonst balanciert man zweimal
-3. **v3.5 (QoL) früh** — macht alle weiteren Tests angenehmer
-4. Dann aufeinander aufbauend: Segnungen → Spiegel → Runen
-5. Content und Schwierigkeit zuletzt — wenn das Fundament steht
+2. **Segnungen-Pool wachsen lassen?**
+   Rein zufällig aus dem festen Pool, oder wächst der Pool mit freigeschalteten Runen?
+   (Letzteres: näher an Hades, stärkeres Progressions-Gefühl)
 
----
-
-## Datei-Übersicht: Was sich ändert
-
-| Datei | Änderung |
-|-------|----------|
-| `main.py` | Run-Loop statt Slot-Menü |
-| `core/save.py` | Komplett neu: meta_save + run_save |
-| `core/player.py` | active_segnungen, spiegel_effects, upgrade-per-item |
-| `core/combat.py` | Segnung-Hooks, kompakterer Log |
-| `content/loot_tables.py` | Neue Sets, Mythic-Tier, Zone-Pool-Anpassung |
-| `systems/dungeon.py` | Segnung-Auswahl nach Dungeon, Autosave |
-| `systems/world_map.py` | Rune-Drops, Hub-Transition |
-| `config.py` | Neue Konstanten (Runenessenz, Balancing-Multiplier) |
-| **NEU** `systems/hub.py` | Hub-Menü zwischen Runs |
-| **NEU** `systems/meta_save.py` | Persistente Metadaten |
-| **NEU** `systems/segnungen.py` | Segnung-Pool und Logik |
-| **NEU** `systems/runen.py` | Rune-Definitionen und Drops |
-| **NEU** `systems/dunkelsiegel.py` | Siegel-System |
-| **NEU** `ui/spiegel.py` | Spiegel-Menü |
-| **NEU** `ui/hub.py` | Hub-UI |
-| **NEU** `ui/segnungen_ui.py` | Segnung-Auswahlmenü |
+3. **Mythic-Items: max. 1 pro Run?**
+   Damit das Item besonders bleibt und nicht gestapelt wird.
 
 ---
 
-## Offene Designfragen (vor Umsetzung klären)
+## Gesamtübersicht
 
-1. **Alter Save-Modus behalten?** — Gibt es einen "Klassisch"-Modus mit Speicherslots
-   neben dem Roguelite-Modus, oder ist der Roguelite-Modus das einzige?
-
-2. **Runenessenz verlieren bei Siegel-Aktivierung?** — Oder nur Bonus für erfolgreiche Runs?
-
-3. **Segnungen wählbar oder zufällig?** — Aktuell: 3 zufällige zur Auswahl.
-   Alternative: Pool wird größer je mehr Runen man hat (Hades-Style).
-
-4. **Mythic-Items: zu stark?** — Müssen getestet werden, eventuell nur 1 pro Run möglich.
+| Version | Inhalt | Status |
+|---------|--------|--------|
+| v2.2 | Bugfixes (8 Bugs behoben) | ✅ released |
+| **v2.3** | QoL: Autosave, Upgrade/Item, Kampf-Log | 🔲 geplant |
+| **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | 🔲 geplant |
+| **v3.1** | Equipment-Rebalancing + Mythic-Tier | 🔲 geplant |
+| **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | 🔲 geplant |
+| **v3.3** | Dunkelsiegel + Cosmetics | 🔲 geplant |
