@@ -3,6 +3,11 @@ from ui.utils import clear_screen, print_header, console, hp_bar, energy_bar
 from rich.markup import escape as _esc
 from rich.table import Table
 from content.loot_tables import roll_loot, roll_zone_loot, apply_loot, CONSUMABLE_DEFS, EQUIPMENT_DEFS
+from core.abilities import (
+    brutaler_hieb, schildwall, schildstoss, kriegsschrei,
+    aus_dem_schatten, giftklinge, blendpulver, rauchbombe,
+    arkane_entladung, froststrahl, feuerball, mana_schild_aktivieren,
+)
 
 
 def _apply_weapon_passive(player, target, dmg: int):
@@ -331,20 +336,20 @@ def combat(player, enemy_list):
             living = [e for e in enemy_list if e.is_alive()]
             res    = None
             if pclass == "warrior":
-                if key == "S":   res = player.brutaler_hieb(target)
-                elif key == "R": res = player.schildwall()
-                elif key == "C": res = player.schildstoss(target)
-                elif key == "X": res = player.kriegsschrei()
+                if key == "S":   res = brutaler_hieb(player, target)
+                elif key == "R": res = schildwall(player)
+                elif key == "C": res = schildstoss(player, target)
+                elif key == "X": res = kriegsschrei(player)
             elif pclass == "rogue":
-                if key == "S":   res = player.aus_dem_schatten()
-                elif key == "R": res = player.giftklinge(target)
-                elif key == "C": res = player.blendpulver(target)
-                elif key == "X": res = player.rauchbombe()
+                if key == "S":   res = aus_dem_schatten(player)
+                elif key == "R": res = giftklinge(player, target)
+                elif key == "C": res = blendpulver(player, target)
+                elif key == "X": res = rauchbombe(player)
             elif pclass == "mage":
-                if key == "S":   res = player.arkane_entladung(living)
-                elif key == "R": res = player.froststrahl(target)
-                elif key == "C": res = player.feuerball(target)
-                elif key == "X": res = player.mana_schild_aktivieren()
+                if key == "S":   res = arkane_entladung(player, living)
+                elif key == "R": res = froststrahl(player, target)
+                elif key == "C": res = feuerball(player, target)
+                elif key == "X": res = mana_schild_aktivieren(player)
             # Rauchbombe: garantierter Rückzug
             if res == "__FLEE__":
                 console.print("  [cyan]💨 Du verschwindest im Rauch...[/cyan]")
