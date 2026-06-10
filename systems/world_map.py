@@ -128,7 +128,7 @@ def run_zone_boss(player, zone_id: str) -> str:
     from core.combat import combat
     from content.loot_tables import roll_boss_loot, apply_loot
     from systems.achievements import check_all
-    from config import DIFFICULTY_SETTINGS
+    from systems.zones import scale_enemy
 
     bdef       = ZONE_BOSS_DEFS[zone_id]
     zdef       = ZONE_DEFS[zone_id]
@@ -139,20 +139,7 @@ def run_zone_boss(player, zone_id: str) -> str:
     boss.max_hp  = max(1, int(boss.max_hp * bdef.get("hp_mult", 2.5)))
     boss.hp      = boss.max_hp
     boss.attack  = max(1, int(boss.attack * bdef.get("atk_mult", 1.0)))
-
-    diff = getattr(player, "difficulty", "normal")
-    if diff != "normal":
-        cfg          = DIFFICULTY_SETTINGS[diff]
-        boss.max_hp  = max(1, int(boss.max_hp * cfg["hp_mult"]))
-        boss.hp      = boss.max_hp
-        boss.attack  = max(1, int(boss.attack * cfg["atk_mult"]))
-
-    ng = getattr(player, "ng_plus", 0)
-    if ng > 0:
-        mult        = min(1.3 ** ng, 3.0)
-        boss.max_hp = max(1, int(boss.max_hp * mult))
-        boss.hp     = boss.max_hp
-        boss.attack = max(1, int(boss.attack * mult))
+    scale_enemy(boss, player)
 
     clear_screen()
     print_header(f"🔥 ZONEN-BOSS  —  {_esc(bdef['emoji'])} {_esc(zdef['name'])}")

@@ -95,35 +95,6 @@ def _generate_rooms(player_level: int) -> list:
     return middle
 
 
-def _create_scaled_enemy(player, forced_rank: int):
-    from systems.zones import ZONE_DEFS
-    zone_id = getattr(player, "current_zone", "wald")
-    zdef = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
-    classes, weights = zip(*zdef["monsters"])
-    mob_class = random.choices(list(classes), weights=list(weights), k=1)[0]
-    enemy = mob_class(rank=forced_rank)
-    diff = getattr(player, "difficulty", "normal")
-    if diff != "normal":
-        from config import DIFFICULTY_SETTINGS
-        cfg = DIFFICULTY_SETTINGS[diff]
-        enemy.max_hp = max(1, int(enemy.max_hp * cfg["hp_mult"]))
-        enemy.hp     = enemy.max_hp
-        enemy.attack = max(1, int(enemy.attack * cfg["atk_mult"]))
-    ng = getattr(player, "ng_plus", 0)
-    if ng > 0:
-        mult         = min(1.3 ** ng, 3.0)
-        enemy.max_hp = max(1, int(enemy.max_hp * mult))
-        enemy.hp     = enemy.max_hp
-        enemy.attack = max(1, int(enemy.attack * mult))
-
-    # Basis-Buff normale Gegner (+10%)
-    enemy.max_hp = max(1, int(enemy.max_hp * 1.1))
-    enemy.hp     = enemy.max_hp
-    enemy.attack = max(1, int(enemy.attack * 1.1))
-
-    return enemy
-
-
 def _add_zone_kills(player, count: int):
     zone_id = getattr(player, "current_zone", "wald")
     zk = player.stats.setdefault("zone_kills", {})
@@ -352,6 +323,7 @@ def run_dungeon(player) -> str:
     Rückgabe: 'completed' | 'fled' | 'defeat'
     """
     from core.combat import generate_enemy_group, combat
+    from systems.zones import create_zone_enemy
     from systems.events import trigger_event
     from systems.achievements import check_all
     from content.loot_tables import roll_loot, roll_zone_loot, roll_boss_loot, apply_loot
@@ -406,7 +378,7 @@ def run_dungeon(player) -> str:
 
         # ── Elite-Raum ────────────────────────────────────────
         elif room_type == "elite":
-            elite = _create_scaled_enemy(player, forced_rank=2)
+            elite = create_zone_enemy(player, forced_rank=2)
             console.print(f"  [bold red]💪 {_esc(elite.name)} stellt sich dir entgegen![/bold red]")
             input("  Bereit machen... (ENTER)")
             outcome = _run_combat_room(player, [elite], room_num)
@@ -437,7 +409,7 @@ def run_dungeon(player) -> str:
 
         # ── Mini-Boss-Raum ────────────────────────────────────
         elif room_type == "miniboss":
-            miniboss = _create_scaled_enemy(player, forced_rank=3)
+            miniboss = create_zone_enemy(player, forced_rank=3)
             console.print(f"  [bold red]💀 {_esc(miniboss.name)} versperrt den Weg![/bold red]")
             input("  Bereit machen... (ENTER)")
             outcome = _run_combat_room(player, [miniboss], room_num)
@@ -455,7 +427,7 @@ def run_dungeon(player) -> str:
                 boss_rank = random.choices([3, 4, 5], weights=[20, 50, 30])[0]
             else:
                 boss_rank = random.choices([4, 5], weights=[55, 45])[0]
-            boss      = _create_scaled_enemy(player, forced_rank=boss_rank)
+            boss      = create_zone_enemy(player, forced_rank=boss_rank)
             clear_screen()
             print_header(f"🔥 BOSS  —  {_esc(boss.name)}")
             base_name = type(boss).__name__

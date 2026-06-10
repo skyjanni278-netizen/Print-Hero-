@@ -118,34 +118,27 @@ def roll_rank_for_zone(zone_id: str) -> int:
     return random.choices([1, 2, 3, 4, 5], weights=zdef["rank_weights"], k=1)[0]
 
 
-def create_zone_enemy(player, zone_id: str = None):
+def scale_enemy(mob, player):
+    from config import DIFFICULTY_SETTINGS, ENEMY_BASE_HP_MULT, ENEMY_BASE_ATK_MULT
+    hp_mult  = ENEMY_BASE_HP_MULT
+    atk_mult = ENEMY_BASE_ATK_MULT
+    diff = getattr(player, "difficulty", "normal")
+    if diff != "normal":
+        cfg       = DIFFICULTY_SETTINGS[diff]
+        hp_mult  *= cfg["hp_mult"]
+        atk_mult *= cfg["atk_mult"]
+    mob.max_hp = max(1, int(mob.max_hp * hp_mult))
+    mob.hp     = mob.max_hp
+    mob.attack = max(1, int(mob.attack * atk_mult))
+    return mob
+
+
+def create_zone_enemy(player, zone_id: str = None, forced_rank: int = None):
     if zone_id is None:
         zone_id = getattr(player, "current_zone", "wald")
     zdef = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
 
     classes, weights = zip(*zdef["monsters"])
     mob_class = random.choices(list(classes), weights=list(weights), k=1)[0]
-    rank = roll_rank_for_zone(zone_id)
-    mob  = mob_class(rank=rank)
-
-    diff = getattr(player, "difficulty", "normal")
-    if diff != "normal":
-        from config import DIFFICULTY_SETTINGS
-        cfg        = DIFFICULTY_SETTINGS[diff]
-        mob.max_hp = max(1, int(mob.max_hp * cfg["hp_mult"]))
-        mob.hp     = mob.max_hp
-        mob.attack = max(1, int(mob.attack * cfg["atk_mult"]))
-
-    ng = getattr(player, "ng_plus", 0)
-    if ng > 0:
-        mult       = min(1.3 ** ng, 3.0)
-        mob.max_hp = max(1, int(mob.max_hp * mult))
-        mob.hp     = mob.max_hp
-        mob.attack = max(1, int(mob.attack * mult))
-
-    # Basis-Buff normale Gegner (+10%)
-    mob.max_hp = max(1, int(mob.max_hp * 1.1))
-    mob.hp     = mob.max_hp
-    mob.attack = max(1, int(mob.attack * 1.1))
-
-    return mob
+    rank = forced_rank if forced_rank is not None else roll_rank_for_zone(zone_id)
+    return scale_enemy(mob_class(rank=rank), player)
