@@ -4,9 +4,9 @@
 
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
-**Letzte abgeschlossene Version:** v2.2 — Bugfixes & Set-Features  
-**Nächste Version:** v2.3 — QoL  
-**Danach:** v3.0 — Roguelite Foundation
+**Letzte abgeschlossene Version:** v2.3 — QoL  
+**In Arbeit:** v3.0 — Roguelite (Phase 1 von 4 fertig)  
+**Danach:** v3.1 — Equipment-Rebalancing
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
@@ -15,17 +15,24 @@
 - ROADMAP.md angelegt mit vollständigem Plan v2.3 → v3.3
 - Designentscheidungen für v3.0 geklärt (nur Roguelite, fester Segnung-Pool, kein Mythic-Limit)
 - ITEMS.md (Item-/Set-Referenz) neu erstellt, README + ROADMAP auf v2.3-Stand gebracht
+- **v3.0 Phase 1 (Roguelite Foundation) komplett:**
+  - `core/save.py` neu: `meta_save.json` + `run_save.json`, 3-Slot-System entfernt
+  - `systems/hub.py`: Zuflucht-Menü (Run starten/fortsetzen, Errungenschaften, Lifetime-Stats)
+  - `main.py`: Run-Loop (Hub → Run → Tod/Sieg → Hub), Quit im Camp kehrt zur Zuflucht zurück
+  - Runenessenz: 15–25/Dungeon, 50–80/Zonen-Boss, +200 Sieg-Bonus — direkt ins Meta-Save
+  - NG+ komplett entfernt (Achievement „Zweite Runde" → „Bezwinger": einen Run gewinnen)
+  - Achievements sind meta-persistent (überleben den Tod)
+  - Basis-Balancing: Gegner +20 % HP / +15 % ATK, zentrale `scale_enemy()` in zones.py
+  - Schwierigkeitsgrade bleiben, Wahl pro Run; Start-HP-Bonus/-Malus wird jetzt wirklich angewendet
 
-### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 1 (Roguelite Foundation)
-Reihenfolge wegen Abhängigkeiten: erst Speichersystem, dann Hub, dann Rest.
+### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 2 (Segnungen)
+1. `systems/segnungen.py` — SEGNUNGEN_POOL (~30 Segnungen), Synergien
+2. `ui/segnungen_ui.py` — Auswahlmenü (1 aus 3) nach jedem Dungeon
+3. `core/player.py` — `active_segnungen`-Liste (+ to_dict/from_dict!)
+4. `core/combat.py` + `core/abilities.py` — Segnung-Hooks in den Kampfphasen
+5. `systems/dungeon.py` — Segnungswahl nach Dungeon-Abschluss aufrufen
 
-1. **Speichersystem neu** — `core/save.py` komplett neu: `meta_save.json` + `run_save.json`, 3-Slot-System entfällt
-2. **Hub** — `systems/hub.py` (neu): Menü zwischen Runs, Klasse wählen, Run starten
-3. **Runenessenz** — Metawährung: 15–25 pro Dungeon, 50–80 pro Zonen-Boss, auch bei Tod gutgeschrieben
-4. **Run-Loop** — `main.py`: Hub → Run → Tod/Sieg → Hub statt Slot-Menü
-5. **Basis-Balancing** — Gegner-HP +20 %, ATK +15 % gegenüber v2.2 (`config.py`: `BASE_DIFFICULTY_MULT`)
-
-Danach Phase 2 (Segnungen), Phase 3 (Spiegel), Phase 4 (Runen) — Details siehe v3.0-Abschnitt unten.
+Details siehe v3.0-Abschnitt unten.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*

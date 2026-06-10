@@ -1,6 +1,5 @@
 __pycache__/
 *.py[cod]
 savegame.json
-saves/savegame.json
-saves/savegame_*.json
+saves/
 CLAUDE.md
