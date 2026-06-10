@@ -300,13 +300,10 @@ def show_world_map(player):
         return
 
 
-def endscreen(player) -> str:
-    """
-    Zeigt den Endscreen nach dem Besiegen aller Zonen-Bosse.
-    Rückgabe: 'ng_plus' | 'continue'
-    """
-    from core.save import save_game
-    from systems.achievements import check_all
+def victory_screen(player, meta):
+    """Sieg-Screen nach dem Besiegen aller Zonen-Bosse. Beendet den Run → Hub."""
+    from core.save import save_meta, delete_run, sync_achievements
+    from systems.achievements import ACHIEVEMENTS
 
     clear_screen()
     console.print(Panel(
@@ -329,28 +326,18 @@ def endscreen(player) -> str:
     console.print(f"  🏰  Dungeons abgeschl.   : [cyan]{s.get('dungeons_completed', 0)}[/cyan]")
     console.print(f"  💰  Gold verdient        : [yellow]{s.get('gold_earned', 0)}[/yellow]")
     console.print(f"  🧪  Tränke benutzt       : [cyan]{s.get('potions_used', 0)}[/cyan]")
-    console.print(f"  📈  Errungenschaften     : [cyan]{len(getattr(player, 'achievements', set()))}/20[/cyan]")
+    console.print(f"  📈  Errungenschaften     : [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
     console.print("─" * 52)
 
-    ng_next = player.ng_plus + 1
-    mult    = round(min(1.3 ** ng_next, 3.0), 2)
-    console.print(f"\n  [bold yellow]⭐ New Game+ Runde {ng_next} — Gegner ×{mult} HP und ATK[/bold yellow]")
-    console.print("  [dim]Du behältst: Gold + alle legendären Items[/dim]\n")
-    console.print("  [[J]] [bold green]New Game+ starten[/bold green]")
-    console.print("  [[W]] Weiterspielen (freies Erkunden)")
+    from systems.achievements import check_all
+    for m in check_all(player, {"event": "run_won"}):
+        console.print(f"  {m}")
 
-    while True:
-        c = input("\nDeine Wahl: ").lower()
-        if c == "j":
-            player.start_ng_plus()
-            for m in check_all(player, {"event": "ng_plus"}):
-                console.print(f"  {m}")
-            save_game(player)
-            clear_screen()
-            print_header("⭐ New Game+ gestartet!")
-            console.print(f"  [bold]Runde {player.ng_plus} beginnt.[/bold]")
-            console.print("  [dim]Die Zonen-Bosse erwachen stärker als je zuvor...[/dim]")
-            input("\n(ENTER)")
-            return "ng_plus"
-        elif c == "w":
-            return "continue"
+    sync_achievements(player, meta)
+    ls = meta.setdefault("lifetime_stats", {})
+    ls["runs_won"] = ls.get("runs_won", 0) + 1
+    save_meta(meta)
+    delete_run()
+
+    console.print("\n  [bold green]Der Run ist abgeschlossen — zurück zur Zuflucht.[/bold green]")
+    input("\n(ENTER)")

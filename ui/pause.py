@@ -1,6 +1,6 @@
 from ui.utils import clear_screen, print_header, console, hp_bar as _hp_bar
 from rich.markup import escape as _esc
-from core.save import save_game
+from core.save import save_run
 from content.shop import shop_menu
 from config import MAX_INVENTORY_SLOTS
 
@@ -20,13 +20,11 @@ def camp_menu(player) -> str:
         from config import DIFFICULTY_SETTINGS
         from content.classes import CLASS_DEFS
         diff_label  = DIFFICULTY_SETTINGS.get(getattr(player, "difficulty", "normal"), {}).get("label", "Normal")
-        ng          = getattr(player, "ng_plus", 0)
-        ng_tag      = f" | ⭐ NG+{ng}" if ng > 0 else ""
         pclass      = getattr(player, "player_class", "warrior")
         class_emoji = CLASS_DEFS.get(pclass, {}).get("emoji", "")
         class_name  = CLASS_DEFS.get(pclass, {}).get("name", "")
         hp_b = _hp_bar(player.hp, player.max_hp, width=14)
-        console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}{_esc(ng_tag)}")
+        console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}")
         console.print(f"  HP  {hp_b} {player.hp}/{player.max_hp}   💰 {player.inventory['Gold']} Gold")
         console.print(f"  [cyan]ATK {player.get_total_attack():<5}[/cyan]  [yellow]DEF {player.get_total_armor()}[/yellow]   XP {player.xp}/{player.xp_to_level_up}  (LVL {player.level})")
         for _slot_key, _slot_label in (("weapon","Waffe  "),("chest","Rüstung"),("head","Helm   "),("feet","Schuhe ")):
@@ -67,7 +65,7 @@ def camp_menu(player) -> str:
         if boss_ready:
             bname = ZONE_BOSS_DEFS[zone_id]["name"]
             console.print(f"  [[B]] [bold red]🔥 Zone-Boss: {_esc(bname)}[/bold red]")
-        console.print(f"  [[W]] [bold green]Dungeon betreten[/bold green]  |  [[S]] Speichern  |  [[Q]] Beenden")
+        console.print(f"  [[W]] [bold green]Dungeon betreten[/bold green]  |  [[S]] Speichern  |  [[Q]] Zur Zuflucht")
 
         choice = input("\nDeine Wahl: ").lower()
         if choice == 'i':
@@ -88,15 +86,13 @@ def camp_menu(player) -> str:
             skill_menu(player)
         elif choice == 'e':
             from systems.achievements import achievements_menu
-            achievements_menu(player)
+            achievements_menu(player.achievements)
         elif choice == 't':
             stats_menu(player)
         elif choice == 's':
-            save_game(player)
+            save_run(player)
             input("(ENTER)")
         elif choice == 'q':
-            clear_screen()
-            console.print("  [dim]Du verlässt das Spiel. Auf Wiedersehen![/dim]")
             return "quit"
         elif choice == 'b' and boss_ready:
             return "boss"

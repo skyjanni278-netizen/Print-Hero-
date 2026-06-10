@@ -46,7 +46,6 @@ class Character:
 
         self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
 
-        self.ng_plus      = 0
         self.achievements = set()
 
         self.player_class        = "warrior"
@@ -411,82 +410,6 @@ class Character:
             return f"{emoji} {self.name} benutzt {key}! " + ", ".join(msgs) + "."
         return f"{emoji} {self.name} benutzt {key}."
 
-    def start_ng_plus(self):
-        from content.loot_tables import EQUIPMENT_DEFS
-        from config import DIFFICULTY_SETTINGS
-
-        self.ng_plus += 1
-
-        # Legendäre Items aus Inventar und Ausrüstung behalten
-        kept_equip = [
-            item for item in self.inventory["Equipment"]
-            if EQUIPMENT_DEFS.get(item["name"], {}).get("rarity") == "legendary"
-        ]
-        kept_gold = self.inventory["Gold"]
-        kept_achievements = self.achievements
-
-        # Reset auf Level-1-Werte
-        start_hp = DIFFICULTY_SETTINGS.get(self.difficulty, {}).get("start_hp", 30)
-        self.max_hp        = start_hp
-        self.hp            = start_hp
-        self.attack        = 10
-        self.min_attack    = 1
-        self.level         = 1
-        self.xp            = 0
-        self.xp_to_level_up = 30
-        self.energy        = 15
-        self.bleed_stacks  = 0
-        self.burn_stacks   = 0
-        self.combat_modifiers = {"attack": 0}
-
-        # Ausrüstung zurücksetzen
-        self.equipment = {
-            "weapon": {"name": "Fäuste",       "attack": 0, "type": "weapon"},
-            "chest":  {"name": "Lumpen",        "armor": 0, "type": "chest"},
-            "head":   {"name": "Kein Helm",     "armor": 0, "type": "head"},
-            "feet":   {"name": "Keine Schuhe",  "armor": 0, "type": "feet"},
-        }
-        self.equipment_upgrades = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
-
-        # Inventar zurücksetzen, Gold + Legendaries behalten
-        self.inventory = {
-            "Consumables": {"Healing Potion": 2},
-            "Junk":        {},
-            "Gold":        kept_gold,
-            "Equipment":   kept_equip,
-        }
-
-        # Skills zurücksetzen
-        self.skill_points  = 0
-        self.skills        = set()
-        self.shield_ready  = False
-        self.shield_active = False
-
-        # Events und XP/ATK-Buff zurücksetzen
-        self.next_fight_xp_mult  = 1.0
-        self.next_fight_atk_mult = 1.0
-        self.fights_until_event  = random.randint(2, 3)
-
-        # Achievements behalten
-        self.achievements = kept_achievements
-
-        # Zone + Shop zurücksetzen
-        self.current_zone           = "wald"
-        self.schwarzmarkt_available = True
-        self.shop_stock             = []
-        self.zone_progress = {
-            zid: {"dungeons_completed": 0, "boss_defeated": False}
-            for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
-        }
-        self.stats["zones_cleared"]       = []
-        self.stats["dungeons_completed"]  = 0
-
-        self.passive_crit_bonus = 0.0
-
-        # Klassen-Boni neu anwenden (Werte kommen aus apply_class)
-        from content.classes import apply_class
-        apply_class(self, self.player_class)
-
     # ── Serialisierung ────────────────────────────────────────
 
     def to_dict(self) -> dict:
@@ -513,7 +436,6 @@ class Character:
             "equipment_upgrades":     self.equipment_upgrades,
             "fights_until_event":     self.fights_until_event,
             "next_fight_xp_mult":     self.next_fight_xp_mult,
-            "ng_plus":                self.ng_plus,
             "achievements":           list(self.achievements),
             "player_class":           self.player_class,
             "current_zone":           self.current_zone,
@@ -524,7 +446,7 @@ class Character:
         }
 
     @classmethod
-    def from_dict(cls, data: dict, slot: int = 1) -> "Character":
+    def from_dict(cls, data: dict) -> "Character":
         """Erstellt einen Character aus einem gespeicherten Dict (save.py-Format)."""
         player = cls(data["name"], data["max_hp"], data["attack"])
         player.hp              = data["hp"]
@@ -561,7 +483,6 @@ class Character:
         player.shield_active       = False
         _default_upgrades          = {"weapon": 0, "chest": 0, "head": 0, "feet": 0}
         player.equipment_upgrades  = {**_default_upgrades, **data.get("equipment_upgrades", {})}
-        player.ng_plus             = data.get("ng_plus", 0)
         player.achievements        = set(data.get("achievements", []))
         player.player_class        = data.get("player_class", "warrior")
         player.current_zone        = data.get("current_zone", "wald")
@@ -577,5 +498,4 @@ class Character:
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
         }
         player.zone_progress = {**_default_zp, **data.get("zone_progress", {})}
-        player.save_slot     = slot
         return player

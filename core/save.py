@@ -3,84 +3,97 @@ import os
 from core.player import Character
 from ui.utils import console
 
-_ROOT    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SAVE_DIR = os.path.join(_ROOT, "saves")
+_ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SAVE_DIR  = os.path.join(_ROOT, "saves")
+META_PATH = os.path.join(SAVE_DIR, "meta_save.json")
+RUN_PATH  = os.path.join(SAVE_DIR, "run_save.json")
 
 
-def _slot_path(slot: int) -> str:
-    return os.path.join(SAVE_DIR, f"savegame_{slot}.json")
+# ── Meta-Save (permanent, überlebt jeden Run) ─────────────────
+
+def _default_meta() -> dict:
+    return {
+        "runenessenz":    0,
+        "achievements":   [],
+        "spiegel_state":  {},   # v3.0 Phase 3
+        "unlocked_runen": [],   # v3.0 Phase 4
+        "lifetime_stats": {
+            "runs_started":  0,
+            "runs_won":      0,
+            "runs_lost":     0,
+            "essenz_earned": 0,
+        },
+    }
 
 
-def get_save_slots() -> list:
-    """Gibt Info-Dicts für alle 3 Slots zurück."""
-    slots = []
-    for s in (1, 2, 3):
-        path = _slot_path(s)
-        if os.path.exists(path):
-            try:
-                with open(path, "r") as f:
-                    d = json.load(f)
-                slots.append({
-                    "slot": s, "exists": True,
-                    "name": d.get("name", "?"),
-                    "level": d.get("level", 1),
-                    "player_class": d.get("player_class", "warrior"),
-                    "ng_plus": d.get("ng_plus", 0),
-                    "difficulty": d.get("difficulty", "normal"),
-                })
-            except (json.JSONDecodeError, KeyError, TypeError):
-                slots.append({
-                    "slot": s, "exists": True, "corrupt": True,
-                    "name": "??? (beschädigt)", "level": 0,
-                    "player_class": "?", "ng_plus": 0, "difficulty": "?",
-                })
-        else:
-            slots.append({"slot": s, "exists": False})
-    return slots
-
-
-def save_game(player):
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    slot = getattr(player, "save_slot", 1)
-    path = _slot_path(slot)
-    with open(path, "w") as f:
-        json.dump(player.to_dict(), f, indent=2)
-    console.print(f"  [green]💾 Spielstand {slot} gespeichert![/green]")
-
-
-def load_game(slot: int = 1):
-    path = _slot_path(slot)
-    # Legacy-Fallback für alten einzelnen Spielstand
-    if not os.path.exists(path):
-        legacy = os.path.join(SAVE_DIR, "savegame.json")
-        if os.path.exists(legacy):
-            path = legacy
-        elif os.path.exists("savegame.json"):
-            path = "savegame.json"
-        else:
-            return None
+def load_meta() -> dict:
+    if not os.path.exists(META_PATH):
+        return _default_meta()
     try:
-        with open(path, "r") as f:
+        with open(META_PATH, "r") as f:
             data = json.load(f)
     except (json.JSONDecodeError, OSError) as e:
-        console.print(f"\n  [red]Spielstand {slot} ist beschädigt und kann nicht geladen werden.[/red]")
+        console.print("  [red]meta_save.json ist beschädigt — starte mit leerem Meta-Stand.[/red]")
         console.print(f"  [dim]Fehler: {e}[/dim]")
         input("  (ENTER)")
+        return _default_meta()
+    meta = _default_meta()
+    lifetime = {**meta["lifetime_stats"], **data.get("lifetime_stats", {})}
+    meta.update(data)
+    meta["lifetime_stats"] = lifetime
+    return meta
+
+
+def save_meta(meta: dict):
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    with open(META_PATH, "w") as f:
+        json.dump(meta, f, indent=2)
+
+
+def add_runenessenz(meta: dict, amount: int):
+    meta["runenessenz"] = meta.get("runenessenz", 0) + amount
+    ls = meta.setdefault("lifetime_stats", {})
+    ls["essenz_earned"] = ls.get("essenz_earned", 0) + amount
+    save_meta(meta)
+
+
+def sync_achievements(player, meta: dict):
+    unlocked = set(meta.get("achievements", [])) | set(getattr(player, "achievements", set()))
+    meta["achievements"] = sorted(unlocked)
+
+
+# ── Run-Save (aktueller Run, bei Tod/Sieg gelöscht) ───────────
+
+def run_exists() -> bool:
+    return os.path.exists(RUN_PATH)
+
+
+def save_run(player, quiet: bool = False):
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    with open(RUN_PATH, "w") as f:
+        json.dump(player.to_dict(), f, indent=2)
+    if not quiet:
+        console.print("  [green]💾 Run gespeichert![/green]")
+
+
+def load_run(meta: dict = None):
+    if not run_exists():
         return None
     try:
-        player = Character.from_dict(data, slot=slot)
-    except (KeyError, TypeError) as e:
-        console.print(f"\n  [red]Spielstand {slot} hat ein ungültiges Format.[/red]")
+        with open(RUN_PATH, "r") as f:
+            data = json.load(f)
+        player = Character.from_dict(data)
+    except (json.JSONDecodeError, OSError, KeyError, TypeError) as e:
+        console.print("\n  [red]run_save.json ist beschädigt und kann nicht geladen werden.[/red]")
         console.print(f"  [dim]Fehler: {e}[/dim]")
         input("  (ENTER)")
         return None
-    console.print(f"  [green]📂 Spielstand {slot} geladen![/green]")
+    if meta is not None:
+        player.achievements |= set(meta.get("achievements", []))
+    console.print("  [green]📂 Run geladen![/green]")
     return player
 
 
-def save_exists():
-    return (
-        any(os.path.exists(_slot_path(s)) for s in (1, 2, 3))
-        or os.path.exists(os.path.join(SAVE_DIR, "savegame.json"))
-        or os.path.exists("savegame.json")
-    )
+def delete_run():
+    if os.path.exists(RUN_PATH):
+        os.remove(RUN_PATH)

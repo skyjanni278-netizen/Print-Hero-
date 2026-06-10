@@ -1,13 +1,11 @@
-import random
-from core.player import Character
 from ui.utils import clear_screen, print_header, console
 from rich.markup import escape as _esc
 from ui.pause import camp_menu
-from core.save import load_game, get_save_slots
+from core.save import load_meta, save_meta, load_run, save_run, delete_run, sync_achievements
+from systems.hub import hub_menu
 from systems.dungeon import run_dungeon
-from systems.world_map import run_zone_boss, check_all_zones_cleared, endscreen
-from systems.achievements import check_all
-from config import DIFFICULTY_SETTINGS
+from systems.world_map import run_zone_boss, check_all_zones_cleared, victory_screen
+from systems.achievements import check_all, ACHIEVEMENTS
 
 
 def _choose_difficulty():
@@ -22,62 +20,32 @@ def _choose_difficulty():
             return mapping[c]
 
 
-def _new_game(slot: int):
+def _new_run(meta):
+    from core.player import Character
     from content.classes import choose_class, apply_class, CLASS_DEFS
+    from config import DIFFICULTY_SETTINGS
+
     diff     = _choose_difficulty()
     class_id = choose_class()
     cdef     = CLASS_DEFS[class_id]
     player   = Character("Hero", hp=cdef["start_hp"], attack=cdef["start_atk"])
     player.difficulty = diff
     apply_class(player, class_id)
-    player.save_slot = slot
+
+    hp_delta = DIFFICULTY_SETTINGS.get(diff, {}).get("start_hp", 30) - 30
+    if hp_delta:
+        player.max_hp = max(1, player.max_hp + hp_delta)
+        player.hp     = player.max_hp
+
+    player.achievements = set(meta.get("achievements", []))
+    ls = meta.setdefault("lifetime_stats", {})
+    ls["runs_started"] = ls.get("runs_started", 0) + 1
+    save_meta(meta)
+    save_run(player, quiet=True)
     return player
 
 
-def _slot_menu():
-    from content.classes import CLASS_DEFS
-    from config import DIFFICULTY_SETTINGS
-    while True:
-        clear_screen()
-        print_header("🗡️  Print-Hero  —  Spielstand wählen")
-        slots = get_save_slots()
-        for info in slots:
-            s = info["slot"]
-            if info["exists"]:
-                pclass  = info.get("player_class", "warrior")
-                emoji   = CLASS_DEFS.get(pclass, {}).get("emoji", "")
-                ng      = info.get("ng_plus", 0)
-                ng_tag  = f" [bold yellow]⭐ NG+{ng}[/bold yellow]" if ng > 0 else ""
-                diff    = DIFFICULTY_SETTINGS.get(info.get("difficulty", "normal"), {}).get("label", "Normal")
-                console.print(f"  [[{s}]] {_esc(emoji)} [bold]Level {info['level']}[/bold]{ng_tag}  |  {_esc(diff)}")
-            else:
-                console.print(f"  [[{s}]] [dim]— Leer —  Neues Spiel[/dim]")
-        console.print("\n  [[Q]] Beenden")
-        choice = input("\nDeine Wahl: ").strip().lower()
-        if choice == "q":
-            exit()
-        if choice.isdigit() and 1 <= int(choice) <= 3:
-            slot = int(choice)
-            info = slots[slot - 1]
-            if info["exists"]:
-                clear_screen()
-                print_header(f"Slot {slot}")
-                pclass = info.get("player_class", "warrior")
-                emoji  = CLASS_DEFS.get(pclass, {}).get("emoji", "")
-                ng     = info.get("ng_plus", 0)
-                ng_tag = f" NG+{ng}" if ng > 0 else ""
-                console.print(f"  {_esc(emoji)} Level {info['level']}{_esc(ng_tag)}")
-                console.print("\n  [[L]] Laden   [[N]] Neu starten (überschreibt Slot)   [[Z]] Zurück")
-                c = input("\nDeine Wahl: ").strip().lower()
-                if c == "l":
-                    return load_game(slot)
-                elif c == "n":
-                    return _new_game(slot)
-            else:
-                return _new_game(slot)
-
-
-def _handle_defeat(player):
+def _handle_defeat(player, meta):
     from content.items import EQUIPMENT_DEFS, RARITY_LABEL
     from systems.zones import ZONE_DEFS
 
@@ -112,19 +80,29 @@ def _handle_defeat(player):
         _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
         console.print(f"\n  Bestes Item: {rbadge} {_esc(edef.get('emoji','⚔️'))} {_esc(best['name'])}")
 
-    console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/20[/cyan]")
+    console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
     console.print("─" * 46)
-    input("\n(ENTER)")
+
+    sync_achievements(player, meta)
+    ls = meta.setdefault("lifetime_stats", {})
+    ls["runs_lost"] = ls.get("runs_lost", 0) + 1
+    save_meta(meta)
+    delete_run()
+
+    console.print("\n  [dim]Dein Run endet hier — die Runenessenz bleibt dir erhalten.[/dim]")
+    input("\n(ENTER) Zurück zur Zuflucht")
 
 
-def main():
-    player = _slot_menu()
-
+def _run_loop(player, meta):
     while player.is_alive():
         action = camp_menu(player)
 
         if action == "quit":
-            break
+            save_run(player, quiet=True)
+            sync_achievements(player, meta)
+            save_meta(meta)
+            console.print("  [dim]Run gespeichert — zurück zur Zuflucht.[/dim]")
+            return
 
         player.shop_stock = []
 
@@ -133,19 +111,40 @@ def main():
         else:
             result = run_dungeon(player)
 
+        sync_achievements(player, meta)
+        save_meta(meta)
+
         if result == "defeat":
-            _handle_defeat(player)
-            break
+            _handle_defeat(player, meta)
+            return
 
         if result in ("completed", "victory"):
             for m in check_all(player, {"event": "gold_check"}):
                 console.print(f"  {m}")
 
             if check_all_zones_cleared(player):
-                outcome = endscreen(player)
-                if outcome == "ng_plus":
-                    continue
-                # "continue" → freies Erkunden, Loop geht weiter
+                victory_screen(player, meta)
+                return
+
+
+def main():
+    meta = load_meta()
+    while True:
+        action = hub_menu(meta)
+
+        if action == "quit":
+            clear_screen()
+            console.print("  [dim]Du verlässt die Zuflucht. Auf Wiedersehen![/dim]")
+            break
+
+        if action == "continue_run":
+            player = load_run(meta)
+            if player is None:
+                continue
+        else:
+            player = _new_run(meta)
+
+        _run_loop(player, meta)
 
 
 if __name__ == "__main__":

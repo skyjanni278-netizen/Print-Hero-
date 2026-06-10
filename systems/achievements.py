@@ -25,7 +25,7 @@ ACHIEVEMENTS = {
     "wealthy":        {"name": "Goldgräber",        "emoji": "💰", "desc": "500 Gold gleichzeitig besessen"},
     "got_legendary":  {"name": "Legendär",          "emoji": "🟨", "desc": "Legendäres Item gefunden"},
     # ── Meta ───────────────────────────────────────────────────
-    "ng_plus":        {"name": "Zweite Runde",      "emoji": "⭐", "desc": "New Game+ gestartet"},
+    "run_won":        {"name": "Bezwinger",         "emoji": "⭐", "desc": "Einen Run siegreich abgeschlossen"},
 }
 
 _ZONE_ACH = {
@@ -91,8 +91,8 @@ def check_all(player, context: dict):
         if gold >= 500:
             _try("wealthy")
 
-    elif event == "ng_plus":
-        _try("ng_plus")
+    elif event == "run_won":
+        _try("run_won")
 
     elif event == "dungeon_complete":
         dc      = player.stats.get("dungeons_completed", 0)
@@ -107,21 +107,18 @@ def check_all(player, context: dict):
     return msgs
 
 
-def achievements_menu(player):
-    if not hasattr(player, "achievements"):
-        player.achievements = set()
+def achievements_menu(unlocked: set):
     clear_screen()
     print_header("Errungenschaften")
-    unlocked = len(player.achievements)
-    total    = len(ACHIEVEMENTS)
-    console.print(f"  Freigeschaltet: [bold cyan]{unlocked}/{total}[/bold cyan]\n")
+    total = len(ACHIEVEMENTS)
+    console.print(f"  Freigeschaltet: [bold cyan]{len(unlocked)}/{total}[/bold cyan]\n")
 
     sections = [
         ("⚔️  Kampf",            ["first_blood", "slayer_10", "slayer_100", "fighter_50", "no_potions", "boss_slayer"]),
         ("📈 Aufstieg",          ["reach_lv5", "reach_lv10", "warrior_legend", "rogue_master", "mage_sage"]),
         ("🗡️  Dungeons & Zonen", ["dungeon_veteran", "wald_cleared", "ruinen_cleared", "wueste_cleared", "vulkan_cleared", "dunkel_cleared"]),
         ("💰 Wirtschaft",        ["wealthy", "got_legendary"]),
-        ("⭐ Meta",              ["ng_plus"]),
+        ("⭐ Meta",              ["run_won"]),
     ]
     for section_name, ids in sections:
         console.print(f"\n  [bold]{section_name}[/bold]")
@@ -129,7 +126,7 @@ def achievements_menu(player):
             if aid not in ACHIEVEMENTS:
                 continue
             a = ACHIEVEMENTS[aid]
-            if aid in player.achievements:
+            if aid in unlocked:
                 console.print(f"  [green]✅ {a['emoji']} {a['name']:<22}[/green] — {a['desc']}")
             else:
                 console.print(f"  [dim]🔒 {a['emoji']} {a['name']:<22} — {a['desc']}[/dim]")
