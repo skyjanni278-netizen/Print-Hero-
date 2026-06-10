@@ -120,7 +120,7 @@ def check_all_zones_cleared(player) -> bool:
     )
 
 
-def run_zone_boss(player, zone_id: str) -> str:
+def run_zone_boss(player, zone_id: str, meta) -> str:
     """
     Zonen-Boss-Kampf.
     Rückgabe: 'victory' | 'defeat' | 'fled'
@@ -193,6 +193,12 @@ def run_zone_boss(player, zone_id: str) -> str:
     for m in lvl_msgs:
         console.print(f"  {m}")
     console.print(f"\n  [bold green]+{total_xp} XP[/bold green]")
+
+    from config import RUNENESSENZ_BOSS
+    from core.save import add_runenessenz
+    essenz = random.randint(*RUNENESSENZ_BOSS)
+    add_runenessenz(meta, essenz)
+    console.print(f"  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
     pots_used = player.stats.get("potions_used", 0) - pots_before
     for m in check_all(player, {"event": "victory", "enemies": [boss], "potions_used": pots_used}):
@@ -328,6 +334,11 @@ def victory_screen(player, meta):
     console.print(f"  🧪  Tränke benutzt       : [cyan]{s.get('potions_used', 0)}[/cyan]")
     console.print(f"  📈  Errungenschaften     : [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
     console.print("─" * 52)
+
+    from config import RUNENESSENZ_VICTORY
+    from core.save import add_runenessenz
+    add_runenessenz(meta, RUNENESSENZ_VICTORY)
+    console.print(f"\n  [bold cyan]💠 +{RUNENESSENZ_VICTORY} Runenessenz — Sieg-Bonus![/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
     from systems.achievements import check_all
     for m in check_all(player, {"event": "run_won"}):

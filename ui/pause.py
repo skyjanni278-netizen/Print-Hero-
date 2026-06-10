@@ -5,7 +5,7 @@ from content.shop import shop_menu
 from config import MAX_INVENTORY_SLOTS
 
 
-def camp_menu(player) -> str:
+def camp_menu(player, meta=None) -> str:
     """
     Lagerfeuer-Menü.
     Rückgabe: 'dungeon' | 'boss' | 'quit'
@@ -25,7 +25,8 @@ def camp_menu(player) -> str:
         class_name  = CLASS_DEFS.get(pclass, {}).get("name", "")
         hp_b = _hp_bar(player.hp, player.max_hp, width=14)
         console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}")
-        console.print(f"  HP  {hp_b} {player.hp}/{player.max_hp}   💰 {player.inventory['Gold']} Gold")
+        essenz_tag = f"   💠 {meta.get('runenessenz', 0)} Essenz" if meta is not None else ""
+        console.print(f"  HP  {hp_b} {player.hp}/{player.max_hp}   💰 {player.inventory['Gold']} Gold{essenz_tag}")
         console.print(f"  [cyan]ATK {player.get_total_attack():<5}[/cyan]  [yellow]DEF {player.get_total_armor()}[/yellow]   XP {player.xp}/{player.xp_to_level_up}  (LVL {player.level})")
         for _slot_key, _slot_label in (("weapon","Waffe  "),("chest","Rüstung"),("head","Helm   "),("feet","Schuhe ")):
             _up = player.equipment_upgrades.get(_slot_key, 0)

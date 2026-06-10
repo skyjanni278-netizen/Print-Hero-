@@ -317,7 +317,7 @@ def _run_combat_room(player, enemies, room_num) -> str:
     return "ok"
 
 
-def run_dungeon(player) -> str:
+def run_dungeon(player, meta) -> str:
     """
     Vollständiger Dungeon-Durchlauf.
     Rückgabe: 'completed' | 'fled' | 'defeat'
@@ -520,10 +520,15 @@ def run_dungeon(player) -> str:
         console.print(f"\n  [bold red]🔥 Zonen-Ziel erreicht! ({done}/{req} Dungeons)[/bold red]")
         console.print(f"  [red]{_esc(bdef['name'])} kann nun herausgefordert werden![/red]")
 
+    from config import RUNENESSENZ_DUNGEON
+    from core.save import save_run, add_runenessenz
+    essenz = random.randint(*RUNENESSENZ_DUNGEON)
+    add_runenessenz(meta, essenz)
+    console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
         console.print(f"  {m}")
 
-    from core.save import save_run
     save_run(player)
 
     input("\n(ENTER)")

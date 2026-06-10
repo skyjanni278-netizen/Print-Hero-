@@ -81,6 +81,7 @@ def _handle_defeat(player, meta):
         console.print(f"\n  Bestes Item: {rbadge} {_esc(edef.get('emoji','⚔️'))} {_esc(best['name'])}")
 
     console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
+    console.print(f"  💠 Runenessenz gesamt: [bold cyan]{meta.get('runenessenz', 0)}[/bold cyan]  [dim](bleibt erhalten)[/dim]")
     console.print("─" * 46)
 
     sync_achievements(player, meta)
@@ -95,7 +96,7 @@ def _handle_defeat(player, meta):
 
 def _run_loop(player, meta):
     while player.is_alive():
-        action = camp_menu(player)
+        action = camp_menu(player, meta)
 
         if action == "quit":
             save_run(player, quiet=True)
@@ -107,9 +108,9 @@ def _run_loop(player, meta):
         player.shop_stock = []
 
         if action == "boss":
-            result = run_zone_boss(player, player.current_zone)
+            result = run_zone_boss(player, player.current_zone, meta)
         else:
-            result = run_dungeon(player)
+            result = run_dungeon(player, meta)
 
         sync_achievements(player, meta)
         save_meta(meta)
