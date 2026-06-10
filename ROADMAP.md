@@ -135,6 +135,10 @@ vollständig und spielbar ist, wird die Version getaggt und gepusht.
 > **Ziel:** Erster Run ist nicht schaffbar. Nach 8–12 Runs hat man genug
 > Metaprogression um Zone 5 und den Endboss zu bezwingen.
 
+> **🐛 Bug-Pass:** Dieser Schritt umfasst auch eine gezielte Suche nach Bugs
+> und deren Behebung. Vor dem Tagging wird der neue Code auf Fehler geprüft
+> und bestehende Bugs werden mitbehoben.
+
 ---
 
 ### Entwicklungsphase 1 — Roguelite Foundation
@@ -329,12 +333,17 @@ Alle vier Entwicklungsphasen vollständig umgesetzt und stabil:
 - [ ] Spiegel kaufbar, Effekte greifen im Run
 - [ ] Runen droppen, Hub-NPCs erscheinen
 - [ ] Basis-Balancing: erster Run erreicht nicht Zone 5
+- [ ] Bug-Pass durchgeführt: neuer Code geprüft, gefundene Bugs behoben
 
 ---
 
 ## v3.1 — Equipment-Rebalancing
 
 > Progression verlangsamen. Zone 5 soll noch echte Überraschungen bieten.
+
+> **🐛 Bug-Pass:** Dieser Schritt umfasst auch eine gezielte Suche nach Bugs
+> und deren Behebung. Vor dem Tagging wird der neue Code auf Fehler geprüft
+> und bestehende Bugs werden mitbehoben.
 
 **Problem:** Zu wenige Items pro Zone, Progression zu schnell.
 Epic-Items erscheinen bereits ab Zone 3, Zone 5 bietet kaum Neues.
@@ -397,6 +406,10 @@ README.md                 Equipment-Tabellen aktualisieren
 ---
 
 ## v3.2 — Content-Erweiterung
+
+> **🐛 Bug-Pass:** Dieser Schritt umfasst auch eine gezielte Suche nach Bugs
+> und deren Behebung. Vor dem Tagging wird der neue Code auf Fehler geprüft
+> und bestehende Bugs werden mitbehoben.
 
 ### 3 neue Monster
 
@@ -470,6 +483,10 @@ Verdammter Held       Run mit allen 3 Dunkelsiegeln abgeschlossen
 ## v3.3 — Dunkelsiegel
 
 > Optionale Schwierigkeitsmodifikatoren für Spieler, die das Spiel beherrschen.
+
+> **🐛 Bug-Pass:** Dieser Schritt umfasst auch eine gezielte Suche nach Bugs
+> und deren Behebung. Vor dem Tagging wird der neue Code auf Fehler geprüft
+> und bestehende Bugs werden mitbehoben.
 
 | Siegel | Malus | Runenessenz-Bonus |
 |--------|-------|-------------------|
