@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch 5 Zonen, besiege Zonen-Bosse und rette das Reich.
 
-**Aktuelle Version: v2.2** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v2.3** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -23,11 +23,15 @@ main.py                  — Spielschleife & Einstiegspunkt
 config.py                — Schwierigkeitsgrade & globale Konstanten
 core/
   player.py              — Spieler-Klasse, Inventar, Skills, Equipment
+  abilities.py           — Die 12 Klassen-Fähigkeiten als Standalone-Funktionen
   combat.py              — Kampflogik, Fähigkeiten, Loot-Vergabe
   save.py                — Speichern & Laden (JSON, 3 Slots)
 content/
   monsters.py            — Alle Gegner-Klassen, Rang-System, Boss-Fähigkeiten
-  loot_tables.py         — Loot-Pools, Item-Definitionen, Set-Definitionen
+  items.py               — Item-Definitionen (Equipment, Consumables, Junk, Rezepte)
+  sets.py                — Set-Definitionen & Set-Bonus-Berechnung
+  loot.py                — Loot-Pools & Würfel-Funktionen
+  loot_tables.py         — Kompatibilitäts-Shim (re-exportiert items/sets/loot)
   shop.py                — Händler-Sortiment
   classes.py             — Klassen-Definitionen & Startboni
 systems/
@@ -262,6 +266,13 @@ Beim Start: Auswahl mit Klasse, Level, Schwierigkeit und NG+-Runde pro Slot.
 ---
 
 ## 📋 Changelog
+
+### v2.3
+- Autosave: Nach jedem Dungeon-Abschluss wird automatisch in den aktiven Slot gespeichert
+- Upgrade-Level wird am Item gespeichert statt am Slot — bleibt beim Ablegen/Wechseln erhalten
+- Kompakterer Kampf-Log: Status-Ticks in einer Zeile zusammengefasst, weniger ENTER-Prompts
+- Death-Screen: vollständige Run-Zusammenfassung (Zone, Kills, Schaden, bestes Item, Achievements)
+- Refactoring: Klassen-Fähigkeiten in `core/abilities.py` ausgelagert, `loot_tables.py` in `items.py`/`sets.py`/`loot.py` aufgeteilt
 
 ### v2.2
 - Bugfix: Gegner nahmen keinen Giftschaden (check_poison fehlte im Status-Tick)

@@ -14,14 +14,18 @@
 - v2.3: Autosave, Upgrade-per-Item, kompakterer Kampf-Log, erweiterter Death-Screen
 - ROADMAP.md angelegt mit vollständigem Plan v2.3 → v3.3
 - Designentscheidungen für v3.0 geklärt (nur Roguelite, fester Segnung-Pool, kein Mythic-Limit)
+- ITEMS.md (Item-/Set-Referenz) neu erstellt, README + ROADMAP auf v2.3-Stand gebracht
 
-### 🔧 Nächster Schritt: v3.0 — Roguelite Foundation
-Vier unabhängige Verbesserungen, keine Abhängigkeiten untereinander:
+### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 1 (Roguelite Foundation)
+Reihenfolge wegen Abhängigkeiten: erst Speichersystem, dann Hub, dann Rest.
 
-1. **Autosave** — `systems/dungeon.py`: `save_game(player)` nach `return "completed"` einfügen
-2. **Upgrade per Item** — `core/player.py` + `ui/pause.py`: Item-Dict bekommt `"upgrade": N`-Feld
-3. **Kompakter Kampf-Log** — `core/combat.py`: Status-Ticks zusammenfassen, ENTER reduzieren
-4. **Death-Screen** — `main.py`: `_handle_defeat()` zu vollständiger Run-Zusammenfassung ausbauen
+1. **Speichersystem neu** — `core/save.py` komplett neu: `meta_save.json` + `run_save.json`, 3-Slot-System entfällt
+2. **Hub** — `systems/hub.py` (neu): Menü zwischen Runs, Klasse wählen, Run starten
+3. **Runenessenz** — Metawährung: 15–25 pro Dungeon, 50–80 pro Zonen-Boss, auch bei Tod gutgeschrieben
+4. **Run-Loop** — `main.py`: Hub → Run → Tod/Sieg → Hub statt Slot-Menü
+5. **Basis-Balancing** — Gegner-HP +20 %, ATK +15 % gegenüber v2.2 (`config.py`: `BASE_DIFFICULTY_MULT`)
+
+Danach Phase 2 (Segnungen), Phase 3 (Spiegel), Phase 4 (Runen) — Details siehe v3.0-Abschnitt unten.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
