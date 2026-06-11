@@ -97,6 +97,8 @@ def roll_segnung_choices(player, n: int = 3) -> list:
     owned = set(getattr(player, "active_segnungen", []))
     pool  = [sid for sid, d in SEGNUNGEN_POOL.items()
              if sid not in owned and (d["class"] is None or d["class"] == player.player_class)]
+    if getattr(player, "class_variant", None) == "berserker":
+        pool = [sid for sid in pool if sid != "unerschuetterlich"]
     random.shuffle(pool)
     return pool[:n]
 

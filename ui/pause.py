@@ -148,7 +148,10 @@ def upgrade_menu(player):
     while True:
         clear_screen()
         print_header("Equipment aufwerten")
+        gratis = getattr(player, "schmied_gratis_upgrade", False)
         console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
+        if gratis:
+            console.print("  [bold cyan]🔨 Schmiedegeheimnis: Dein nächstes Upgrade ist GRATIS![/bold cyan]\n")
         console.print(f"  {'Slot':<10} {'Item':<24} {'Stufe':<8} {'Bonus':<12} {'Kosten'}")
         console.print("  " + "─" * 60)
 
@@ -170,11 +173,12 @@ def upgrade_menu(player):
             if lvl >= _MAX_UPGRADE_LVL:
                 console.print(f"  [green]✅  {label:<10} {_esc(item['name']):<24} MAX      {bonus_str:<12} —[/green]")
             else:
-                cost = _UPGRADE_COSTS[lvl]
+                cost = 0 if gratis else _UPGRADE_COSTS[lvl]
                 can_afford = player.inventory["Gold"] >= cost
                 afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
                 price_col  = "yellow" if can_afford else "red"
-                console.print(f"  [[{len(upgradeable)}]] {label:<10} {_esc(item['name']):<24} Stufe {lvl}  {bonus_str:<12} [{price_col}]{cost} Gold[/{price_col}] {afford_tag}")
+                cost_str   = "GRATIS 🔨" if gratis else f"{cost} Gold"
+                console.print(f"  [[{len(upgradeable)}]] {label:<10} {_esc(item['name']):<24} Stufe {lvl}  {bonus_str:<12} [{price_col}]{cost_str}[/{price_col}] {afford_tag}")
                 upgradeable.append((slot, lvl, cost))
 
         if not upgradeable:
@@ -193,6 +197,9 @@ def upgrade_menu(player):
                 console.print("  [red]Zu wenig Gold![/red]")
                 input("(ENTER)")
                 continue
+            if gratis:
+                player.schmied_gratis_upgrade = False
+                console.print("  [cyan]🔨 Der Schmied übernimmt die Kosten.[/cyan]")
             player.inventory["Gold"]        -= cost
             player.equipment_upgrades[slot] += 1
             new_lvl = player.equipment_upgrades[slot]

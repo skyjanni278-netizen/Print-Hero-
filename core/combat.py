@@ -329,6 +329,10 @@ def combat(player, enemy_list):
                 console.print(f"  [dim]🔒 {_esc(adef.get('name', key))} wird bei Level {unlock} freigeschaltet![/dim]")
                 input("  ENTER...")
                 continue
+            if key == "R" and pclass == "warrior" and getattr(player, "class_variant", None) == "berserker":
+                console.print("  [dim]💢 Ein Berserker kennt keinen Schildwall![/dim]")
+                input("  ENTER...")
+                continue
             cds    = getattr(player, "ability_cooldowns", {"S":0,"R":0,"C":0,"X":0})
             cur_cd = cds.get(key, 0)
             if cur_cd > 0:

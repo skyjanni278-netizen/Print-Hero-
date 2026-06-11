@@ -67,6 +67,9 @@ class Character:
         self.spiegel_immun_effekt = None
         self.spiegel_first_fight  = False
 
+        self.class_variant          = None
+        self.schmied_gratis_upgrade = False
+
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
         self.shop_stock = []
@@ -328,6 +331,8 @@ class Character:
         return f"{self.name} macht {real_damage} Schaden!{crit_tag}{seg_tag}", real_damage
 
     def try_flee(self):
+        if getattr(self, "class_variant", None) == "meuchler":
+            return True
         if self.player_class == "rogue":
             return random.random() < 0.70
         return random.randint(1, 20) >= 10
@@ -512,6 +517,8 @@ class Character:
             "spiegel_leben_used":     self.spiegel_leben_used,
             "spiegel_immun_effekt":   self.spiegel_immun_effekt,
             "spiegel_first_fight":    self.spiegel_first_fight,
+            "class_variant":          self.class_variant,
+            "schmied_gratis_upgrade": self.schmied_gratis_upgrade,
         }
 
     @classmethod
@@ -570,6 +577,8 @@ class Character:
         player.spiegel_leben_used      = data.get("spiegel_leben_used", False)
         player.spiegel_immun_effekt    = data.get("spiegel_immun_effekt")
         player.spiegel_first_fight     = data.get("spiegel_first_fight", False)
+        player.class_variant           = data.get("class_variant")
+        player.schmied_gratis_upgrade  = data.get("schmied_gratis_upgrade", False)
         _default_zp = {
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]

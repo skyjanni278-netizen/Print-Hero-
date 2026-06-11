@@ -19,13 +19,15 @@ def hub_menu(meta) -> str:
     Rückgabe: 'new_run' | 'continue_run' | 'quit'
     """
     from systems.achievements import ACHIEVEMENTS, achievements_menu
+    from systems.runen import RUNEN_DEFS, rune_unlocked
     while True:
         clear_screen()
         print_header("🏕️  Die Zuflucht")
         ls  = meta.get("lifetime_stats", {})
         ach = len(meta.get("achievements", []))
+        runen_count = len(meta.get("unlocked_runen", []))
         console.print(f"  💠 Runenessenz: [bold cyan]{meta.get('runenessenz', 0)}[/bold cyan]")
-        console.print(f"  🏃 Runs: {ls.get('runs_started', 0)}  |  🏆 Siege: {ls.get('runs_won', 0)}  |  📜 Errungenschaften: {ach}/{len(ACHIEVEMENTS)}")
+        console.print(f"  🏃 Runs: {ls.get('runs_started', 0)}  |  🏆 Siege: {ls.get('runs_won', 0)}  |  📜 Errungenschaften: {ach}/{len(ACHIEVEMENTS)}  |  🧿 Runen: {runen_count}/{len(RUNEN_DEFS)}")
         console.print("─" * 50)
         has_run = run_exists()
         if has_run:
@@ -34,6 +36,9 @@ def hub_menu(meta) -> str:
         else:
             console.print("  [[N]] [bold green]Neuen Run starten[/bold green]")
         console.print("  [[S]] 🪞 Der Spiegel [dim](permanente Upgrades)[/dim]")
+        console.print("  [[R]] 🧿 Runen [dim](gefundene Unlocks)[/dim]")
+        if rune_unlocked(meta, "orakelwissen"):
+            console.print("  [[O]] 🔮 Orakel befragen [dim](nächster Zonen-Boss)[/dim]")
         console.print("  [[E]] Errungenschaften")
         console.print("  [[T]] Statistiken")
         console.print("  [[Q]] Beenden")
@@ -51,6 +56,12 @@ def hub_menu(meta) -> str:
         elif choice == "s":
             from ui.spiegel import spiegel_menu
             spiegel_menu(meta)
+        elif choice == "r":
+            from ui.runen_ui import runen_overview
+            runen_overview(meta)
+        elif choice == "o" and rune_unlocked(meta, "orakelwissen"):
+            from ui.runen_ui import orakel_menu
+            orakel_menu(meta)
         elif choice == "e":
             achievements_menu(set(meta.get("achievements", [])))
         elif choice == "t":

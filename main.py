@@ -32,6 +32,13 @@ def _new_run(meta):
     player.difficulty = diff
     apply_class(player, class_id)
 
+    from ui.runen_ui import choose_klassen_variante, choose_startkit, essenz_shop
+    from systems.runen import apply_klassen_variante, rune_unlocked
+    variante = choose_klassen_variante(meta, class_id)
+    if variante:
+        for m in apply_klassen_variante(player, variante):
+            console.print(f"  [cyan]{m}[/cyan]")
+
     hp_delta = DIFFICULTY_SETTINGS.get(diff, {}).get("start_hp", 30) - 30
     if hp_delta:
         player.max_hp = max(1, player.max_hp + hp_delta)
@@ -43,6 +50,14 @@ def _new_run(meta):
         console.print("\n  [bold cyan]🪞 Der Spiegel wirkt:[/bold cyan]")
         for m in spiegel_msgs:
             console.print(f"  {m}")
+        input("  (ENTER)")
+
+    choose_startkit(meta, player)
+    if rune_unlocked(meta, "haendlernetzwerk"):
+        essenz_shop(meta, player)
+    if rune_unlocked(meta, "schmiedegeheimnis"):
+        player.schmied_gratis_upgrade = True
+        console.print("\n  [cyan]🔨 Schmiedegeheimnis: Dein erstes Equipment-Upgrade in diesem Run ist gratis![/cyan]")
         input("  (ENTER)")
 
     player.achievements = set(meta.get("achievements", []))
