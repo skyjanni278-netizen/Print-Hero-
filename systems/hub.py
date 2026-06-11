@@ -33,6 +33,7 @@ def hub_menu(meta) -> str:
             console.print("  [[N]] Neuen Run starten [dim](verwirft den aktuellen Run)[/dim]")
         else:
             console.print("  [[N]] [bold green]Neuen Run starten[/bold green]")
+        console.print("  [[S]] 🪞 Der Spiegel [dim](permanente Upgrades)[/dim]")
         console.print("  [[E]] Errungenschaften")
         console.print("  [[T]] Statistiken")
         console.print("  [[Q]] Beenden")
@@ -47,6 +48,9 @@ def hub_menu(meta) -> str:
                     continue
                 delete_run()
             return "new_run"
+        elif choice == "s":
+            from ui.spiegel import spiegel_menu
+            spiegel_menu(meta)
         elif choice == "e":
             achievements_menu(set(meta.get("achievements", [])))
         elif choice == "t":
