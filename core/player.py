@@ -56,6 +56,12 @@ class Character:
         self.mana_shield_active  = False
         self.passive_crit_bonus  = 0.0
 
+        self.active_segnungen        = []
+        self.seg_kill_streak         = 0
+        self.seg_raserei_ready       = False
+        self.seg_zweite_chance_used  = False
+        self.seg_first_strike        = False
+
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
         self.shop_stock = []
@@ -164,7 +170,10 @@ class Character:
         skill_bonus   = 2 if "Scharfe Klingen" in self.skills else 0
         upgrade_bonus = self.equipment["weapon"].get("upgrade", self.equipment_upgrades.get("weapon", 0)) * 2
         set_bonus     = self.get_set_bonus()["atk"]
-        return self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus + upgrade_bonus + set_bonus
+        total = self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus + upgrade_bonus + set_bonus
+        if "letzter_wille" in self.active_segnungen and self.hp <= max(1, int(self.max_hp * 0.10)):
+            total = int(total * 1.30)
+        return total
 
     def reset_combat_modifiers(self):
         """Setzt alle temporären Kampfboni zurück. Nach jedem Kampf aufrufen."""
@@ -178,6 +187,7 @@ class Character:
         self.block_charges       = 0
         self.shadow_strike_ready = False
         self.mana_shield_active  = False
+        self.seg_first_strike    = False
         self.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
 
     def get_total_armor(self):
@@ -254,6 +264,12 @@ class Character:
         raw_damage = random.randint(self.get_effective_min_attack(), self.get_total_attack())
         crit       = False
         ignore_def = False
+        seg_tag    = ""
+
+        if self.seg_first_strike:
+            self.seg_first_strike = False
+            raw_damage = int(raw_damage * 1.5)
+            seg_tag   += " 📯 Schlachtruf!"
 
         # Aus dem Schatten (Schurke): garantierter Krit + ignoriert DEF
         if self.shadow_strike_ready:
@@ -268,22 +284,39 @@ class Character:
             set_crit    = 0.15 if "schatten_crit" in specials else 0.0
             rogue_bonus = (0.10 + self.passive_crit_bonus + shadow_crit) if self.player_class == "rogue" else 0
             base_crit   = 0.15 if "Kritischer Treffer" in self.skills else 0
-            if random.random() < (base_crit + rogue_bonus + set_crit):
+            seg_crit    = 0.10 if "adlerauge" in self.active_segnungen else 0
+            if random.random() < (base_crit + rogue_bonus + set_crit + seg_crit):
                 raw_damage *= 2
                 crit = True
 
         real_damage = raw_damage if ignore_def else self.apply_armor_reduction(raw_damage, target.get_total_armor())
-        target.hp   = max(0, target.hp - real_damage)
+
+        if self.active_segnungen:
+            from systems.segnungen import seg_outgoing_damage
+            real_damage, dmg_tag = seg_outgoing_damage(self, target, real_damage)
+            seg_tag += dmg_tag
+
+        target.hp = max(0, target.hp - real_damage)
 
         crit_tag = " 💥 KRITISCH!" if crit else ""
+
+        if crit and self.active_segnungen:
+            if "seelenernte" in self.active_segnungen:
+                gain = min(8, self.get_effective_max_energy() - self.energy)
+                self.energy += gain
+                seg_tag += f" ⚡ Seelenernte +{gain}E"
+            if "vampirseele" in self.active_segnungen:
+                heal = min(4, self.max_hp - self.hp)
+                self.hp += heal
+                seg_tag += f" 🦇 Vampirseele +{heal} HP"
 
         # Blutgier: 20% Lifesteal
         if "Blutgier" in self.skills and random.random() < 0.20:
             heal = max(1, real_damage // 4)
             self.hp = min(self.max_hp, self.hp + heal)
-            return f"{self.name} macht {real_damage} Schaden!{crit_tag} 🩸 Blutgier +{heal} HP", real_damage
+            return f"{self.name} macht {real_damage} Schaden!{crit_tag}{seg_tag} 🩸 Blutgier +{heal} HP", real_damage
 
-        return f"{self.name} macht {real_damage} Schaden!{crit_tag}", real_damage
+        return f"{self.name} macht {real_damage} Schaden!{crit_tag}{seg_tag}", real_damage
 
     def try_flee(self):
         if self.player_class == "rogue":
@@ -294,7 +327,8 @@ class Character:
         specials    = self.get_set_specials()
         extra_e     = 3 if "eisen_energy_regen" in specials else 0
         mage_bonus  = 3 if self.player_class == "mage" else 0
-        energy_gain = self.energy_regen + (2 if "Energiefluss" in self.skills else 0) + mage_bonus + extra_e
+        seg_regen   = 2 if "fluss_der_kraft" in self.active_segnungen else 0
+        energy_gain = self.energy_regen + (2 if "Energiefluss" in self.skills else 0) + mage_bonus + extra_e + seg_regen
         self.energy = min(self.get_effective_max_energy(), self.energy + energy_gain)
         msgs = [f"{self.name} regeneriert {energy_gain} Energie."]
         if "Regeneration" in self.skills:
@@ -327,12 +361,14 @@ class Character:
             return f"{self.name} erleidet {damage} Schaden durch Blutung! ({self.bleed_stacks} Stacks verbleibend)"
         return ""
 
-    def check_poison(self) -> str:
+    def check_poison(self, keep_stacks: bool = False) -> str:
         if self.poison_stacks > 0:
             if getattr(self, "immune_to_bleed_poison", False):
                 self.poison_stacks = 0
                 return ""
             self.hp = max(0, self.hp - POISON_DAMAGE)
+            if keep_stacks:
+                return f"☠️  {self.name} erleidet {POISON_DAMAGE} Giftschaden! ({self.poison_stacks} Stacks — Giftmeister hält sie aktiv)"
             self.poison_stacks -= 1
             return f"☠️  {self.name} erleidet {POISON_DAMAGE} Giftschaden! ({self.poison_stacks} Stacks verbleibend)"
         return ""
@@ -358,7 +394,10 @@ class Character:
         return chance
 
     def get_xp_bonus_mult(self) -> float:
-        return 1.20 if "runen_xp_bonus" in self.get_set_specials() else 1.0
+        mult = 1.20 if "runen_xp_bonus" in self.get_set_specials() else 1.0
+        if "weise_seele" in self.active_segnungen:
+            mult *= 1.15
+        return mult
 
     def use_consumable(self, key: str) -> str:
         from content.loot_tables import CONSUMABLE_DEFS
@@ -379,6 +418,8 @@ class Character:
         emoji  = cdef.get("emoji", "🧪")
 
         if effect == "heal":
+            if "trankmeister" in self.active_segnungen:
+                value = int(value * 1.5)
             healed = min(value, self.max_hp - self.hp)
             self.hp = min(self.max_hp, self.hp + value)
             return f"{emoji} {self.name} benutzt {key} und heilt {healed} HP! (HP: {self.hp}/{self.max_hp})"
@@ -443,6 +484,10 @@ class Character:
             "schwarzmarkt_available": self.schwarzmarkt_available,
             "shop_stock":             self.shop_stock,
             "zone_progress":          self.zone_progress,
+            "active_segnungen":       self.active_segnungen,
+            "seg_kill_streak":        self.seg_kill_streak,
+            "seg_raserei_ready":      self.seg_raserei_ready,
+            "seg_zweite_chance_used": self.seg_zweite_chance_used,
         }
 
     @classmethod
@@ -493,6 +538,10 @@ class Character:
         player.passive_crit_bonus      = data.get("passive_crit_bonus", 0.0)
         player.schwarzmarkt_available  = data.get("schwarzmarkt_available", True)
         player.shop_stock              = data.get("shop_stock", [])
+        player.active_segnungen        = data.get("active_segnungen", [])
+        player.seg_kill_streak         = data.get("seg_kill_streak", 0)
+        player.seg_raserei_ready       = data.get("seg_raserei_ready", False)
+        player.seg_zweite_chance_used  = data.get("seg_zweite_chance_used", False)
         _default_zp = {
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]
