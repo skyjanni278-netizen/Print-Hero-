@@ -261,6 +261,8 @@ def apply_loot(player, loot_list: list) -> list:
     for item in loot_list:
         if item["type"] == "gold":
             amount = random.randint(item["min"], item["max"])
+            if "goldgier" in getattr(player, "active_segnungen", []):
+                amount = int(amount * 1.25)
             player.inventory["Gold"] = player.inventory.get("Gold", 0) + amount
             messages.append(f"  💰 {amount}x Gold")
 

@@ -8,6 +8,10 @@ from core.abilities import (
     aus_dem_schatten, giftklinge, blendpulver, rauchbombe,
     arkane_entladung, froststrahl, feuerball, mana_schild_aktivieren,
 )
+from systems.segnungen import (
+    on_combat_start, on_kill, on_player_hit, status_snapshot,
+    check_vergeltung, check_zweite_chance, check_glut_burst,
+)
 
 
 def _apply_weapon_passive(player, target, dmg: int):
@@ -78,6 +82,7 @@ def _print_combat_screen(player, enemy_list, round_num: int):
     if getattr(player, "shield_active", False):       fx.append("[cyan]🔵 Magieschild[/cyan]")
     if getattr(player, "mana_shield_active", False):  fx.append("[blue]🔮 Mana-Schild[/blue]")
     if getattr(player, "shadow_strike_ready", False): fx.append("[magenta]🗡️ Schatten-Krit[/magenta]")
+    if getattr(player, "seg_raserei_ready", False):   fx.append("[bold red]🔥 RASEREI bereit[/bold red]")
     if fx:
         console.print(f"    {' | '.join(fx)}")
 
@@ -232,14 +237,22 @@ def combat(player, enemy_list):
         player.combat_modifiers["attack"] = player.combat_modifiers.get("attack", 0) + bonus
         player.next_fight_atk_mult = 1.0
 
+    seg_start_msgs = on_combat_start(player, enemy_list) if player.active_segnungen else []
+
     round_num = 0
 
     while player.is_alive() and any(e.is_alive() for e in enemy_list):
         round_num += 1
         _print_combat_screen(player, enemy_list, round_num)
+        if round_num == 1 and seg_start_msgs:
+            for m in seg_start_msgs:
+                console.print(f"  [cyan]{m}[/cyan]")
         _print_action_menu(player)
 
         # Betäubung: Zug überspringen
+        if player.stunned and "eiserner_wille" in player.active_segnungen and random.random() < 0.50:
+            player.stunned = False
+            console.print("\n  [cyan]🧠 Eiserner Wille: Du widerstehst der Betäubung![/cyan]")
         if player.stunned:
             player.stunned = False
             console.print("\n  [yellow]🪨 Du bist betäubt — überspringst diese Runde![/yellow]")
@@ -247,6 +260,8 @@ def combat(player, enemy_list):
             choice = "__stunned__"
         else:
             choice = input("\n  Deine Wahl: ").strip().lower()
+
+        alive_before = [e for e in enemy_list if e.is_alive()]
 
         if choice == "__stunned__":
             pass
@@ -387,20 +402,41 @@ def combat(player, enemy_list):
 
         # ── [A] Angriff ───────────────────────────────────────
         elif choice == 'a':
-            tidx = _pick_target(enemy_list)
-            if tidx < 0:
-                continue
-            target = enemy_list[tidx]
-            _result_header(player, enemy_list)
-            console.print("  [bold]⚔  Angriff[/bold]")
-            console.print()
-            if _check_swallow(target):
-                console.print(f"  [dim]🌪 {_esc(target.name)} verschluckt deinen Angriff![/dim]")
+            if getattr(player, "seg_raserei_ready", False):
+                player.seg_raserei_ready = False
+                _result_header(player, enemy_list)
+                console.print("  [bold red]🔥 RASEREI — Angriff auf alle Gegner![/bold red]")
+                console.print()
+                for e in [x for x in enemy_list if x.is_alive()]:
+                    if _check_swallow(e):
+                        console.print(f"  [dim]🌪 {_esc(e.name)} verschluckt deinen Angriff![/dim]")
+                        continue
+                    msg, dmg = player.attack_target(e)
+                    player.stats["damage_dealt"] += dmg
+                    console.print(f"  [dim]{_esc(e.name)}:[/dim] {msg}")
+                    _apply_weapon_passive(player, e, dmg)
             else:
-                msg, dmg = player.attack_target(target)
-                player.stats["damage_dealt"] += dmg
-                console.print(f"  {msg}")
-                _apply_weapon_passive(player, target, dmg)
+                tidx = _pick_target(enemy_list)
+                if tidx < 0:
+                    continue
+                target = enemy_list[tidx]
+                _result_header(player, enemy_list)
+                console.print("  [bold]⚔  Angriff[/bold]")
+                console.print()
+                if _check_swallow(target):
+                    console.print(f"  [dim]🌪 {_esc(target.name)} verschluckt deinen Angriff![/dim]")
+                else:
+                    msg, dmg = player.attack_target(target)
+                    player.stats["damage_dealt"] += dmg
+                    console.print(f"  {msg}")
+                    _apply_weapon_passive(player, target, dmg)
+                    if ("finstere_klinge" in player.active_segnungen
+                            and target.is_alive() and random.random() < 0.10):
+                        console.print("  [magenta]🗡️  Finstere Klinge: Dein Angriff wiederholt sich![/magenta]")
+                        msg2, dmg2 = player.attack_target(target)
+                        player.stats["damage_dealt"] += dmg2
+                        console.print(f"  {msg2}")
+                        _apply_weapon_passive(player, target, dmg2)
 
         # ── [U] Verbrauchsgegenstände ─────────────────────────
         elif choice == 'u':
@@ -428,16 +464,31 @@ def combat(player, enemy_list):
             exit()
 
         # ── Status-Ticks (Gegner) ─────────────────────────────
+        giftmeister = "giftmeister" in player.active_segnungen
         for e in enemy_list:
             if e.is_alive():
-                tick_msgs = [m for m in (e.check_bleed(), e.check_poison(), e.check_burn()) if m]
+                burn_before = getattr(e, "burn_stacks", 0)
+                tick_msgs = [m for m in (e.check_bleed(), e.check_poison(keep_stacks=giftmeister), e.check_burn()) if m]
+                glut_msg  = check_glut_burst(player, e, burn_before)
+                if glut_msg:
+                    tick_msgs.append(glut_msg)
                 if tick_msgs:
                     console.print(f"  {'  |  '.join(tick_msgs)}")
+
+        # ── Kill-Hooks (Segnungen) ────────────────────────────
+        if player.active_segnungen:
+            for e in alive_before:
+                if not e.is_alive():
+                    for m in on_kill(player, e):
+                        console.print(f"  {m}")
 
         # ── Status-Ticks (Spieler) ────────────────────────────
         player_ticks = [m for m in (player.check_bleed(), player.check_poison(), player.check_burn()) if m]
         if player_ticks:
             console.print(f"  {'  |  '.join(player_ticks)}")
+        zc = check_zweite_chance(player)
+        if zc:
+            console.print(f"  {zc}")
 
         # ── Gegner-Angriffe ───────────────────────────────────
         console.print()
@@ -455,6 +506,10 @@ def combat(player, enemy_list):
                 rem = f"({e.blind_turns} verbleibend)" if e.blind_turns > 0 else "(Blindheit beendet)"
                 console.print(f"  💨 [cyan]{_esc(e.name)} ist geblendet — verfehlt den Angriff! {rem}[/cyan]")
                 continue
+            if round_num == 1 and "schattenform" in player.active_segnungen:
+                console.print(f"  🌑 [green]Schattenform: Du weichst dem Angriff von {_esc(e.name)} aus![/green]")
+                continue
+            before_status = status_snapshot(player) if player.active_segnungen else None
             if getattr(player, "block_next", False):
                 player.block_charges -= 1
                 if player.block_charges <= 0:
@@ -492,9 +547,18 @@ def combat(player, enemy_list):
                         msg, dmg = e.attack_target(player)
                         player.stats["damage_taken"] += dmg
                         console.print(f"  {msg}")
+                        if player.active_segnungen:
+                            for m in on_player_hit(player, e, dmg):
+                                console.print(f"  {m}")
             ability_chance = getattr(e, "boss_ability_chance", 0.30)
             if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < ability_chance:
                 console.print(f"  {e.boss_ability(player)}")
+            if player.active_segnungen:
+                for m in check_vergeltung(player, e, before_status):
+                    console.print(f"  {m}")
+                zc = check_zweite_chance(player)
+                if zc:
+                    console.print(f"  {zc}")
 
         # ── Cooldowns dekrementieren ──────────────────────────
         cds = getattr(player, "ability_cooldowns", {})

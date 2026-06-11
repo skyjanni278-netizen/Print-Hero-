@@ -1,8 +1,8 @@
 import random
+from systems.segnungen import seg_dmg
 
 # Alle 12 Klassen-Fähigkeiten als Standalone-Funktionen.
 # Werden von core/combat.py aufgerufen — kein direkter Zugriff auf Character nötig.
-# Zukünftige Segnung-Hooks (v3.0) werden hier eingehängt.
 
 
 def _cost(player, base: int) -> int:
@@ -17,7 +17,7 @@ def brutaler_hieb(player, target) -> tuple:
         return f"Nicht genug Energie! ({player.energy}/{cost})", 0
     player.energy -= cost
     raw = random.randint(player.get_effective_min_attack(), player.get_total_attack()) + 6
-    dmg = player.apply_armor_reduction(raw, int(target.get_total_armor() * 0.70))
+    dmg = seg_dmg(player, target, player.apply_armor_reduction(raw, int(target.get_total_armor() * 0.70)))
     target.hp = max(0, target.hp - dmg)
     return f"⚔️  Brutaler Hieb! {dmg} Schaden (30% Rüstung ignoriert).", dmg
 
@@ -40,7 +40,7 @@ def schildstoss(player, target) -> tuple:
         return f"Nicht genug Energie! ({player.energy}/{cost})", 0
     player.energy -= cost
     raw = random.randint(player.get_effective_min_attack(), player.get_total_attack())
-    dmg = player.apply_armor_reduction(raw, target.get_total_armor())
+    dmg = seg_dmg(player, target, player.apply_armor_reduction(raw, target.get_total_armor()))
     target.hp = max(0, target.hp - dmg)
     if random.random() < 0.50:
         target.stunned = True
@@ -76,7 +76,7 @@ def giftklinge(player, target) -> tuple:
         return f"Nicht genug Energie! ({player.energy}/{cost})", 0
     player.energy -= cost
     raw = random.randint(player.get_effective_min_attack(), player.get_total_attack())
-    dmg = player.apply_armor_reduction(raw, target.get_total_armor())
+    dmg = seg_dmg(player, target, player.apply_armor_reduction(raw, target.get_total_armor()))
     target.hp          = max(0, target.hp - dmg)
     target.poison_stacks = getattr(target, "poison_stacks", 0) + 3
     return f"🗡️  Giftklinge! {dmg} Schaden + 3 Giftstacks auf {target.name}!", dmg
@@ -112,11 +112,25 @@ def arkane_entladung(player, enemy_list) -> tuple:
     living = [e for e in enemy_list if e.is_alive()]
     for e in living:
         e.hp = max(0, e.hp - dmg * hits)
+    total  = dmg * hits * len(living)
     names  = ", ".join(e.name for e in living)
     suffix = " (Arkane Roben: 2× Treffer!)" if double else ""
+    extra_msg = ""
+    if "arkane_ueberladung" in player.active_segnungen:
+        extra_total = 0
+        for _ in range(3):
+            alive_now = [e for e in living if e.is_alive()]
+            if not alive_now:
+                break
+            t = random.choice(alive_now)
+            t.hp = max(0, t.hp - dmg)
+            extra_total += dmg
+        if extra_total:
+            extra_msg = f" ✨ Überladung: +{extra_total} Schaden!"
+            total += extra_total
     return (
-        f"✨ Arkane Entladung! {dmg * hits} Schaden (ignoriert DEF) an: {names}{suffix}",
-        dmg * hits * len(living),
+        f"✨ Arkane Entladung! {dmg * hits} Schaden (ignoriert DEF) an: {names}{suffix}{extra_msg}",
+        total,
     )
 
 
@@ -125,7 +139,7 @@ def froststrahl(player, target) -> tuple:
     if player.energy < cost:
         return f"Nicht genug Energie! ({player.energy}/{cost})", 0
     player.energy -= cost
-    dmg = random.randint(15, 25)
+    dmg = seg_dmg(player, target, random.randint(15, 25))
     target.hp      = max(0, target.hp - dmg)
     target.stunned = True
     return f"❄️  Froststrahl! {dmg} Eisschaden (ignoriert DEF) — {target.name} ist eingefroren!", dmg
@@ -137,7 +151,7 @@ def feuerball(player, target) -> tuple:
         return f"Nicht genug Energie! ({player.energy}/{cost})", 0
     player.energy -= cost
     raw = random.randint(player.get_effective_min_attack(), player.get_total_attack()) + 4
-    dmg = player.apply_armor_reduction(raw, target.get_total_armor())
+    dmg = seg_dmg(player, target, player.apply_armor_reduction(raw, target.get_total_armor()))
     target.hp          = max(0, target.hp - dmg)
     target.burn_stacks = getattr(target, "burn_stacks", 0) + 3
     return f"🔥 Feuerball! {dmg} Schaden + 3 Verbrennungsstacks auf {target.name}!", dmg
