@@ -477,6 +477,8 @@ class Character:
         return f"{emoji} {self.name} benutzt {key}."
 
     # ── Serialisierung ────────────────────────────────────────
+    # Jedes neue Character-Attribut muss in to_dict UND from_dict ergänzt werden,
+    # sonst geht es beim Laden verloren.
 
     def to_dict(self) -> dict:
         """Serialisiert den Spieler vollständig als JSON-kompatibles Dict."""

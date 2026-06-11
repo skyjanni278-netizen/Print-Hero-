@@ -51,6 +51,7 @@ def save_meta(meta: dict):
         json.dump(meta, f, indent=2)
 
 
+# Einzige erlaubten Wege, Runenessenz zu ändern — nie meta["runenessenz"] direkt anfassen.
 def add_runenessenz(meta: dict, amount: int):
     meta["runenessenz"] = meta.get("runenessenz", 0) + amount
     ls = meta.setdefault("lifetime_stats", {})

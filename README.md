@@ -21,6 +21,10 @@ python main.py
 ```
 main.py                  — Spielschleife & Einstiegspunkt
 config.py                — Schwierigkeitsgrade & globale Konstanten
+DEVELOPMENT.md           — Entwickler-Handbuch: Architektur, Konventionen, Constraints
+ITEMS.md                 — Referenz: alle Items, Sets & Waffen als Tabellen
+ROADMAP.md               — Entwicklungsplan & aktueller Stand
+LICENSE                  — MIT
 core/
   player.py              — Spieler-Klasse, Inventar, Skills, Equipment
   abilities.py           — Die 12 Klassen-Fähigkeiten als Standalone-Funktionen

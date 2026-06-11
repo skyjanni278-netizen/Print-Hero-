@@ -58,6 +58,7 @@
   - Bugfix: Tode bei Zonen-Boss-Niederlagen doppelt gezählt (world_map + _handle_defeat) — Zählung jetzt nur noch in `_handle_defeat()`
   - Headless-Kampftest (gescriptete Eingaben) über den kompletten Kampf-Pfad inkl. Spiegel-Hooks
   - README komplett auf v3.0 umgeschrieben (Roguelite-Loop, Segnungen, Spiegel, Runen, neues Save-System, Changelog)
+  - Docs: DEVELOPMENT.md (Entwickler-Handbuch: Architektur, Konventionen, Save-Constraints, Erweiterungs-Rezepte), MIT-LICENSE, Constraint-Kommentare an allen Save-kritischen Dicts/Funktionen
   - v3.0 getaggt
 
 ### 🔧 Nächster Schritt: v3.1 — Equipment-Rebalancing

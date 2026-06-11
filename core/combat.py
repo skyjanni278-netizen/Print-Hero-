@@ -15,6 +15,7 @@ from systems.segnungen import (
 from systems.spiegel import spiegel_active, check_spiegel_leben, check_dunkelresistenz
 
 
+# Waffen-Passive leben nur hier — nicht in player.attack_target().
 def _apply_weapon_passive(player, target, dmg: int):
     if dmg <= 0:
         return

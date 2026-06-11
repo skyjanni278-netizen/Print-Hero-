@@ -2,6 +2,7 @@ import random
 from rich.markup import escape as _esc
 
 # ── Spiegel-Upgrades (permanent, im Meta-Save) ────────────────────────────────
+# Upgrade-IDs sind Keys in meta["spiegel_state"] — umbenennen bricht gekaufte Upgrades.
 
 SPIEGEL_DEFS = {
     "zaehigkeit": {
@@ -79,6 +80,8 @@ def spiegel_active(player, uid: str, variant: str) -> bool:
     return getattr(player, "spiegel", {}).get(uid) == variant
 
 
+# Kopiert den Meta-Stand als Run-Snapshot nach player.spiegel —
+# alle Kampf-/Loot-Hooks lesen nur den Snapshot, nie das Meta.
 def apply_spiegel_effects(player, meta) -> list:
     state = dict(meta.get("spiegel_state", {}))
     player.spiegel = state

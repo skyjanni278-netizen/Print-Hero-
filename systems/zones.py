@@ -133,6 +133,7 @@ def scale_enemy(mob, player):
     return mob
 
 
+# Einzige Monster-Fabrik — neue Monster in den Gegnerpool von ZONE_DEFS eintragen.
 def create_zone_enemy(player, zone_id: str = None, forced_rank: int = None):
     if zone_id is None:
         zone_id = getattr(player, "current_zone", "wald")

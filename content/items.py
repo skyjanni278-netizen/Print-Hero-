@@ -1,5 +1,6 @@
 # Item-Definitionen: Consumables, Junk, Equipment, Klassen-Mapping, Rezepte.
 # Wird von content/sets.py, content/loot.py und allen anderen Modulen importiert.
+# Item-Namen sind Save-IDs (Inventar/Equipment in run_save.json) — umbenennen bricht Spielstände.
 
 CONSUMABLE_DEFS = {
     "Healing Potion":   {"effect": "heal",    "value": 10, "emoji": "🧪", "desc": "Heilt 10 HP",                   "max_stack": 5,  "sell": 7},

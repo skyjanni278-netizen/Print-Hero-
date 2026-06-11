@@ -2,6 +2,7 @@ import random
 from rich.markup import escape as _esc
 
 # ── Runen (permanente Unlocks, Dead-Cells-Blueprints) ─────────────────────────
+# Rune-IDs sind Keys in meta["unlocked_runen"] — umbenennen bricht Spielstände.
 
 RUNEN_DEFS = {
     "kriegers_vermaechtnis": {"name": "Kriegers Vermächtnis", "emoji": "🪓", "kategorie": "startkit", "class": "warrior",

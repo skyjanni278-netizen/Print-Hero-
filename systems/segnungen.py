@@ -3,6 +3,7 @@ from rich.markup import escape as _esc
 from config import BURN_DAMAGE
 
 # ── Segnung-Pool (gilt nur für den laufenden Run) ─────────────────────────────
+# Segnung-IDs werden in player.active_segnungen serialisiert — umbenennen bricht laufende Runs.
 
 SEGNUNGEN_POOL = {
     "blutdurst":        {"name": "Blutdurst",         "emoji": "🩸", "class": None,
