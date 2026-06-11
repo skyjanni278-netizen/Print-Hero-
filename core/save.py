@@ -57,6 +57,14 @@ def add_runenessenz(meta: dict, amount: int):
     save_meta(meta)
 
 
+def spend_runenessenz(meta: dict, amount: int) -> bool:
+    if meta.get("runenessenz", 0) < amount:
+        return False
+    meta["runenessenz"] -= amount
+    save_meta(meta)
+    return True
+
+
 def sync_achievements(player, meta: dict):
     unlocked = set(meta.get("achievements", [])) | set(getattr(player, "achievements", set()))
     meta["achievements"] = sorted(unlocked)
