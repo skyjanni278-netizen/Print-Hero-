@@ -56,6 +56,8 @@
   - Bugfix: Energie-Auffüllung (Schrein, Blutiger Altar, Dungeon-Abschluss) nutzt `get_effective_max_energy()` statt `max_energy` — Set-Energie-Boni wurden ignoriert, Auffüllen konnte Energie reduzieren
   - Bugfix: `combat()` gibt „defeat" zurück, wenn der Spieler in der Runde des letzten Kills am eigenen Status-Tick stirbt (vorher „victory" mit 0 HP)
   - Bugfix: Tode bei Zonen-Boss-Niederlagen doppelt gezählt (world_map + _handle_defeat) — Zählung jetzt nur noch in `_handle_defeat()`
+  - Bugfix (Voll-Review): Magieschild-Skill wird in `reset_combat_modifiers()` wieder aufgeladen — war zuvor 1× pro Run statt „1× pro Kampf"
+  - Voll-Review-Beobachtungen (kein Fix, Entscheidung für v3.1): besiegte Zonen-Bosse via [B] wiederholbar (Essenz-Farming möglich); Starter-Kettenhemd hat 5 DEF vs. 4 DEF in EQUIPMENT_DEFS; Kampf-Achievements (first_blood usw.) triggern erst beim nächsten Boss-Sieg statt nach jedem Kampf
   - Headless-Kampftest (gescriptete Eingaben) über den kompletten Kampf-Pfad inkl. Spiegel-Hooks
   - README komplett auf v3.0 umgeschrieben (Roguelite-Loop, Segnungen, Spiegel, Runen, neues Save-System, Changelog)
   - Docs: DEVELOPMENT.md (Entwickler-Handbuch: Architektur, Konventionen, Save-Constraints, Erweiterungs-Rezepte), MIT-LICENSE, Constraint-Kommentare an allen Save-kritischen Dicts/Funktionen

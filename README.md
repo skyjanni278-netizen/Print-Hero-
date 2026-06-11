@@ -331,6 +331,7 @@ Zwei Speicherdateien in `saves/`:
 - Bugfix: Energie-Auffüllung (Schrein, Blutiger Altar, Dungeon-Abschluss) respektiert Set-Energie-Boni — konnte Energie zuvor sogar reduzieren
 - Bugfix: Tod durch eigenen Status-Tick in der Runde des letzten Kills zählt als Niederlage statt als Sieg
 - Bugfix: Tode wurden bei Zonen-Boss-Niederlagen doppelt gezählt
+- Bugfix: Magieschild-Skill lädt sich jetzt nach jedem Kampf wieder auf („1× pro Kampf" statt faktisch 1× pro Run)
 
 ### v2.3
 - Autosave: Nach jedem Dungeon-Abschluss wird automatisch in den aktiven Slot gespeichert

@@ -196,6 +196,7 @@ class Character:
         self.shadow_strike_ready = False
         self.mana_shield_active  = False
         self.seg_first_strike    = False
+        self.shield_ready        = "Magieschild" in self.skills
         self.ability_cooldowns   = {"S": 0, "R": 0, "C": 0, "X": 0}
 
     def get_total_armor(self):

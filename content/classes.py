@@ -59,7 +59,7 @@ CLASS_DEFS = {
         "desc":        "Hohe Energie, günstige Spezialfähigkeiten",
         "bonus_desc":  "Energie-Regen +3/Runde, Spezialfähigkeiten -5 Energie",
         "ability_name":"Arkane Entladung",
-        "ability_desc":"25–40 Schaden an ALLE Gegner, ignoriert DEF",
+        "ability_desc":"Magischer Schaden an ALLE Gegner, ignoriert DEF, skaliert mit Level",
         "start_item":   None,
     },
     "rogue": {
