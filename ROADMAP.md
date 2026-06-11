@@ -5,7 +5,7 @@
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
 **Letzte abgeschlossene Version:** v2.3 — QoL  
-**In Arbeit:** v3.0 — Roguelite (Phase 3 von 4 fertig)  
+**In Arbeit:** v3.0 — Roguelite (alle 4 Phasen fertig — es fehlt nur noch der Bug-Pass + Release-Tag)  
 **Danach:** v3.1 — Equipment-Rebalancing
 
 ### ✅ Was ist fertig
@@ -40,14 +40,21 @@
     - Zweites Leben B: „Bei Tod: 20% deines Goldes als Runenessenz" (statt „Items behalten" — run_save wird bei Tod gelöscht)
     - Glück B: „Boss-Beute: +1 zusätzlicher Beute-Wurf" (statt „1× pro Run Item-Qualität +1" — Items haben feste Defs, kein Qualitätsfeld)
 
-### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 4 (Runen)
-1. `systems/runen.py` — RUNE_DEFS, check_rune_drop(), apply_rune_unlock()
-2. `core/save.py` — `unlocked_runen` im Meta-Save nutzen (Feld existiert bereits)
-3. `systems/hub.py` — [R] Runen-Übersicht + Startkit-Auswahl vor Run-Start
-4. `systems/world_map.py` / `core/combat.py` — Rune-Drops (Zonen-Boss 100%, Dungeon-Boss 25%, Elite 5%, Truhe 15%)
-5. Danach: Bug-Pass + v3.0-Release-Kriterien prüfen
+- **v3.0 Phase 4 (Runen) komplett:**
+  - `systems/runen.py`: RUNEN_DEFS (9 Runen: 4 Startkits, 2 Klassen-Varianten, 3 Zuflucht-NPCs), `check_rune_drop()` mit Quellen-Chancen, `apply_startkit()`, `apply_klassen_variante()`
+  - Drops verdrahtet: Zonen-Boss 100% (1× pro Boss, `meta["boss_runen_dropped"]`), Dungeon-Boss Rang 5 25%, Elite 5%, Schatztruhe 15% (`trigger_event` reicht `meta` durch)
+  - `ui/runen_ui.py`: Runen-Übersicht ([R] im Hub), Klassen-Varianten-Wahl, Startkit-Wahl, Essenz-Händlerin, Orakel ([O] im Hub)
+  - Klassen-Varianten: Berserker (−10 HP, +6 ATK, kein Schildwall — auch Segnung „Unerschütterlich" gefiltert), Meuchler (15 HP, 18 ATK, Flucht immer erfolgreich via `try_flee`)
+  - Schmiedegeheimnis: `player.schmied_gratis_upgrade`-Flag pro Run, eingelöst im Upgrade-Menü (`ui/pause.py`)
+  - Neue Player-Felder `class_variant` + `schmied_gratis_upgrade` serialisiert
+  - Abweichungen vom ursprünglichen Plan (NPCs als Pre-Run-Schritte statt eigener Hub-Menüpunkte, da das Inventar pro Run existiert):
+    - Händlernetzwerk: Essenz-Shop erscheint beim Run-Start (nicht als stehender Hub-NPC)
+    - Schmiedegeheimnis: Gratis-Upgrade-Marke pro Run statt Upgrade „vor dem Run" (beim Start gibt es noch kein aufwertbares Equipment)
 
-Details siehe v3.0-Abschnitt unten.
+### 🔧 Nächster Schritt: v3.0 — Bug-Pass + Release
+1. Gezielter Bug-Pass über den neuen v3.0-Code (Phasen 1–4)
+2. Release-Kriterien prüfen (siehe v3.0-Abschnitt)
+3. v3.0 taggen (Tag über die GitHub-Website erstellen)
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
