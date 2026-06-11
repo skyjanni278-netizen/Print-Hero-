@@ -212,7 +212,7 @@ def _poison_trap(player):
     input("\n(ENTER)")
 
 
-def _treasure_chest(player):
+def _treasure_chest(player, meta=None):
     from content.loot_tables import roll_loot, apply_loot
     clear_screen()
     print_header("Schatz-Truhe")
@@ -224,6 +224,13 @@ def _treasure_chest(player):
             console.print(f"  {m}")
     else:
         console.print("  [dim]Die Truhe ist leider leer.[/dim]")
+    if meta is not None:
+        from systems.runen import check_rune_drop, rune_found_msgs
+        rid = check_rune_drop(meta, "chest")
+        if rid:
+            console.print()
+            for m in rune_found_msgs(rid):
+                console.print(f"  {m}")
     input("\n(ENTER)")
 
 
@@ -558,10 +565,13 @@ _EVENTS = [
 ]
 
 
-def trigger_event(player):
+def trigger_event(player, meta=None):
     events = _EVENTS
     if getattr(player, "spiegel", {}).get("haendlerglueck") == "A":
         events = [(f, w * 2 if f is _wandering_merchant else w) for f, w in _EVENTS]
     funcs, weights = zip(*events)
     chosen = random.choices(funcs, weights=weights, k=1)[0]
-    chosen(player)
+    if chosen is _treasure_chest:
+        chosen(player, meta)
+    else:
+        chosen(player)

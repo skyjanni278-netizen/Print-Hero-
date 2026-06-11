@@ -203,6 +203,13 @@ def run_zone_boss(player, zone_id: str, meta) -> str:
     add_runenessenz(meta, essenz)
     console.print(f"  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
+    from systems.runen import check_rune_drop, rune_found_msgs
+    rid = check_rune_drop(meta, "zone_boss", zone_id)
+    if rid:
+        console.print()
+        for m in rune_found_msgs(rid):
+            console.print(f"  {m}")
+
     pots_used = player.stats.get("potions_used", 0) - pots_before
     for m in check_all(player, {"event": "victory", "enemies": [boss], "potions_used": pots_used}):
         console.print(f"  {m}")

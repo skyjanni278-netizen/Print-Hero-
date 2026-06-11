@@ -387,10 +387,16 @@ def run_dungeon(player, meta) -> str:
             outcome = _run_combat_room(player, [elite], room_num)
             if outcome in ("defeat", "fled"):
                 return outcome
+            from systems.runen import check_rune_drop, rune_found_msgs
+            rid = check_rune_drop(meta, "elite")
+            if rid:
+                for m in rune_found_msgs(rid):
+                    console.print(f"  {m}")
+                input("  (ENTER)")
 
         # ── Ereignis-Raum ─────────────────────────────────────
         elif room_type == "event":
-            trigger_event(player)
+            trigger_event(player, meta)
             if not player.is_alive():
                 return "defeat"
 
@@ -483,6 +489,13 @@ def run_dungeon(player, meta) -> str:
             for m in lvl_msgs:
                 console.print(f"  {m}")
             console.print(f"\n  [bold green]+{total_xp} XP[/bold green]")
+            if boss_rank == 5:
+                from systems.runen import check_rune_drop, rune_found_msgs
+                rid = check_rune_drop(meta, "dungeon_boss")
+                if rid:
+                    console.print()
+                    for m in rune_found_msgs(rid):
+                        console.print(f"  {m}")
             pots_used = player.stats.get("potions_used", 0) - pots_before
             for m in check_all(player, {"event": "victory", "enemies": [boss], "potions_used": pots_used}):
                 console.print(f"  {m}")
