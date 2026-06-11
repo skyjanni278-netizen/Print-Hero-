@@ -1,6 +1,7 @@
 import random
 from ui.utils import clear_screen, print_header, console, hp_bar, energy_bar
 from rich.markup import escape as _esc
+from systems.spiegel import spiegel_price as _spiegel_price
 
 
 _SCHWARZMARKT_CATALOGUE = [
@@ -22,7 +23,8 @@ def _schwarzmarkt(player):
     print_header("🏴 Schwarzmarkt")
     console.print("  Der Händler schaut sich um und zieht eine schwarze Plane beiseite.")
     console.print("  [dim]\"Nur für dich, und nur dieses Mal. Sag niemandem, was du hier gesehen hast.\"[/dim]\n")
-    picks = random.sample(_SCHWARZMARKT_CATALOGUE, min(4, len(_SCHWARZMARKT_CATALOGUE)))
+    picks = [dict(it, price=_spiegel_price(player, it["price"]))
+             for it in random.sample(_SCHWARZMARKT_CATALOGUE, min(4, len(_SCHWARZMARKT_CATALOGUE)))]
     console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
     for i, item in enumerate(picks):
         can_afford = player.inventory["Gold"] >= item["price"]
@@ -119,7 +121,7 @@ def _wandering_merchant(player):
         console.print("  Ein Händler tritt aus dem Gebüsch — sein Sortiment wirkt verlockend.")
         console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
         for i, item in enumerate(picks):
-            discounted = max(1, int(item["price"] * 0.8))
+            discounted = _spiegel_price(player, max(1, int(item["price"] * 0.8)))
             emoji      = CONSUMABLE_DEFS.get(item["key"], {}).get("emoji", "🧪")
             cur        = player.inventory.get("Consumables", {}).get(item["key"], 0)
             max_stack  = CONSUMABLE_DEFS.get(item["key"], {}).get("max_stack", 99)
@@ -139,7 +141,7 @@ def _wandering_merchant(player):
             input("(ENTER)")
             continue
         item = picks[idx]
-        discounted = max(1, int(item["price"] * 0.8))
+        discounted = _spiegel_price(player, max(1, int(item["price"] * 0.8)))
         if player.inventory["Gold"] < discounted:
             console.print("  [red]Zu wenig Gold![/red]")
             input("(ENTER)")
@@ -465,11 +467,11 @@ def _dungeon_arms_dealer(player):
     picks = []
     for key in random.sample(equip_pool, min(2, len(equip_pool))):
         edef  = EQUIPMENT_DEFS[key]
-        price = max(15, int(edef.get("sell", 10) * 2 * 1.3))
+        price = _spiegel_price(player, max(15, int(edef.get("sell", 10) * 2 * 1.3)))
         picks.append({"key": key, "type": "equipment", "price": price, "edef": edef})
     for key in random.sample(cons_pool, min(2, len(cons_pool))):
         cdef  = CONSUMABLE_DEFS[key]
-        price = max(10, int(cdef.get("sell", 8) * 2 * 1.3))
+        price = _spiegel_price(player, max(10, int(cdef.get("sell", 8) * 2 * 1.3)))
         picks.append({"key": key, "type": "consumable", "price": price, "cdef": cdef})
 
     console.print(f"  Gold: [yellow]{player.inventory['Gold']} 🪙[/yellow]\n")
@@ -557,6 +559,9 @@ _EVENTS = [
 
 
 def trigger_event(player):
-    funcs, weights = zip(*_EVENTS)
+    events = _EVENTS
+    if getattr(player, "spiegel", {}).get("haendlerglueck") == "A":
+        events = [(f, w * 2 if f is _wandering_merchant else w) for f, w in _EVENTS]
+    funcs, weights = zip(*events)
     chosen = random.choices(funcs, weights=weights, k=1)[0]
     chosen(player)

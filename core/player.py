@@ -62,6 +62,11 @@ class Character:
         self.seg_zweite_chance_used  = False
         self.seg_first_strike        = False
 
+        self.spiegel              = {}
+        self.spiegel_leben_used   = False
+        self.spiegel_immun_effekt = None
+        self.spiegel_first_fight  = False
+
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
         self.shop_stock = []
@@ -239,7 +244,11 @@ class Character:
             self.min_attack += LEVEL_ATK_GAIN
             self.skill_points += 1
             msgs.append(f"[bold yellow]✨ {self.name} ist nun Level {self.level}![/bold yellow]")
-            msgs.append(f"[yellow]+1 Skillpunkt! (Gesamt: {self.skill_points})[/yellow]")
+            if getattr(self, "spiegel", {}).get("seelenbindung") == "B":
+                self.skill_points += 1
+                msgs.append(f"[yellow]+2 Skillpunkte! 🪞📿 Seelenbindung (Gesamt: {self.skill_points})[/yellow]")
+            else:
+                msgs.append(f"[yellow]+1 Skillpunkt! (Gesamt: {self.skill_points})[/yellow]")
             if self.level in self.SKILL_UNLOCKS:
                 skill_name, skill_desc = self.SKILL_UNLOCKS[self.level]
                 msgs.append(f"[cyan]🔓 Neue Fähigkeit freigeschaltet: {skill_name}[/cyan]")
@@ -351,6 +360,9 @@ class Character:
             if getattr(self, "immune_to_bleed_poison", False):
                 self.bleed_stacks = 0
                 return ""
+            if getattr(self, "spiegel_immun_effekt", None) == "bleed":
+                self.bleed_stacks = 0
+                return f"🌓 {self.name} ist immun gegen Blutung — Stacks verpuffen!"
             specials = self.get_set_specials()
             if "stahl_bleed_immune" in specials:
                 self.bleed_stacks = 0
@@ -366,6 +378,9 @@ class Character:
             if getattr(self, "immune_to_bleed_poison", False):
                 self.poison_stacks = 0
                 return ""
+            if getattr(self, "spiegel_immun_effekt", None) == "poison":
+                self.poison_stacks = 0
+                return f"🌓 {self.name} ist immun gegen Gift — Stacks verpuffen!"
             self.hp = max(0, self.hp - POISON_DAMAGE)
             if keep_stacks:
                 return f"☠️  {self.name} erleidet {POISON_DAMAGE} Giftschaden! ({self.poison_stacks} Stacks — Giftmeister hält sie aktiv)"
@@ -378,6 +393,9 @@ class Character:
             if getattr(self, "immune_to_bleed_poison", False):
                 self.burn_stacks = 0
                 return ""
+            if getattr(self, "spiegel_immun_effekt", None) == "burn":
+                self.burn_stacks = 0
+                return f"🌓 {self.name} ist immun gegen Verbrennung — Stacks verpuffen!"
             self.hp = max(0, self.hp - BURN_DAMAGE)
             self.burn_stacks -= 1
             return f"🔥 {self.name} erleidet {BURN_DAMAGE} Verbrennungsschaden! ({self.burn_stacks} Stacks verbleibend)"
@@ -397,6 +415,8 @@ class Character:
         mult = 1.20 if "runen_xp_bonus" in self.get_set_specials() else 1.0
         if "weise_seele" in self.active_segnungen:
             mult *= 1.15
+        if getattr(self, "spiegel", {}).get("seelenbindung") == "A":
+            mult *= 1.08
         return mult
 
     def use_consumable(self, key: str) -> str:
@@ -488,6 +508,10 @@ class Character:
             "seg_kill_streak":        self.seg_kill_streak,
             "seg_raserei_ready":      self.seg_raserei_ready,
             "seg_zweite_chance_used": self.seg_zweite_chance_used,
+            "spiegel":                self.spiegel,
+            "spiegel_leben_used":     self.spiegel_leben_used,
+            "spiegel_immun_effekt":   self.spiegel_immun_effekt,
+            "spiegel_first_fight":    self.spiegel_first_fight,
         }
 
     @classmethod
@@ -542,6 +566,10 @@ class Character:
         player.seg_kill_streak         = data.get("seg_kill_streak", 0)
         player.seg_raserei_ready       = data.get("seg_raserei_ready", False)
         player.seg_zweite_chance_used  = data.get("seg_zweite_chance_used", False)
+        player.spiegel                 = data.get("spiegel", {})
+        player.spiegel_leben_used      = data.get("spiegel_leben_used", False)
+        player.spiegel_immun_effekt    = data.get("spiegel_immun_effekt")
+        player.spiegel_first_fight     = data.get("spiegel_first_fight", False)
         _default_zp = {
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]

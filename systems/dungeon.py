@@ -333,6 +333,9 @@ def run_dungeon(player, meta) -> str:
     zone_id = getattr(player, "current_zone", "wald")
     dungeon_name = random.choice(DUNGEON_NAMES.get(zone_id, DUNGEON_NAMES["wald"]))
 
+    if getattr(player, "spiegel", {}).get("kriegserfahrung") == "B":
+        player.spiegel_first_fight = True
+
     # Dungeon-Einstieg
     clear_screen()
     print_header(f"🗡️  {_esc(dungeon_name)}")
@@ -465,7 +468,8 @@ def run_dungeon(player, meta) -> str:
             player.stats["kills"]  += 1
             _add_zone_kills(player, 1)
             gold_before  = player.inventory["Gold"]
-            loot_items   = roll_zone_loot(zone_id, rolls=boss.loot_rolls + 1)
+            extra_rolls  = 2 if getattr(player, "spiegel", {}).get("glueck") == "B" else 1
+            loot_items   = roll_zone_loot(zone_id, rolls=boss.loot_rolls + extra_rolls)
             msgs         = apply_loot(player, loot_items)
             player.stats["gold_earned"] += player.inventory["Gold"] - gold_before
             total_xp     = int(boss.xp_value * player.next_fight_xp_mult * player.get_xp_bonus_mult())

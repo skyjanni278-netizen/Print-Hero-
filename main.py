@@ -37,6 +37,14 @@ def _new_run(meta):
         player.max_hp = max(1, player.max_hp + hp_delta)
         player.hp     = player.max_hp
 
+    from systems.spiegel import apply_spiegel_effects
+    spiegel_msgs = apply_spiegel_effects(player, meta)
+    if spiegel_msgs:
+        console.print("\n  [bold cyan]🪞 Der Spiegel wirkt:[/bold cyan]")
+        for m in spiegel_msgs:
+            console.print(f"  {m}")
+        input("  (ENTER)")
+
     player.achievements = set(meta.get("achievements", []))
     ls = meta.setdefault("lifetime_stats", {})
     ls["runs_started"] = ls.get("runs_started", 0) + 1
@@ -79,6 +87,13 @@ def _handle_defeat(player, meta):
         edef = EQUIPMENT_DEFS.get(best["name"], {})
         _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
         console.print(f"\n  Bestes Item: {rbadge} {_esc(edef.get('emoji','⚔️'))} {_esc(best['name'])}")
+
+    if getattr(player, "spiegel", {}).get("zweites_leben") == "B":
+        from core.save import add_runenessenz
+        gold_bonus = int(player.inventory.get("Gold", 0) * 0.20)
+        if gold_bonus > 0:
+            add_runenessenz(meta, gold_bonus)
+            console.print(f"\n  [bold cyan]🪞🕊️ Zweites Leben: 20% deines Goldes gerettet — +{gold_bonus} Runenessenz![/bold cyan]")
 
     console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
     console.print(f"  💠 Runenessenz gesamt: [bold cyan]{meta.get('runenessenz', 0)}[/bold cyan]  [dim](bleibt erhalten)[/dim]")

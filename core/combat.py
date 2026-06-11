@@ -12,6 +12,7 @@ from systems.segnungen import (
     on_combat_start, on_kill, on_player_hit, status_snapshot,
     check_vergeltung, check_zweite_chance, check_glut_burst,
 )
+from systems.spiegel import spiegel_active, check_spiegel_leben, check_dunkelresistenz
 
 
 def _apply_weapon_passive(player, target, dmg: int):
@@ -238,6 +239,12 @@ def combat(player, enemy_list):
         player.next_fight_atk_mult = 1.0
 
     seg_start_msgs = on_combat_start(player, enemy_list) if player.active_segnungen else []
+
+    if getattr(player, "spiegel_first_fight", False) and spiegel_active(player, "kriegserfahrung", "B"):
+        player.spiegel_first_fight = False
+        bonus = max(1, int(player.get_total_attack() * 0.5))
+        player.combat_modifiers["attack"] = player.combat_modifiers.get("attack", 0) + bonus
+        seg_start_msgs.append(f"🪞⚔️ Kriegserfahrung: Erster Kampf des Dungeons — +{bonus} ATK (+50% Schaden)!")
 
     round_num = 0
 
@@ -489,6 +496,9 @@ def combat(player, enemy_list):
         zc = check_zweite_chance(player)
         if zc:
             console.print(f"  {zc}")
+        sl = check_spiegel_leben(player)
+        if sl:
+            console.print(f"  {sl}")
 
         # ── Gegner-Angriffe ───────────────────────────────────
         console.print()
@@ -509,7 +519,8 @@ def combat(player, enemy_list):
             if round_num == 1 and "schattenform" in player.active_segnungen:
                 console.print(f"  🌑 [green]Schattenform: Du weichst dem Angriff von {_esc(e.name)} aus![/green]")
                 continue
-            before_status = status_snapshot(player) if player.active_segnungen else None
+            track_status  = player.active_segnungen or spiegel_active(player, "dunkelresistenz", "A")
+            before_status = status_snapshot(player) if track_status else None
             if getattr(player, "block_next", False):
                 player.block_charges -= 1
                 if player.block_charges <= 0:
@@ -559,6 +570,11 @@ def combat(player, enemy_list):
                 zc = check_zweite_chance(player)
                 if zc:
                     console.print(f"  {zc}")
+            for m in check_dunkelresistenz(player, before_status):
+                console.print(f"  {m}")
+            sl = check_spiegel_leben(player)
+            if sl:
+                console.print(f"  {sl}")
 
         # ── Cooldowns dekrementieren ──────────────────────────
         cds = getattr(player, "ability_cooldowns", {})
@@ -582,6 +598,10 @@ def combat(player, enemy_list):
         input("\n  Nächste Runde (ENTER)...")
 
     if not any(e.is_alive() for e in enemy_list):
+        if spiegel_active(player, "zaehigkeit", "B") and player.hp < player.max_hp:
+            healed = min(5, player.max_hp - player.hp)
+            player.hp += healed
+            console.print(f"  [green]🪞❤️ Zähigkeit: +{healed} HP nach dem Kampf (HP: {player.hp}/{player.max_hp})[/green]")
         return "victory"
     return "defeat"
 

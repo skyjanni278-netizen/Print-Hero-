@@ -2,6 +2,7 @@ import random
 from ui.utils import clear_screen, print_header, console
 from rich.markup import escape as _esc
 from config import MAX_INVENTORY_SLOTS
+from systems.spiegel import spiegel_price as _spiegel_price
 
 _RARITY_COLORS = {
     "common":    "white",
@@ -190,7 +191,8 @@ def shop_menu(player):
 
             for item in section_items:
                 idx        = flat.index(item) + 1
-                can_afford = player.inventory["Gold"] >= item["price"]
+                price      = _spiegel_price(player, item["price"])
+                can_afford = player.inventory["Gold"] >= price
                 afford_tag = "[green]✅[/green]" if can_afford else "[red]❌[/red]"
 
                 if item["type"] == "consumable":
@@ -200,7 +202,7 @@ def shop_menu(player):
                     warn       = "" if has_space else " [red]🎒VOLL[/red]"
                     stack_info = f"({cur}/{max_stack})"
                     price_col  = "yellow" if can_afford else "red"
-                    console.print(f"  [[{idx:>2}]] {_esc(item['name']):<24} {stack_info:<8} [dim]{_esc(item['desc']):<20}[/dim] [{price_col}]{item['price']:>4} Gold[/{price_col}]  {afford_tag}{warn}")
+                    console.print(f"  [[{idx:>2}]] {_esc(item['name']):<24} {stack_info:<8} [dim]{_esc(item['desc']):<20}[/dim] [{price_col}]{price:>4} Gold[/{price_col}]  {afford_tag}{warn}")
                 else:
                     if EQUIPMENT_DEFS.get(item["key"], {}).get("slot") == "weapon":
                         display_key, edef = _resolve_weapon(item["key"], player.player_class)
@@ -217,7 +219,7 @@ def shop_menu(player):
                     price_col = "yellow" if can_afford else "red"
                     set_info  = item_to_set.get(item["key"])
                     set_tag   = f"  [dim]{set_info[1]} {_esc(set_info[0])}[/dim]" if set_info else ""
-                    console.print(f"  [[{idx:>2}]] {rbadge}[{rc}]{emoji} {_esc(display_key):<24}[/{rc}] {stat:<10} [dim]{_esc(edef.get('desc','')):<22}[/dim] [{price_col}]{item['price']:>4} Gold[/{price_col}]  {afford_tag}{warn}{set_tag}")
+                    console.print(f"  [[{idx:>2}]] {rbadge}[{rc}]{emoji} {_esc(display_key):<24}[/{rc}] {stat:<10} [dim]{_esc(edef.get('desc','')):<22}[/dim] [{price_col}]{price:>4} Gold[/{price_col}]  {afford_tag}{warn}{set_tag}")
 
             # 🔒 Vorschau nächster Unlock
             if upcoming:
@@ -244,9 +246,10 @@ def shop_menu(player):
             input("ENTER...")
             continue
 
-        item = flat[display_idx - 1]
+        item  = flat[display_idx - 1]
+        price = _spiegel_price(player, item["price"])
 
-        if player.inventory["Gold"] < item["price"]:
+        if player.inventory["Gold"] < price:
             console.print("  [red]❌ Nicht genug Gold![/red]")
             input("ENTER...")
             continue
@@ -262,7 +265,7 @@ def shop_menu(player):
                     console.print(f"  [red]🎒 Inventar voll! ({player.inventory_count()}/{MAX_INVENTORY_SLOTS} Slots)[/red]")
                 input("ENTER...")
                 continue
-            player.inventory["Gold"] -= item["price"]
+            player.inventory["Gold"] -= price
             console.print(f"  [green]✅ Du kaufst {added}x {_esc(item['name'])}![/green]")
 
         elif item["type"] == "equipment":
@@ -281,7 +284,7 @@ def shop_menu(player):
                 equip["attack"] = edef["attack"]
             else:
                 equip["armor"] = edef["armor"]
-            player.inventory["Gold"] -= item["price"]
+            player.inventory["Gold"] -= price
             player.inventory["Equipment"].append(equip)
             console.print(f"  [green]✅ {_esc(resolved_key)} wurde deinem Inventar hinzugefügt![/green]")
 

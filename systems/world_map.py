@@ -178,6 +178,9 @@ def run_zone_boss(player, zone_id: str, meta) -> str:
     gold_before = player.inventory["Gold"]
     zone_id     = getattr(player, "current_zone", "wald")
     loot_items  = roll_boss_loot(zone_id)
+    if getattr(player, "spiegel", {}).get("glueck") == "B":
+        from content.loot_tables import roll_zone_loot
+        loot_items += roll_zone_loot(zone_id, rolls=1)
     loot_msgs   = apply_loot(player, loot_items)
     player.stats["gold_earned"] = player.stats.get("gold_earned", 0) + player.inventory["Gold"] - gold_before
 
