@@ -5,7 +5,7 @@
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
 **Letzte abgeschlossene Version:** v2.3 — QoL  
-**In Arbeit:** v3.0 — Roguelite (Phase 1 von 4 fertig)  
+**In Arbeit:** v3.0 — Roguelite (Phase 2 von 4 fertig)  
 **Danach:** v3.1 — Equipment-Rebalancing
 
 ### ✅ Was ist fertig
@@ -24,13 +24,18 @@
   - Achievements sind meta-persistent (überleben den Tod)
   - Basis-Balancing: Gegner +20 % HP / +15 % ATK, zentrale `scale_enemy()` in zones.py
   - Schwierigkeitsgrade bleiben, Wahl pro Run; Start-HP-Bonus/-Malus wird jetzt wirklich angewendet
+- **v3.0 Phase 2 (Segnungen) komplett:**
+  - `systems/segnungen.py`: SEGNUNGEN_POOL (30 Segnungen: 27 neutral + 3 Klassen), 3 Synergien
+  - `ui/segnungen_ui.py`: 1-aus-3-Auswahl nach jedem Dungeon-Abschluss + Übersicht
+  - Kampf-Hooks in `core/combat.py`, `core/abilities.py`, `core/player.py`, `content/loot.py`
+  - `active_segnungen` + Raserei/Zweite-Chance-Status im run_save serialisiert
+  - Camp-Menü: kompakte Segnungs-Zeile + [G] Segnungs-Übersicht
 
-### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 2 (Segnungen)
-1. `systems/segnungen.py` — SEGNUNGEN_POOL (~30 Segnungen), Synergien
-2. `ui/segnungen_ui.py` — Auswahlmenü (1 aus 3) nach jedem Dungeon
-3. `core/player.py` — `active_segnungen`-Liste (+ to_dict/from_dict!)
-4. `core/combat.py` + `core/abilities.py` — Segnung-Hooks in den Kampfphasen
-5. `systems/dungeon.py` — Segnungswahl nach Dungeon-Abschluss aufrufen
+### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 3 (Der Spiegel)
+1. `ui/spiegel.py` — Spiegel-Menü, A/B-Auswahl, Fortschritt
+2. `core/save.py` — `spiegel_state` im Meta-Save nutzen (Feld existiert bereits)
+3. `core/player.py` — `apply_spiegel_effects(meta)` beim Run-Start
+4. `systems/hub.py` — [S] Spiegel-Option im Hub
 
 Details siehe v3.0-Abschnitt unten.
 

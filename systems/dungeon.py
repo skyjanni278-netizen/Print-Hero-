@@ -529,7 +529,10 @@ def run_dungeon(player, meta) -> str:
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
         console.print(f"  {m}")
 
-    save_run(player)
-
     input("\n(ENTER)")
+
+    from ui.segnungen_ui import choose_segnung_menu
+    choose_segnung_menu(player)
+
+    save_run(player, quiet=True)
     return "completed"

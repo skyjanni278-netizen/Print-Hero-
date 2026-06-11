@@ -40,6 +40,14 @@ def camp_menu(player, meta=None) -> str:
                 star = "[green]✅ VOLL[/green]" if count == 4 else f"{count}/4"
                 parts.append(f"{_esc(sdef['emoji'])} {_esc(sname)} {star}: [dim]{_esc(bonus['desc'])}[/dim]")
             console.print("  Set:  " + "  |  ".join(parts))
+        active_segs = getattr(player, "active_segnungen", [])
+        if active_segs:
+            from systems.segnungen import SEGNUNGEN_POOL, get_active_synergien
+            seg_parts = [f"{SEGNUNGEN_POOL[sid]['emoji']} {_esc(SEGNUNGEN_POOL[sid]['name'])}"
+                         for sid in active_segs if sid in SEGNUNGEN_POOL]
+            syn_count = len(get_active_synergien(player))
+            syn_tag   = f"  [cyan]🔗 {syn_count} Synergie(n)[/cyan]" if syn_count else ""
+            console.print("  ✨ " + "  ".join(seg_parts) + syn_tag)
         from systems.zones import ZONE_DEFS
         zone_id    = getattr(player, "current_zone", "wald")
         zdef       = ZONE_DEFS.get(zone_id, ZONE_DEFS["wald"])
@@ -61,7 +69,7 @@ def camp_menu(player, meta=None) -> str:
         console.print(f"  [[U]] Equipment aufwerten    [[E]] Errungenschaften ({len(player.achievements)}/20)")
         console.print(f"  [[V]] Inventar verkaufen     [[T]] Statistiken")
         console.print(f"  [[K]] Händler besuchen       [[Z]] Weltkarte / Zone wählen")
-        console.print(f"  [[C]] Handwerk (Crafting)")
+        console.print(f"  [[C]] Handwerk (Crafting)    [[G]] Segnungen ({len(getattr(player, 'active_segnungen', []))})")
         console.print("─" * 50)
         if boss_ready:
             bname = ZONE_BOSS_DEFS[zone_id]["name"]
@@ -85,6 +93,9 @@ def camp_menu(player, meta=None) -> str:
         elif choice == 'f':
             from systems.skilltree import skill_menu
             skill_menu(player)
+        elif choice == 'g':
+            from ui.segnungen_ui import show_segnungen_overview
+            show_segnungen_overview(player)
         elif choice == 'e':
             from systems.achievements import achievements_menu
             achievements_menu(player.achievements)
