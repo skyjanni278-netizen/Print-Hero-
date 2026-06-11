@@ -4,8 +4,8 @@
 
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
-**Letzte abgeschlossene Version:** v3.0 — Das Roguelite  
-**Nächster Schritt:** v3.1 — Equipment-Rebalancing
+**Letzte abgeschlossene Version:** v3.1 — Equipment-Rebalancing  
+**Nächster Schritt:** v3.2 — Content-Erweiterung
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
@@ -63,9 +63,14 @@
   - Docs: DEVELOPMENT.md (Entwickler-Handbuch: Architektur, Konventionen, Save-Constraints, Erweiterungs-Rezepte), MIT-LICENSE, Constraint-Kommentare an allen Save-kritischen Dicts/Funktionen
   - v3.0 getaggt
 
-### 🔧 Nächster Schritt: v3.1 — Equipment-Rebalancing
-Siehe v3.1-Abschnitt unten: Fünf-Zonen-Equipment-Kurve, Klassen-Sets strecken,
-Totenritter-Set, Abyssal-Set, Mythic-Tier.
+- **v3.1 Equipment-Rebalancing (komplett):**
+  - Mythic-Rarity (🟥) + 3 Mythic-Einzelitems: Götterspeer (Krit <30% HP), Seelenpanzer (absorbiert 1. Angriff/Kampf), Krone der Götter (+15% XP getragen — Abweichung von ROADMAP „+3 Skillpunkte zu Run-Beginn", da Equipment im Roguelite nicht run-übergreifend existiert)
+  - Totenritter-Set (Epic, Vulkan/Dunkelreich) mit `totenritter_berserker`, Abyssal-Set (Legendary, Zone 5) mit `abyssal_thorns`
+  - Fünf-Zonen-Loot-Kurve umgesetzt, Klassen-Sets gestreckt (Waffe+Schuhe Zone 3, Rüstung+Helm Zone 4)
+  - Review-Fixes: Boss-Refight geblockt, Starter-Kettenhemd 4 DEF, Kampf-Achievements sofort nach jedem Kampf
+
+### 🔧 Nächster Schritt: v3.2 — Content-Erweiterung
+Siehe v3.2-Abschnitt unten: 3 neue Monster, 4 neue Events, 10 neue Achievements.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
@@ -568,7 +573,7 @@ systems/meta_save.py      aktive Siegel für laufenden Run speichern
 |---------|--------|--------|
 | v2.2 | Bugfixes (8 Bugs behoben) | ✅ released |
 | **v2.3** | QoL: Autosave, Upgrade/Item, Kampf-Log, Death-Screen | ✅ released |
-| **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | 🔲 geplant |
-| **v3.1** | Equipment-Rebalancing + Mythic-Tier | 🔲 geplant |
+| **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | ✅ released |
+| **v3.1** | Equipment-Rebalancing + Mythic-Tier | ✅ released |
 | **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | 🔲 geplant |
 | **v3.3** | Dunkelsiegel + Cosmetics | 🔲 geplant |

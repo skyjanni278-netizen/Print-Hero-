@@ -115,6 +115,8 @@ def _room_loot(player, enemy_group) -> tuple:
     player.xp += total_xp
     lvl_msgs = player.check_level_up()
     loot_lines.extend(lvl_msgs)
+    for m in check_all(player, {"event": "victory", "enemies": enemy_group, "potions_used": -1}):
+        loot_lines.append(m)
     for m in check_all(player, {"event": "level_up", "level": player.level}):
         loot_lines.append(m)
     return loot_lines, total_xp

@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Roguelite-RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch 5 Zonen, stirb, werde stärker — und bezwinge das Dunkel-Reich.
 
-**Aktuelle Version: v3.0** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v3.1** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -221,7 +221,9 @@ Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 | Drachen-Set | Vulkan | +15 DEF, +12 ATK | 15 % Angriff vollst. blocken |
 | Drachenschuppen | Vulkan | +12 DEF, +8 ATK | 20 % Angriff vollst. blocken |
 | Verdammten-Stahl | Dunkel-Reich | +6 ATK, −4 DEF | — |
+| Totenritter | Vulkan/Dunkel-Reich | +10 DEF, +8 ATK | Bei ≤25 % HP: +50 % ATK, +20 % Ausweichen |
 | Licht-Set | Dunkel-Reich | +20 DEF, +18 ATK | +3 HP/Runde |
+| Abyssal-Set | Dunkel-Reich | +16 DEF, +12 ATK | 30 % des erlittenen Schadens als Rückstoß an alle Gegner |
 
 **Klassen-Sets** (nur für die jeweilige Klasse):
 
@@ -230,6 +232,16 @@ Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 | Eisenfestung | ⚔️ Krieger | +10 DEF, +5 ATK | Schildwall blockt 2 Angriffe |
 | Schattenhülle | 🗡️ Schurke | +8 DEF, +5 ATK, +15 % Krit | +15 % Krit-Chance bei "Aus dem Schatten" |
 | Arkane Roben | 🔮 Magier | +8 DEF, +4 ATK, +20 Energie | Arkane Entladung trifft 2× (doppelter Schaden) |
+
+Klassen-Set-Teile droppen seit v3.1 gestreckt: Waffe + Schuhe in der Wüste (Zone 3), Rüstung + Helm im Vulkan (Zone 4).
+
+**Mythic-Items** (seit v3.1 — neue höchste Rarity 🟥, nur Zone 5, sehr seltene Einzeldrops):
+
+| Item | Slot | Effekt |
+|------|------|--------|
+| 🔱 Götterspeer | Waffe (ATK 28) | Gegner unter 30 % HP: immer kritisch |
+| 🪬 Seelenpanzer | Rüstung (DEF 22) | Absorbiert den ersten Angriff jedes Kampfes |
+| 👑 Krone der Götter | Helm (DEF 16) | +15 % XP solange getragen |
 
 ---
 
@@ -318,6 +330,18 @@ Zwei Speicherdateien in `saves/`:
 ---
 
 ## 📋 Changelog
+
+### v3.1 — Equipment-Rebalancing
+- **Fünf-Zonen-Loot-Kurve:** Rarity-Schwerpunkt steigt pro Zone (Wald = Common … Dunkel-Reich = Legendary/Mythic) — Zone 5 bietet wieder echte Überraschungen
+- **Mythic-Tier:** neue höchste Rarity 🟥 mit 3 Einzeldrops in Zone 5 (Götterspeer, Seelenpanzer, Krone der Götter)
+- **Totenritter-Set** (Epic, Vulkan/Dunkel-Reich): 4-Set bei ≤25 % HP → +50 % ATK und +20 % Ausweichen
+- **Abyssal-Set** (Legendary, Dunkel-Reich): 4-Set → 30 % des erlittenen Schadens als Rückstoß an alle Gegner
+- **Klassen-Sets gestreckt:** Waffe + Schuhe droppen ab Zone 3, Rüstung + Helm ab Zone 4 — Komplett-Set erst in Zone 4–5
+- Boss-Pools erweitert: Vulkan-Boss droppt Totenritter-Teile, Dunkel-Reich-Boss Abyssal-Teile
+- Bugfix: Besiegte Zonen-Bosse sind nicht mehr wiederholbar (verhinderte Essenz-Farming)
+- Bugfix: Krieger-Starter-Kettenhemd auf 4 DEF angeglichen (war 5, Startkit ersetzte es durch ein schlechteres)
+- Bugfix: Kampf-Achievements (Erste Blut, Schlächter usw.) werden sofort nach jedem Kampf geprüft statt erst beim nächsten Boss-Sieg
+- Achievement „Legendär" zählt auch Mythic-Funde
 
 ### v3.0 — Das Roguelite
 - **Kompletter Umbau des Spielprinzips:** Hub („Die Zuflucht") → Run → Tod/Sieg → Hub. New Game+ und das 3-Slot-Speichersystem wurden entfernt

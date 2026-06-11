@@ -44,10 +44,10 @@ CLASS_DEFS = {
         "start_energy":25,
         "armor":        2,
         "desc":        "Zäher Kämpfer mit hoher Rüstung",
-        "bonus_desc":  "+5 DEF, startet mit Kettenhemd",
+        "bonus_desc":  "+2 DEF Basis, startet mit Kettenhemd (+4 DEF)",
         "ability_name":"Schildwall",
         "ability_desc":"Nächsten eingehenden Angriff vollständig blocken",
-        "start_item":  {"name": "Kettenhemd", "armor": 5, "type": "chest"},
+        "start_item":  {"name": "Kettenhemd", "armor": 4, "type": "chest"},
     },
     "mage": {
         "name":        "Magier",

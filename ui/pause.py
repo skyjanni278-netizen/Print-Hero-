@@ -55,7 +55,7 @@ def camp_menu(player, meta=None) -> str:
         zone_done  = zp.get("dungeons_completed", 0)
         zone_req   = zdef["dungeon_count"]
         zone_status = get_zone_status(player, zone_id)
-        boss_ready  = zone_status in ("boss_ready", "completed")
+        boss_ready  = zone_status == "boss_ready"
         if zone_status == "completed":
             prog_tag = "✅ Boss besiegt"
         elif zone_status == "boss_ready":
