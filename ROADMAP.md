@@ -5,7 +5,7 @@
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
 **Letzte abgeschlossene Version:** v2.3 — QoL  
-**In Arbeit:** v3.0 — Roguelite (Phase 2 von 4 fertig)  
+**In Arbeit:** v3.0 — Roguelite (Phase 3 von 4 fertig)  
 **Danach:** v3.1 — Equipment-Rebalancing
 
 ### ✅ Was ist fertig
@@ -30,12 +30,22 @@
   - Kampf-Hooks in `core/combat.py`, `core/abilities.py`, `core/player.py`, `content/loot.py`
   - `active_segnungen` + Raserei/Zweite-Chance-Status im run_save serialisiert
   - Camp-Menü: kompakte Segnungs-Zeile + [G] Segnungs-Übersicht
+- **v3.0 Phase 3 (Der Spiegel) komplett:**
+  - `systems/spiegel.py`: SPIEGEL_DEFS (7 Upgrades mit A/B-Varianten), Kauf-/Wechsel-Logik (Wechsel = 30%), `apply_spiegel_effects()` + Kampf-/Preis-Hooks
+  - `ui/spiegel.py`: Spiegel-Menü mit A/B-Auswahl und Fortschrittsanzeige, [S]-Option im Hub
+  - `core/save.py`: `spend_runenessenz()`; Spiegel-Stand in `meta["spiegel_state"]` als `{upgrade_id: "A"/"B"}`
+  - Effekte verdrahtet in `main.py`, `core/player.py`, `core/combat.py`, `content/loot.py`, `content/shop.py`, `systems/dungeon.py`, `systems/world_map.py`, `systems/events.py`
+  - Drei B-Varianten gegenüber dem ursprünglichen Plan ersetzt (Original war seit Phase 1 wirkungslos bzw. nicht Roguelite-kompatibel):
+    - Zähigkeit B: „Nach jedem gewonnenen Kampf: +5 HP" (statt „Starte mit vollen HP" — Runs starten ohnehin voll, Dungeons heilen voll)
+    - Zweites Leben B: „Bei Tod: 20% deines Goldes als Runenessenz" (statt „Items behalten" — run_save wird bei Tod gelöscht)
+    - Glück B: „Boss-Beute: +1 zusätzlicher Beute-Wurf" (statt „1× pro Run Item-Qualität +1" — Items haben feste Defs, kein Qualitätsfeld)
 
-### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 3 (Der Spiegel)
-1. `ui/spiegel.py` — Spiegel-Menü, A/B-Auswahl, Fortschritt
-2. `core/save.py` — `spiegel_state` im Meta-Save nutzen (Feld existiert bereits)
-3. `core/player.py` — `apply_spiegel_effects(meta)` beim Run-Start
-4. `systems/hub.py` — [S] Spiegel-Option im Hub
+### 🔧 Nächster Schritt: v3.0 — Entwicklungsphase 4 (Runen)
+1. `systems/runen.py` — RUNE_DEFS, check_rune_drop(), apply_rune_unlock()
+2. `core/save.py` — `unlocked_runen` im Meta-Save nutzen (Feld existiert bereits)
+3. `systems/hub.py` — [R] Runen-Übersicht + Startkit-Auswahl vor Run-Start
+4. `systems/world_map.py` / `core/combat.py` — Rune-Drops (Zonen-Boss 100%, Dungeon-Boss 25%, Elite 5%, Truhe 15%)
+5. Danach: Bug-Pass + v3.0-Release-Kriterien prüfen
 
 Details siehe v3.0-Abschnitt unten.
 
