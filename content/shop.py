@@ -10,6 +10,7 @@ _RARITY_COLORS = {
     "rare":      "blue",
     "epic":      "magenta",
     "legendary": "yellow",
+    "mythic":    "bright_red",
 }
 
 

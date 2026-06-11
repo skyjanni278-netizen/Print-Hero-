@@ -121,6 +121,24 @@ SET_DEFS = {
             4: {"desc": "+8 DEF +5 ATK — Aus dem Schatten: +15% Krit-Chance",  "atk": 5, "def": 8, "special": "rogue_shadow_regen"},
         },
     },
+    "Totenritter": {
+        "emoji": "⚰️",
+        "pieces": {"Totenklinge", "Totenrüstung", "Totenschädel", "Totenstiefel"},
+        "bonuses": {
+            2: {"desc": "+5 DEF",                                                    "atk": 0, "def":  5},
+            3: {"desc": "+8 DEF +5 ATK",                                             "atk": 5, "def":  8},
+            4: {"desc": "+10 DEF +8 ATK — Bei ≤25% HP: +50% ATK, +20% Ausweichen",   "atk": 8, "def": 10, "special": "totenritter_berserker"},
+        },
+    },
+    "Abyssal-Set": {
+        "emoji": "🕳️",
+        "pieces": {"Abyssalklinge", "Abyssalrobe", "Abyssalhelm", "Abyssalsohlen"},
+        "bonuses": {
+            2: {"desc": "+10 DEF",                                                       "atk": 0,  "def": 10},
+            3: {"desc": "+14 DEF +8 ATK",                                                "atk": 8,  "def": 14},
+            4: {"desc": "+16 DEF +12 ATK — 30% des erlittenen Schadens als Rückstoß",    "atk": 12, "def": 16, "special": "abyssal_thorns"},
+        },
+    },
     "Arkane Roben": {
         "emoji": "🔮",
         "pieces": {"Arkaner Stab", "Arkane Robe", "Arkane Kapuze", "Arkane Schuhe"},

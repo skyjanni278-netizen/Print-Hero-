@@ -96,6 +96,20 @@ EQUIPMENT_DEFS = {
     "Arkane Robe":     {"slot": "chest",  "armor":  10, "rarity": "epic", "emoji": "🔮", "sell": 125, "desc": "Von Arkaner Energie durchwirkt","class_only": "mage"},
     "Arkane Kapuze":   {"slot": "head",   "armor":   6, "rarity": "epic", "emoji": "🔮", "sell":  90, "desc": "Kapuze des Arkanen Weisen",    "class_only": "mage"},
     "Arkane Schuhe":   {"slot": "feet",   "armor":   5, "rarity": "epic", "emoji": "🔮", "sell":  80, "desc": "Gleiten über den Äther",       "class_only": "mage"},
+    # ── TOTENRITTER-SET (Vulkan/Dunkel-Reich, v3.1) ───────────────
+    "Totenklinge":          {"slot": "weapon", "attack": 16, "rarity": "epic",      "emoji": "⚰️",  "sell": 150, "desc": "Klinge eines gefallenen Ritters"},
+    "Totenrüstung":         {"slot": "chest",  "armor":  14, "rarity": "epic",      "emoji": "⚰️",  "sell": 145, "desc": "Panzer aus Grabesstahl"},
+    "Totenschädel":         {"slot": "head",   "armor":   9, "rarity": "epic",      "emoji": "💀",  "sell": 110, "desc": "Helm aus gebleichtem Schädel"},
+    "Totenstiefel":         {"slot": "feet",   "armor":   7, "rarity": "epic",      "emoji": "⚰️",  "sell":  95, "desc": "Schritte aus dem Grab"},
+    # ── ABYSSAL-SET (Dunkel-Reich exklusiv, v3.1) ─────────────────
+    "Abyssalklinge":        {"slot": "weapon", "attack": 22, "rarity": "legendary", "emoji": "🕳️",  "sell": 320, "desc": "Geschmiedet im Abgrund"},
+    "Abyssalrobe":          {"slot": "chest",  "armor":  18, "rarity": "legendary", "emoji": "🕳️",  "sell": 310, "desc": "Gewebt aus ewiger Leere"},
+    "Abyssalhelm":          {"slot": "head",   "armor":  12, "rarity": "legendary", "emoji": "🕳️",  "sell": 270, "desc": "Ein Blick in den Abgrund"},
+    "Abyssalsohlen":        {"slot": "feet",   "armor":  10, "rarity": "legendary", "emoji": "🕳️",  "sell": 250, "desc": "Wandeln am Rand der Leere"},
+    # ── MYTHIC (Zone 5, sehr seltene Einzeldrops, v3.1) ───────────
+    "Götterspeer":          {"slot": "weapon", "attack": 28, "rarity": "mythic",    "emoji": "🔱",  "sell": 600, "desc": "Gegner unter 30% HP: immer kritisch",        "passive": "godspear_crit"},
+    "Seelenpanzer":         {"slot": "chest",  "armor":  22, "rarity": "mythic",    "emoji": "🪬",  "sell": 580, "desc": "Absorbiert den ersten Angriff jedes Kampfes", "passive": "soul_absorb"},
+    "Krone der Götter":     {"slot": "head",   "armor":  16, "rarity": "mythic",    "emoji": "👑",  "sell": 550, "desc": "+15% XP solange getragen",                    "passive": "godcrown_xp"},
     # ── KLASSEN-WAFFEN (gleiche Stats, klassenspezifischer Name) ──
     "Kampfschwert":         {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "⚔️",  "sell": 20,  "desc": "Kräftige Klinge für den Nahkampf"},
     "Spitzdolch":           {"slot": "weapon", "attack": 3,  "rarity": "common",    "emoji": "🗡️",  "sell": 20,  "desc": "Schnell und präzise"},
@@ -156,6 +170,7 @@ RARITY_LABEL = {
     "rare":      ("Selten",      "🟦"),
     "epic":      ("Episch",      "🟪"),
     "legendary": ("Legendär",    "🟨"),
+    "mythic":    ("Mythisch",    "🟥"),
 }
 
 CRAFT_RECIPES = {
