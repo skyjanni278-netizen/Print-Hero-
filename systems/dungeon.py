@@ -382,11 +382,26 @@ def run_dungeon(player, meta) -> str:
         # ── Kampf-Raum ────────────────────────────────────────
         if room_type == "combat":
             enemies = generate_enemy_group(player)
+            grudge_item = getattr(player, "auction_grudge", None)
+            if grudge_item:
+                player.auction_grudge = None
+                rival = create_zone_enemy(player, forced_rank=2)
+                rival.max_hp = max(1, int(rival.max_hp * 1.3))
+                rival.hp     = rival.max_hp
+                rival.attack = max(1, int(rival.attack * 1.3))
+                rival.name   = f"😡 Rivale ({rival.name})"
+                enemies.append(rival)
+                console.print("  [bold red]😡 Der Rivale aus der Auktion lauert dir hier auf![/bold red]")
             console.print(f"  [red]{', '.join(_esc(e.name) for e in enemies)} erscheinen![/red]")
             input("  Bereit machen... (ENTER)")
             outcome = _run_combat_room(player, enemies, room_num)
             if outcome in ("defeat", "fled"):
                 return outcome
+            if grudge_item:
+                console.print("\n  [yellow]Der Rivale lässt sein ersteigertes Stück fallen:[/yellow]")
+                for m in apply_loot(player, [{"type": "equipment", "key": grudge_item}]):
+                    console.print(f"  {m}")
+                input("  (ENTER)")
 
         # ── Elite-Raum ────────────────────────────────────────
         elif room_type == "elite":

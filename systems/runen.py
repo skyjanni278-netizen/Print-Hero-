@@ -36,6 +36,7 @@ RUNE_DROP_CHANCES = {
     "dungeon_boss": 0.25,
     "elite":        0.05,
     "chest":        0.15,
+    "grave":        0.15,
 }
 
 

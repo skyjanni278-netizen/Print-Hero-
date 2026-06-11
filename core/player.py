@@ -69,6 +69,8 @@ class Character:
 
         self.class_variant          = None
         self.schmied_gratis_upgrade = False
+        self.run_xp_mult            = 1.0
+        self.auction_grudge         = None
 
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
@@ -435,6 +437,7 @@ class Character:
             mult *= 1.08
         if EQUIPMENT_DEFS.get(self.equipment["head"]["name"], {}).get("passive") == "godcrown_xp":
             mult *= 1.15
+        mult *= getattr(self, "run_xp_mult", 1.0)
         return mult
 
     def use_consumable(self, key: str) -> str:
@@ -534,6 +537,8 @@ class Character:
             "spiegel_first_fight":    self.spiegel_first_fight,
             "class_variant":          self.class_variant,
             "schmied_gratis_upgrade": self.schmied_gratis_upgrade,
+            "run_xp_mult":            self.run_xp_mult,
+            "auction_grudge":         self.auction_grudge,
         }
 
     @classmethod
@@ -594,6 +599,8 @@ class Character:
         player.spiegel_first_fight     = data.get("spiegel_first_fight", False)
         player.class_variant           = data.get("class_variant")
         player.schmied_gratis_upgrade  = data.get("schmied_gratis_upgrade", False)
+        player.run_xp_mult             = data.get("run_xp_mult", 1.0)
+        player.auction_grudge          = data.get("auction_grudge")
         _default_zp = {
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]

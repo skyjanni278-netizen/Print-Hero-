@@ -4,9 +4,10 @@ from core.player import Character
 from ui.utils import console
 
 _ROOT     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SAVE_DIR  = os.path.join(_ROOT, "saves")
-META_PATH = os.path.join(SAVE_DIR, "meta_save.json")
-RUN_PATH  = os.path.join(SAVE_DIR, "run_save.json")
+SAVE_DIR      = os.path.join(_ROOT, "saves")
+META_PATH     = os.path.join(SAVE_DIR, "meta_save.json")
+RUN_PATH      = os.path.join(SAVE_DIR, "run_save.json")
+LAST_RUN_PATH = os.path.join(SAVE_DIR, "last_run.json")
 
 
 # ── Meta-Save (permanent, überlebt jeden Run) ─────────────────
@@ -104,6 +105,20 @@ def load_run(meta: dict = None):
     return player
 
 
+# Beendeter Run bleibt als Snapshot liegen — Quelle für das Zeitkapsel-Event.
 def delete_run():
     if os.path.exists(RUN_PATH):
-        os.remove(RUN_PATH)
+        try:
+            os.replace(RUN_PATH, LAST_RUN_PATH)
+        except OSError:
+            os.remove(RUN_PATH)
+
+
+def load_last_run_data():
+    if not os.path.exists(LAST_RUN_PATH):
+        return None
+    try:
+        with open(LAST_RUN_PATH, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
