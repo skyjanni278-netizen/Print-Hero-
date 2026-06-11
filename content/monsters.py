@@ -394,6 +394,78 @@ class SandWorm(Character):
         return f"🌪 {self.name}: Sandsturm! -{debuff} DEF-Debuff auf {target.name} für diesen Kampf!"
 
 
+class BoneColossus(Character):
+    """Knochengoliat — Zone 2–3, hohe HP, heilt sich als Boss-Ability"""
+    BASE_HP     = 60
+    BASE_ATTACK = 9
+    BASE_XP     = 42
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Knochengoliat", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 5
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def boss_ability(self, target) -> str:
+        heal = max(1, int(self.max_hp * 0.20))
+        self.hp = min(self.max_hp, self.hp + heal)
+        target.bleed_stacks += 2
+        return (f"🦴 {self.name}: Knochenflicken! Heilt sich um {heal} HP + "
+                f"2 Blutungsstacks auf {target.name}! (HP: {self.hp}/{self.max_hp})")
+
+
+class DesertJackal(Character):
+    """Wüstenschakal — Zone 3, schnell, weicht Spieler-Angriffen aus"""
+    BASE_HP          = 10
+    BASE_ATTACK      = 12
+    BASE_XP          = 26
+    mob_dodge_chance = 0.20
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Wüstenschakal", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 0
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def boss_ability(self, target) -> str:
+        msg1, dmg1 = self.attack_target(target)
+        return f"🐺 {self.name}: Hetzjagd!\n  {msg1}"
+
+
+class DarkSorceress(Character):
+    """Dunkelmagierin — Zone 5, Energie-Drain bei Angriffen, Flüche als Boss-Ability"""
+    BASE_HP     = 35
+    BASE_ATTACK = 14
+    BASE_XP     = 58
+
+    def __init__(self, rank: int = 1):
+        super().__init__("Dunkelmagierin", hp=self.BASE_HP, attack=self.BASE_ATTACK)
+        self.armor = 2
+        _apply_rank(self, self.BASE_HP, self.BASE_ATTACK, self.BASE_XP, rank)
+
+    def attack_target(self, target):
+        msg, dmg = super().attack_target(target)
+        if random.random() < 0.25:
+            drain = min(6, getattr(target, "energy", 0))
+            target.energy = max(0, getattr(target, "energy", 0) - drain)
+            return (f"{msg}\n  🌑 Dunkler Sog! {target.name} verliert {drain} Energie."
+                    f" (Energie: {target.energy}/{getattr(target, 'max_energy', 0)})"), dmg
+        return msg, dmg
+
+    def boss_ability(self, target) -> str:
+        drain = min(12, getattr(target, "energy", 0))
+        target.energy = max(0, getattr(target, "energy", 0) - drain)
+        curse = random.choice(["armor", "burn", "bleed"])
+        if curse == "armor":
+            target.armor_debuff = getattr(target, "armor_debuff", 0) + 3
+            fluch = "-3 DEF für diesen Kampf"
+        elif curse == "burn":
+            target.burn_stacks = getattr(target, "burn_stacks", 0) + 2
+            fluch = "2 Verbrennungsstacks"
+        else:
+            target.bleed_stacks += 2
+            fluch = "2 Blutungsstacks"
+        return f"🔮 {self.name}: Dunkler Fluch! {drain} Energie geraubt + {fluch}!"
+
+
 def roll_rank(player_level: int) -> int:
     """
     Höhere Spieler-Level → höhere Chance auf starke Ränge (bis LVL 10).

@@ -37,9 +37,14 @@ def _apply_weapon_passive(player, target, dmg: int):
         console.print(f"  [yellow]🔨 Runen-Kriegshammer: {_esc(target.name)} −3 DEF![/yellow]")
 
 
-def _check_swallow(target) -> bool:
+def _attack_evaded(target) -> str:
     sc = getattr(target, "swallow_chance", 0)
-    return sc > 0 and random.random() < sc
+    if sc > 0 and random.random() < sc:
+        return f"  [dim]🌪 {_esc(target.name)} verschluckt deinen Angriff![/dim]"
+    dc = getattr(target, "mob_dodge_chance", 0)
+    if dc > 0 and random.random() < dc:
+        return f"  [dim]💨 {_esc(target.name)} weicht deinem Angriff aus![/dim]"
+    return ""
 
 _W = 58  # Anzeigebreite
 
@@ -426,8 +431,9 @@ def combat(player, enemy_list):
                 console.print("  [bold red]🔥 RASEREI — Angriff auf alle Gegner![/bold red]")
                 console.print()
                 for e in [x for x in enemy_list if x.is_alive()]:
-                    if _check_swallow(e):
-                        console.print(f"  [dim]🌪 {_esc(e.name)} verschluckt deinen Angriff![/dim]")
+                    evade = _attack_evaded(e)
+                    if evade:
+                        console.print(evade)
                         continue
                     msg, dmg = player.attack_target(e)
                     player.stats["damage_dealt"] += dmg
@@ -441,8 +447,9 @@ def combat(player, enemy_list):
                 _result_header(player, enemy_list)
                 console.print("  [bold]⚔  Angriff[/bold]")
                 console.print()
-                if _check_swallow(target):
-                    console.print(f"  [dim]🌪 {_esc(target.name)} verschluckt deinen Angriff![/dim]")
+                evade = _attack_evaded(target)
+                if evade:
+                    console.print(evade)
                 else:
                     msg, dmg = player.attack_target(target)
                     player.stats["damage_dealt"] += dmg

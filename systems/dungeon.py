@@ -56,6 +56,12 @@ BOSS_INTROS = {
     "Steingolem":    "Der Steingolem erwacht. Felsbrocken fallen von seinem Körper, als er sich langsam aufrichtet.",
     "Dunkelritter":  "Der Dunkelritter zieht seine pechschwarze Klinge. Sein Blick ist eiskalt — keine Gnade, kein Erbarmen.",
     "Flammendämon":  "Der Flammendämon tritt aus der Lava. Sein Körper brennt wie ein lebendiger Scheiterhaufen.",
+    "Waldgeist":     "Ein bleiches Leuchten zieht zwischen den Bäumen auf. Der Waldgeist hat deine Schritte längst gezählt.",
+    "Lich":          "Modergeruch erfüllt die Luft. Der Lich erhebt sich aus seinem Thron — der Tod war für ihn nur der Anfang.",
+    "Sandwurm":      "Der Boden bebt. Aus der Tiefe bricht ein gewaltiger Sandwurm — sein Schlund verschlingt alles.",
+    "Knochengoliat": "Tausend Knochen fügen sich knirschend zu einem Riesen zusammen. Der Knochengoliat fällt nicht — er setzt sich nur neu zusammen.",
+    "Wüstenschakal": "Ein heiseres Lachen hallt durch die Schlucht. Der Wüstenschakal umkreist dich — schneller, als dein Auge folgen kann.",
+    "Dunkelmagierin":"Violette Funken tanzen durch die Finsternis. Die Dunkelmagierin lächelt — deine Kraft gehört bald ihr.",
 }
 
 ROOM_ICONS = {
@@ -450,6 +456,9 @@ def run_dungeon(player, meta) -> str:
                 "VenomSpider": "Giftige Spinne", "Assassin": "Meuchler",
                 "IceWitch": "Eismagierin", "StoneGolem": "Steingolem",
                 "DarkKnight": "Dunkelritter", "FireDemon": "Flammendämon",
+                "ForestSpirit": "Waldgeist", "Lich": "Lich", "SandWorm": "Sandwurm",
+                "BoneColossus": "Knochengoliat", "DesertJackal": "Wüstenschakal",
+                "DarkSorceress": "Dunkelmagierin",
             }
             intro_key = name_map.get(base_name, "")
             intro = BOSS_INTROS.get(intro_key, "Der Anführer dieses Dungeons stellt sich dir entgegen!")

@@ -5,6 +5,7 @@ from content.monsters import (
     Assassin, IceWitch, StoneGolem, DarkKnight,
     Dragon, FireDemon,
     ForestSpirit, Lich, SandWorm,
+    BoneColossus, DesertJackal, DarkSorceress,
 )
 
 ZONE_DEFS = {
@@ -26,7 +27,7 @@ ZONE_DEFS = {
         "unlock_level":  2,
         "rank_weights":  [50, 33, 14,  3,  0],
         "group_size":    (1, 3),
-        "monsters":      [(Zombie, 30), (Skeleton, 30), (Bandit, 20), (WoodTroll, 10), (Lich, 10)],
+        "monsters":      [(Zombie, 25), (Skeleton, 25), (Bandit, 20), (WoodTroll, 10), (Lich, 10), (BoneColossus, 10)],
         "boss_class":    StoneGolem,
         "dungeon_count": 4,
     },
@@ -37,7 +38,7 @@ ZONE_DEFS = {
         "unlock_level":  4,
         "rank_weights":  [30, 35, 25,  9,  1],
         "group_size":    (1, 3),
-        "monsters":      [(Bandit, 25), (Assassin, 25), (VenomSpider, 20), (Goblin, 15), (SandWorm, 15)],
+        "monsters":      [(Bandit, 20), (Assassin, 20), (VenomSpider, 15), (Goblin, 10), (SandWorm, 15), (DesertJackal, 15), (BoneColossus, 5)],
         "boss_class":    Assassin,
         "dungeon_count": 5,
     },
@@ -59,7 +60,7 @@ ZONE_DEFS = {
         "unlock_level":  8,
         "rank_weights":  [ 5, 20, 30, 30, 15],
         "group_size":    (2, 4),
-        "monsters":      [(DarkKnight, 30), (IceWitch, 25), (Dragon, 25), (FireDemon, 20)],
+        "monsters":      [(DarkKnight, 25), (IceWitch, 20), (Dragon, 20), (FireDemon, 20), (DarkSorceress, 15)],
         "boss_class":    DarkKnight,
         "dungeon_count": 7,
     },
