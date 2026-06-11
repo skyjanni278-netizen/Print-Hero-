@@ -4,9 +4,8 @@
 
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
-**Letzte abgeschlossene Version:** v2.3 — QoL  
-**In Arbeit:** v3.0 — Roguelite (alle 4 Phasen fertig — es fehlt nur noch der Bug-Pass + Release-Tag)  
-**Danach:** v3.1 — Equipment-Rebalancing
+**Letzte abgeschlossene Version:** v3.0 — Das Roguelite  
+**Nächster Schritt:** v3.1 — Equipment-Rebalancing
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
@@ -51,10 +50,19 @@
     - Händlernetzwerk: Essenz-Shop erscheint beim Run-Start (nicht als stehender Hub-NPC)
     - Schmiedegeheimnis: Gratis-Upgrade-Marke pro Run statt Upgrade „vor dem Run" (beim Start gibt es noch kein aufwertbares Equipment)
 
-### 🔧 Nächster Schritt: v3.0 — Bug-Pass + Release
-1. Gezielter Bug-Pass über den neuen v3.0-Code (Phasen 1–4)
-2. Release-Kriterien prüfen (siehe v3.0-Abschnitt)
-3. v3.0 taggen (Tag über die GitHub-Website erstellen)
+- **v3.0 Bug-Pass + Release:**
+  - Sichtbarkeits-Fix: Zähigkeit-B-Heilmeldung erscheint jetzt vor dem Rundenende-ENTER (war zuvor unsichtbar)
+  - UX-Fix: Klassen-Varianten-Meldung pausiert vor dem Startkit-Screen
+  - Bugfix: Energie-Auffüllung (Schrein, Blutiger Altar, Dungeon-Abschluss) nutzt `get_effective_max_energy()` statt `max_energy` — Set-Energie-Boni wurden ignoriert, Auffüllen konnte Energie reduzieren
+  - Bugfix: `combat()` gibt „defeat" zurück, wenn der Spieler in der Runde des letzten Kills am eigenen Status-Tick stirbt (vorher „victory" mit 0 HP)
+  - Bugfix: Tode bei Zonen-Boss-Niederlagen doppelt gezählt (world_map + _handle_defeat) — Zählung jetzt nur noch in `_handle_defeat()`
+  - Headless-Kampftest (gescriptete Eingaben) über den kompletten Kampf-Pfad inkl. Spiegel-Hooks
+  - README komplett auf v3.0 umgeschrieben (Roguelite-Loop, Segnungen, Spiegel, Runen, neues Save-System, Changelog)
+  - v3.0 getaggt
+
+### 🔧 Nächster Schritt: v3.1 — Equipment-Rebalancing
+Siehe v3.1-Abschnitt unten: Fünf-Zonen-Equipment-Kurve, Klassen-Sets strecken,
+Totenritter-Set, Abyssal-Set, Mythic-Tier.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
@@ -361,12 +369,12 @@ core/combat.py            Enemy-Rune-Drop-Check nach Kill
 ### v3.0 Release-Kriterien
 
 Alle vier Entwicklungsphasen vollständig umgesetzt und stabil:
-- [ ] Run-basiertes Speichersystem funktioniert
-- [ ] Segnungen erscheinen nach jedem Dungeon, Synergien funktionieren
-- [ ] Spiegel kaufbar, Effekte greifen im Run
-- [ ] Runen droppen, Hub-NPCs erscheinen
-- [ ] Basis-Balancing: erster Run erreicht nicht Zone 5
-- [ ] Bug-Pass durchgeführt: neuer Code geprüft, gefundene Bugs behoben
+- [x] Run-basiertes Speichersystem funktioniert
+- [x] Segnungen erscheinen nach jedem Dungeon, Synergien funktionieren
+- [x] Spiegel kaufbar, Effekte greifen im Run
+- [x] Runen droppen, Hub-NPCs erscheinen
+- [x] Basis-Balancing: erster Run erreicht nicht Zone 5
+- [x] Bug-Pass durchgeführt: neuer Code geprüft, gefundene Bugs behoben
 
 ---
 

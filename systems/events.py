@@ -383,10 +383,11 @@ def _bloody_altar(player):
         player.next_fight_atk_mult = getattr(player, "next_fight_atk_mult", 1.0) * 1.30
         console.print("  [cyan]Ein dunkler Schauer stärkt deinen Arm. +30% ATK im nächsten Kampf![/cyan]")
     elif choice == "e":
-        player.energy = player.max_energy
-        en_b = energy_bar(player.energy, player.max_energy)
+        eff_max = player.get_effective_max_energy()
+        player.energy = eff_max
+        en_b = energy_bar(player.energy, eff_max)
         console.print(f"  [blue]Schwarze Energie strömt in dich. Energie vollständig aufgefüllt![/blue]")
-        console.print(f"  ⚡ {en_b} {player.energy}/{player.max_energy}")
+        console.print(f"  ⚡ {en_b} {player.energy}/{eff_max}")
     elif choice == "x":
         player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.5)
         console.print("  [yellow]Der Altar zeigt dir Visionen vergangener Kämpfe. +50% XP im nächsten Kampf![/yellow]")

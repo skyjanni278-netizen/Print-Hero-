@@ -126,7 +126,8 @@ def _shrine_room(player):
     console.print("  Eine göttliche Energie umgibt diesen uralten Schrein.")
     console.print("  Wähle eine Segnung:\n")
     heal_amt   = max(5, player.max_hp // 4)
-    energy_gap = player.max_energy - player.energy
+    eff_max    = player.get_effective_max_energy()
+    energy_gap = max(0, eff_max - player.energy)
     console.print(f"  [[H]] [green]Heilsegen[/green]     — +{heal_amt} HP")
     console.print(f"  [[E]] [blue]Energiesegen[/blue]  — +{energy_gap} Energie (vollständig auffüllen)")
     console.print(f"  [[K]] [yellow]Kampfsegen[/yellow]    — +50% XP im nächsten Kampf")
@@ -135,10 +136,10 @@ def _shrine_room(player):
     hp_b = hp_bar(player.hp, player.max_hp)
     en_b = energy_bar(player.energy, player.max_energy)
     if choice == "e":
-        player.energy = player.max_energy
-        en_b2 = energy_bar(player.energy, player.max_energy)
+        player.energy = eff_max
+        en_b2 = energy_bar(player.energy, eff_max)
         console.print(f"\n  [blue]Kraft strömt durch dich. +{energy_gap} Energie[/blue]")
-        console.print(f"  ⚡ {en_b2} {player.energy}/{player.max_energy}")
+        console.print(f"  ⚡ {en_b2} {player.energy}/{eff_max}")
     elif choice == "k":
         player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.5)
         console.print("\n  [yellow]Ein Kampfgeist erfasst dich. +50% XP im nächsten Kampf![/yellow]")
@@ -147,11 +148,11 @@ def _shrine_room(player):
         if roll < 0.35:
             hp_gain = max(5, player.max_hp // 3)
             player.hp = min(player.max_hp, player.hp + hp_gain)
-            player.energy = player.max_energy
+            player.energy = eff_max
             hp_b2 = hp_bar(player.hp, player.max_hp)
-            en_b2 = energy_bar(player.energy, player.max_energy)
+            en_b2 = energy_bar(player.energy, eff_max)
             console.print(f"\n  [green]Dunkle Energie wandelt sich ins Licht! +{hp_gain} HP, volle Energie![/green]")
-            console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}   ⚡ {en_b2} {player.energy}/{player.max_energy}")
+            console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}   ⚡ {en_b2} {player.energy}/{eff_max}")
         elif roll < 0.65:
             from content.loot_tables import roll_loot, apply_loot
             items = roll_loot(rank=3, rolls=2)
@@ -523,11 +524,11 @@ def run_dungeon(player, meta) -> str:
     print_header("✅ Dungeon abgeschlossen!")
     console.print("  Du kämpfst dich siegreich aus dem Dungeon heraus.\n")
     player.hp     = player.max_hp
-    player.energy = player.max_energy
+    player.energy = player.get_effective_max_energy()
     hp_b = hp_bar(player.hp, player.max_hp)
-    en_b = energy_bar(player.energy, player.max_energy)
+    en_b = energy_bar(player.energy, player.get_effective_max_energy())
     console.print(f"  [green]💚 HP vollständig wiederhergestellt![/green]      {hp_b} {player.hp}/{player.max_hp}")
-    console.print(f"  [blue]⚡ Energie vollständig wiederhergestellt![/blue] {en_b} {player.energy}/{player.max_energy}")
+    console.print(f"  [blue]⚡ Energie vollständig wiederhergestellt![/blue] {en_b} {player.energy}/{player.get_effective_max_energy()}")
 
     # Boss-Benachrichtigung wenn Ziel erreicht
     req  = ZONE_DEFS[zone_id]["dungeon_count"]

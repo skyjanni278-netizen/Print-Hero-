@@ -592,6 +592,12 @@ def combat(player, enemy_list):
 
         player.regenerate()
 
+        if (not any(e.is_alive() for e in enemy_list) and player.is_alive()
+                and spiegel_active(player, "zaehigkeit", "B") and player.hp < player.max_hp):
+            healed = min(5, player.max_hp - player.hp)
+            player.hp += healed
+            console.print(f"  [green]🪞❤️ Zähigkeit: +{healed} HP nach dem Kampf[/green]")
+
         # Finaler HP-Stand am Ende jeder Runde
         console.print()
         hp_b = hp_bar(player.hp, player.max_hp, width=12)
@@ -601,13 +607,9 @@ def combat(player, enemy_list):
 
         input("\n  Nächste Runde (ENTER)...")
 
-    if not any(e.is_alive() for e in enemy_list):
-        if spiegel_active(player, "zaehigkeit", "B") and player.hp < player.max_hp:
-            healed = min(5, player.max_hp - player.hp)
-            player.hp += healed
-            console.print(f"  [green]🪞❤️ Zähigkeit: +{healed} HP nach dem Kampf (HP: {player.hp}/{player.max_hp})[/green]")
-        return "victory"
-    return "defeat"
+    if not player.is_alive():
+        return "defeat"
+    return "victory"
 
 
 # ── Beute-Sammlung ────────────────────────────────────────────────────────────

@@ -156,7 +156,6 @@ def run_zone_boss(player, zone_id: str, meta) -> str:
     player.reset_combat_modifiers()
 
     if result == "defeat":
-        player.stats["deaths"] = player.stats.get("deaths", 0) + 1
         return "defeat"
     if result == "fled":
         return "fled"

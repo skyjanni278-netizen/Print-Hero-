@@ -1,9 +1,9 @@
 # 🗡️ Print-Hero
 
-> Ein rundenbasiertes Terminal-Dungeon-Crawler RPG in Python.  
-> Wähle deine Klasse, kämpfe dich durch 5 Zonen, besiege Zonen-Bosse und rette das Reich.
+> Ein rundenbasiertes Terminal-Roguelite-RPG in Python.  
+> Wähle deine Klasse, kämpfe dich durch 5 Zonen, stirb, werde stärker — und bezwinge das Dunkel-Reich.
 
-**Aktuelle Version: v2.3** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v3.0** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -25,7 +25,7 @@ core/
   player.py              — Spieler-Klasse, Inventar, Skills, Equipment
   abilities.py           — Die 12 Klassen-Fähigkeiten als Standalone-Funktionen
   combat.py              — Kampflogik, Fähigkeiten, Loot-Vergabe
-  save.py                — Speichern & Laden (JSON, 3 Slots)
+  save.py                — Speichern & Laden (meta_save + run_save)
 content/
   monsters.py            — Alle Gegner-Klassen, Rang-System, Boss-Fähigkeiten
   items.py               — Item-Definitionen (Equipment, Consumables, Junk, Rezepte)
@@ -35,24 +35,44 @@ content/
   shop.py                — Händler-Sortiment
   classes.py             — Klassen-Definitionen & Startboni
 systems/
+  hub.py                 — Die Zuflucht: Menü zwischen den Runs
   dungeon.py             — Dungeon-Schleife, Raumgenerierung, Raumtypen
   zones.py               — Zonen-Definitionen, Monster-Pools, Rang-Gewichtung
   world_map.py           — Weltkarte, Zonen-Bosse, Endscreen, zone_progress
   events.py              — Zufalls-Events zwischen Räumen
+  segnungen.py           — Segnungs-Pool (30), Synergien, Kampf-Hooks
+  spiegel.py             — Der Spiegel: 7 permanente A/B-Upgrades
+  runen.py               — Runen: 9 permanente Unlocks + Drop-Logik
   skilltree.py           — Skill-Auswahl & Skill-Effekte
   achievements.py        — Achievement-System (20 Errungenschaften)
 saves/
-  savegame_1.json        — Spielstand Slot 1 (automatisch erstellt)
-  savegame_2.json        — Spielstand Slot 2
-  savegame_3.json        — Spielstand Slot 3
+  meta_save.json         — Permanenter Fortschritt (Essenz, Spiegel, Runen)
+  run_save.json          — Aktueller Run (bei Tod gelöscht, bei Quit behalten)
 ui/
-  pause.py               — Lagerfeuer-Menü, Inventar, Verkauf, Skills
+  pause.py               — Camp-Menü, Inventar, Verkauf, Skills
+  segnungen_ui.py        — Segnungswahl (1 aus 3) + Übersicht
+  spiegel.py             — Spiegel-Menü (A/B-Auswahl, Kauf, Wechsel)
+  runen_ui.py            — Runen-Übersicht, Startkits, Essenz-Shop, Orakel
   utils.py               — clear_screen, print_header
 ```
 
 ---
 
 ## 🎮 Spielsysteme
+
+### Roguelite-Loop
+Print-Hero ist seit v3.0 ein **Roguelite**: Du startest jeden Run in der **Zuflucht**, wählst Klasse und Schwierigkeit und kämpfst dich so weit wie möglich.  
+**Tod beendet den Run** — aber gesammelte **Runenessenz** (💠) bleibt dir erhalten:
+
+| Quelle | Runenessenz |
+|--------|:-----------:|
+| Dungeon abgeschlossen | 15–25 |
+| Zonen-Boss besiegt | 50–80 |
+| Sieg über Malachar | +200 Bonus |
+
+Mit Runenessenz kaufst du im **Spiegel** permanente Upgrades. **Runen** aus Boss- und Elite-Drops schalten dauerhaft Startkits, Klassen-Varianten und Zuflucht-NPCs frei. Die ersten Runs sind bewusst nicht gewinnbar — nach 8–12 Runs ist das Dunkel-Reich bezwingbar.
+
+---
 
 ### Klassen
 Beim Start wählst du eine von drei Klassen — jede hat unterschiedliche Startwerte und vier einzigartige Kampffähigkeiten auf den Tasten `[S]`, `[R]`, `[C]`, `[X]`:
@@ -80,7 +100,7 @@ Das Spiel ist in **5 Zonen** unterteilt, die sequenziell freigeschaltet werden.
 | Dunkel-Reich | 💀 | 8 | Malachar, Herr der Finsternis | 7 |
 
 **Progression:** N Dungeons abschließen → **[B] Zonen-Boss** → nächste Zone öffnet sich.  
-Die **Weltkarte** ist jederzeit über **[Z]** im Lagerfeuer erreichbar.
+Die **Weltkarte** ist jederzeit über **[Z]** im Camp erreichbar.
 
 ---
 
@@ -234,13 +254,40 @@ Equipment kann mit Gold **aufgewertet** werden (+1 ATK bzw. DEF pro Upgrade).
 
 ---
 
-### New Game+
-Nach dem Besiegen **aller 5 Zonen-Bosse** erscheint der Endscreen mit NG+-Angebot:
-- Gegner skalieren mit **×1,3 HP und ATK** pro NG+-Runde (kumulativ, max. ×3,0)
-- Du behältst **Gold** und alle **legendären Items**
-- Level, Skills und normale Ausrüstung werden zurückgesetzt
-- Alle Zonen starten wieder gesperrt
-- Dungeon- und Zonen-Statistiken werden für den neuen Durchlauf zurückgesetzt
+### Segnungen
+Nach **jedem abgeschlossenen Dungeon** wählst du **1 von 3 zufälligen Segnungen** (Pool: 30, davon 3 klassenspezifisch). Sie gelten nur für den laufenden Run und kombinieren sich zu Builds — z. B. heilen Kills, wiederholen sich Angriffe oder explodieren Verbrennungen.  
+**3 Synergien** geben Bonus-Effekte, wenn zwei passende Segnungen aktiv sind (z. B. Giftmeister + Lebensraub → vergiftete Gegner unter 20 % HP nehmen 3× Schaden).
+
+---
+
+### Der Spiegel
+**7 permanente Upgrades**, kaufbar mit Runenessenz in der Zuflucht (`[S]`). Jedes Upgrade hat **zwei Varianten — A oder B** — du entscheidest dich für einen Spielstil; ein Wechsel kostet 30 % des Preises:
+
+| Upgrade | A | B | 💠 |
+|---------|---|---|:--:|
+| ❤️ Zähigkeit | +15 max HP | Nach jedem Kampfsieg +5 HP | 60 |
+| ⚔️ Kriegserfahrung | +1 ATK | 1. Kampf pro Dungeon +50 % Schaden | 80 |
+| 🍀 Glück | +15 % Gold | Boss-Beute: +1 Beute-Wurf | 70 |
+| 🕊️ Zweites Leben | 1×/Run tödlichen Treffer überleben | Bei Tod: 20 % Gold → Runenessenz | 120 |
+| 📿 Seelenbindung | +8 % XP | +1 Skillpunkt pro Level-Up | 90 |
+| 🛒 Händlerglück | Wandernder Händler 2× so oft | Händler-Preise −15 % | 75 |
+| 🌓 Dunkelresistenz | Erhaltene Statuseffekte −1 Stack | Immunität gg. 1 zufälligen Effekt/Run | 100 |
+
+---
+
+### Runen
+**9 Runen** droppen aus Gegnern und Bossen — jede genau einmal, danach permanent freigeschaltet (`[R]` in der Zuflucht):
+
+- **Startkits (4):** Kriegers Vermächtnis, Schurken-Einsteiger, Magier-Erbe, Überlebender — vor jedem Run wählbar
+- **Klassen-Varianten (2):** 💢 Berserker (−10 HP, +6 ATK, kein Schildwall) · 🌘 Meuchler (15 HP, 18 ATK, Flucht gelingt immer)
+- **Zuflucht-NPCs (3):** 🔨 Schmied (1 Gratis-Upgrade pro Run) · 🧺 Essenz-Händlerin (Vorräte gegen Runenessenz) · 🔮 Orakel (zeigt den nächsten Zonen-Boss)
+
+| Quelle | Drop-Chance |
+|--------|:-----------:|
+| Zonen-Boss | 100 % (1× pro Boss) |
+| Dungeon-Boss (Rang 5) | 25 % |
+| Schatztruhen-Event | 15 % |
+| Elite-Gegner | 5 % |
 
 ---
 
@@ -251,7 +298,7 @@ Kampf · Aufstieg · Dungeons & Zonen · Wirtschaft · Meta
 ---
 
 ### Crafting & Schwarzmarkt
-Am Lagerfeuer über **[C] Handwerk** erreichbar:
+Im Camp über **[C] Handwerk** erreichbar:
 - Junk-Items zu Consumables verarbeiten (4 Rezepte)
 - **Wandernder Händler:** Zufalls-Event im Dungeon — bis zu 3 Consumables mit 20 % Rabatt, mehrere Käufe möglich
 - **Schwarzmarkt:** Selteneres Event beim Wandernden Händler — epische/legendäre Items zu Festpreisen, einmalig pro Run verfügbar
@@ -260,12 +307,26 @@ Am Lagerfeuer über **[C] Handwerk** erreichbar:
 
 ## 💾 Speichern & Laden
 
-Bis zu **3 Spielstände** in `saves/savegame_1.json` bis `_3.json`.  
-Beim Start: Auswahl mit Klasse, Level, Schwierigkeit und NG+-Runde pro Slot.
+Zwei Speicherdateien in `saves/`:
+- **`meta_save.json`** — permanent: Runenessenz, Spiegel-Stand, Runen, Errungenschaften, Lifetime-Stats
+- **`run_save.json`** — der aktuelle Run: bei **Tod gelöscht**, bei **Quit behalten** (Run wird beim nächsten Start fortgesetzt). Autosave nach jedem Dungeon.
 
 ---
 
 ## 📋 Changelog
+
+### v3.0 — Das Roguelite
+- **Kompletter Umbau des Spielprinzips:** Hub („Die Zuflucht") → Run → Tod/Sieg → Hub. New Game+ und das 3-Slot-Speichersystem wurden entfernt
+- **Runenessenz** als Metawährung: 15–25 pro Dungeon, 50–80 pro Zonen-Boss, +200 bei Sieg — bleibt auch bei Tod erhalten
+- **Segnungen:** 30 Run-Segnungen (1-aus-3-Wahl nach jedem Dungeon) + 3 Synergien
+- **Der Spiegel:** 7 permanente Upgrades mit je 2 Varianten (A/B), A↔B-Wechsel für 30 % des Preises
+- **Runen:** 9 permanente Unlocks (4 Startkits, 2 Klassen-Varianten, 3 Zuflucht-NPCs) mit quellenabhängigen Drop-Chancen
+- **Basis-Balancing:** Gegner +20 % HP / +15 % ATK — die ersten Runs sind bewusst nicht gewinnbar
+- Achievements sind jetzt meta-persistent und überleben den Tod
+- Bug-Pass über den neuen Code (u. a. Sichtbarkeit von Kampfende-Meldungen, Segnungs-Filter für Berserker)
+- Bugfix: Energie-Auffüllung (Schrein, Blutiger Altar, Dungeon-Abschluss) respektiert Set-Energie-Boni — konnte Energie zuvor sogar reduzieren
+- Bugfix: Tod durch eigenen Status-Tick in der Runde des letzten Kills zählt als Niederlage statt als Sieg
+- Bugfix: Tode wurden bei Zonen-Boss-Niederlagen doppelt gezählt
 
 ### v2.3
 - Autosave: Nach jedem Dungeon-Abschluss wird automatisch in den aktiven Slot gespeichert

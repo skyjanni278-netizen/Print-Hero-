@@ -38,6 +38,7 @@ def _new_run(meta):
     if variante:
         for m in apply_klassen_variante(player, variante):
             console.print(f"  [cyan]{m}[/cyan]")
+        input("  (ENTER)")
 
     hp_delta = DIFFICULTY_SETTINGS.get(diff, {}).get("start_hp", 30) - 30
     if hp_delta:
