@@ -17,6 +17,7 @@ def _default_meta() -> dict:
         "achievements":   [],
         "spiegel_state":  {},   # v3.0 Phase 3
         "unlocked_runen": [],   # v3.0 Phase 4
+        "boss_runen_dropped": [],   # Zonen-Bosse, die ihre Rune bereits vergeben haben
         "lifetime_stats": {
             "runs_started":  0,
             "runs_won":      0,
