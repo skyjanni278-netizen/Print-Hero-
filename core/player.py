@@ -181,6 +181,8 @@ class Character:
         total = self.attack + self.equipment["weapon"]["attack"] + self.combat_modifiers.get("attack", 0) + skill_bonus + upgrade_bonus + set_bonus
         if "letzter_wille" in self.active_segnungen and self.hp <= max(1, int(self.max_hp * 0.10)):
             total = int(total * 1.30)
+        if "totenritter_berserker" in self.get_set_specials() and self.hp <= max(1, int(self.max_hp * 0.25)):
+            total = int(total * 1.50)
         return total
 
     def reset_combat_modifiers(self):
@@ -291,6 +293,8 @@ class Character:
             crit        = True
             ignore_def  = True
         else:
+            from content.loot_tables import EQUIPMENT_DEFS
+            weapon_passive = EQUIPMENT_DEFS.get(self.equipment["weapon"]["name"], {}).get("passive")
             # Kritischer Treffer: 15% (+10% Schurke) Chance auf Doppelschaden
             specials    = self.get_set_specials()
             shadow_crit = 0.15 if "rogue_shadow_regen" in specials else 0.0
@@ -298,7 +302,10 @@ class Character:
             rogue_bonus = (0.10 + self.passive_crit_bonus + shadow_crit) if self.player_class == "rogue" else 0
             base_crit   = 0.15 if "Kritischer Treffer" in self.skills else 0
             seg_crit    = 0.10 if "adlerauge" in self.active_segnungen else 0
-            if random.random() < (base_crit + rogue_bonus + set_crit + seg_crit):
+            if weapon_passive == "godspear_crit" and target.hp <= max(1, int(target.max_hp * 0.30)):
+                raw_damage *= 2
+                crit = True
+            elif random.random() < (base_crit + rogue_bonus + set_crit + seg_crit):
                 raw_damage *= 2
                 crit = True
 
@@ -415,14 +422,19 @@ class Character:
             chance += 0.10
         if "schattentuch_dodge" in specials:
             chance += 0.15
+        if "totenritter_berserker" in specials and self.hp <= max(1, int(self.max_hp * 0.25)):
+            chance += 0.20
         return chance
 
     def get_xp_bonus_mult(self) -> float:
+        from content.loot_tables import EQUIPMENT_DEFS
         mult = 1.20 if "runen_xp_bonus" in self.get_set_specials() else 1.0
         if "weise_seele" in self.active_segnungen:
             mult *= 1.15
         if getattr(self, "spiegel", {}).get("seelenbindung") == "A":
             mult *= 1.08
+        if EQUIPMENT_DEFS.get(self.equipment["head"]["name"], {}).get("passive") == "godcrown_xp":
+            mult *= 1.15
         return mult
 
     def use_consumable(self, key: str) -> str:

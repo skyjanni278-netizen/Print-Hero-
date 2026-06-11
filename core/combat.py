@@ -239,7 +239,13 @@ def combat(player, enemy_list):
         player.combat_modifiers["attack"] = player.combat_modifiers.get("attack", 0) + bonus
         player.next_fight_atk_mult = 1.0
 
+    player.soul_absorb_ready = (
+        EQUIPMENT_DEFS.get(player.equipment["chest"]["name"], {}).get("passive") == "soul_absorb"
+    )
+
     seg_start_msgs = on_combat_start(player, enemy_list) if player.active_segnungen else []
+    if player.soul_absorb_ready:
+        seg_start_msgs.append("🪬 Seelenpanzer: Der erste Angriff dieses Kampfes wird absorbiert!")
 
     if getattr(player, "spiegel_first_fight", False) and spiegel_active(player, "kriegserfahrung", "B"):
         player.spiegel_first_fight = False
@@ -526,7 +532,10 @@ def combat(player, enemy_list):
                 continue
             track_status  = player.active_segnungen or spiegel_active(player, "dunkelresistenz", "A")
             before_status = status_snapshot(player) if track_status else None
-            if getattr(player, "block_next", False):
+            if getattr(player, "soul_absorb_ready", False):
+                player.soul_absorb_ready = False
+                console.print(f"  🪬 [bold]Seelenpanzer absorbiert den Angriff von {_esc(e.name)} vollständig![/bold]")
+            elif getattr(player, "block_next", False):
                 player.block_charges -= 1
                 if player.block_charges <= 0:
                     player.block_next = False
@@ -563,6 +572,12 @@ def combat(player, enemy_list):
                         msg, dmg = e.attack_target(player)
                         player.stats["damage_taken"] += dmg
                         console.print(f"  {msg}")
+                        if dmg > 0 and "abyssal_thorns" in player.get_set_specials():
+                            thorn = max(1, int(dmg * 0.30))
+                            for t in enemy_list:
+                                if t.is_alive():
+                                    t.hp = max(0, t.hp - thorn)
+                            console.print(f"  [magenta]🕳️  Abyssal-Rückstoß: {thorn} Schaden an alle Gegner![/magenta]")
                         if player.active_segnungen:
                             for m in on_player_hit(player, e, dmg):
                                 console.print(f"  {m}")
