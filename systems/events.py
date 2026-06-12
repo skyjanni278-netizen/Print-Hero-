@@ -729,15 +729,9 @@ def _zeitkapsel(player):
         _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
         console.print("  [cyan]Ein Echo deines letzten Lebens — die Kapsel enthält:[/cyan]")
         console.print(f"  {rbadge}{_esc(edef.get('emoji','⚔️'))} [bold]{_esc(name)}[/bold]")
-        if edef.get("rarity") in ("legendary", "mythic"):
-            from systems.achievements import check_and_unlock
-            msg = check_and_unlock(player, "got_legendary")
-            if msg:
-                console.print(f"  {msg}")
-            if edef.get("rarity") == "mythic":
-                msg = check_and_unlock(player, "got_mythic")
-                if msg:
-                    console.print(f"  {msg}")
+        from systems.achievements import rarity_unlock_msgs
+        for msg in rarity_unlock_msgs(player, edef.get("rarity", "common")):
+            console.print(f"  {msg}")
     input("\n(ENTER)")
 
 
@@ -766,10 +760,11 @@ _META_EVENTS = {_treasure_chest, _gefallener_held}
 
 
 def trigger_event(player, meta=None):
+    from systems.dunkelsiegel import siegel_active
     events = _EVENTS
     if getattr(player, "spiegel", {}).get("haendlerglueck") == "A":
         events = [(f, w * 2 if f is _wandering_merchant else w) for f, w in _EVENTS]
-    if "stille" in getattr(player, "aktive_siegel", []):
+    if siegel_active(player, "stille"):
         events = [(f, w) for f, w in events if f is not _wandering_merchant]
     funcs, weights = zip(*events)
     chosen = random.choices(funcs, weights=weights, k=1)[0]

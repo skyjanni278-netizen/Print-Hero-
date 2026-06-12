@@ -87,7 +87,8 @@ def camp_menu(player, meta=None) -> str:
         elif choice == 'v':
             sell_menu(player)
         elif choice == 'k':
-            if "stille" in getattr(player, "aktive_siegel", []):
+            from systems.dunkelsiegel import siegel_active
+            if siegel_active(player, "stille"):
                 console.print("\n  [red]💀 Siegel der Stille: Kein Händler wagt sich in deine Nähe.[/red]")
                 input("  (ENTER)")
             else:

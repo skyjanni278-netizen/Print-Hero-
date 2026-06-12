@@ -46,6 +46,15 @@ def essenz_bonus_tag(player) -> str:
     return f" [red]💀 +{int(round((mult - 1.0) * 100))}%[/red]" if mult > 1.0 else ""
 
 
+# Einziger Weg, Run-Essenz zu vergeben — wendet den Siegel-Bonus an und zeigt ihn an.
+def award_essenz(player, meta, base: int, label: str = "") -> int:
+    from core.save import add_runenessenz
+    essenz = int(base * siegel_essenz_mult(player))
+    add_runenessenz(meta, essenz)
+    console.print(f"  [bold cyan]💠 +{essenz} Runenessenz{label}[/bold cyan]{essenz_bonus_tag(player)}  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+    return essenz
+
+
 # Beim Run-Start: Auswahl aus dem Meta auf den Run übertragen.
 def apply_siegel(player, meta) -> list:
     player.aktive_siegel = [s for s in meta.get("next_run_siegel", []) if s in SIEGEL_DEFS]

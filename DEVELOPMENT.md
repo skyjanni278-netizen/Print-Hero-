@@ -137,13 +137,17 @@ Zwei Dateien in `saves/`:
   die Auswahl als Run-Snapshot; alle Hooks lesen `player.aktive_siegel`, nie das Meta.
 - Effekt-Hooks: Blut in `scale_enemy()` (zones.py), Stille in `camp_menu()` (ui/pause.py)
   + `trigger_event()` (events.py), Verhängnis in `check_spiegel_leben()` (spiegel.py).
-- Essenz-Bonus IMMER über `siegel_essenz_mult(player)` auf den Basisbetrag anwenden,
-  bevor `add_runenessenz()` aufgerufen wird (Anzeige-Tag: `essenz_bonus_tag(player)`).
+- Run-Essenz IMMER über `award_essenz(player, meta, base, label="")` vergeben —
+  wendet den Siegel-Bonus an, schreibt gut und zeigt die Belohnungszeile inkl.
+  Bonus-Tag an. Nie `add_runenessenz` direkt für Run-Belohnungen aufrufen.
 - Bewusste Abgrenzungen: Stille blockt nur Camp-Shop + Wandernden Händler (Dungeon-Händler
   und Auktion bleiben); Verhängnis blockt nur die Spiegel-Wiederbelebung [A] —
   Zweite-Chance-Segnung und Zweites-Leben-[B] (Gold-Rettung) funktionieren weiter.
 
 ### Kampf & Energie
+- **Nicht-Kampf-Schaden** (Events, Fallen, Schreine) IMMER über
+  `player.take_damage(dmg, min_hp=…)` — direkte `player.hp`-Mutation umgeht
+  die Schadens-Statistik und das Unberührt-Achievement.
 - Passive Waffeneffekte sind **nur in `core/combat.py`** implementiert
   (`_apply_weapon_passive()`), nicht in `player.attack_target()`.
 - Energie regeneriert `ENERGY_REGEN = 3` pro Runde (config.py). Fähigkeiten-Kosten

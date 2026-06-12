@@ -197,11 +197,8 @@ def run_zone_boss(player, zone_id: str, meta) -> str:
     console.print(f"\n  [bold green]+{total_xp} XP[/bold green]")
 
     from config import RUNENESSENZ_BOSS
-    from core.save import add_runenessenz
-    from systems.dunkelsiegel import siegel_essenz_mult, essenz_bonus_tag
-    essenz = int(random.randint(*RUNENESSENZ_BOSS) * siegel_essenz_mult(player))
-    add_runenessenz(meta, essenz)
-    console.print(f"  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]{essenz_bonus_tag(player)}  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+    from systems.dunkelsiegel import award_essenz
+    award_essenz(player, meta, random.randint(*RUNENESSENZ_BOSS))
 
     from systems.runen import check_rune_drop, rune_found_msgs
     rid = check_rune_drop(meta, "zone_boss", zone_id)
@@ -346,11 +343,9 @@ def victory_screen(player, meta):
     console.print("─" * 52)
 
     from config import RUNENESSENZ_VICTORY
-    from core.save import add_runenessenz
-    from systems.dunkelsiegel import siegel_essenz_mult, essenz_bonus_tag, all_siegel_active, COSMETIC_ID
-    essenz = int(RUNENESSENZ_VICTORY * siegel_essenz_mult(player))
-    add_runenessenz(meta, essenz)
-    console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz — Sieg-Bonus![/bold cyan]{essenz_bonus_tag(player)}  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+    from systems.dunkelsiegel import award_essenz, all_siegel_active, COSMETIC_ID
+    console.print()
+    award_essenz(player, meta, RUNENESSENZ_VICTORY, label=" — Sieg-Bonus!")
 
     if all_siegel_active(player):
         cosmetics = meta.setdefault("cosmetics", [])

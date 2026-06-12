@@ -350,6 +350,11 @@ Zwei Speicherdateien in `saves/`:
 
 ## 📋 Changelog
 
+### v3.3.1 — Review-Fixes
+- Bugfix: Event-Schaden (Blutiger Altar, Giftfalle, Magische Truhe u. a.) zählt jetzt in „Schaden erhalten" — das Achievement „Unberührt" war über Event-Räume austricksbar. Neuer zentraler Eintrittspunkt `Character.take_damage()` für allen Nicht-Kampf-Schaden
+- Bugfix: Die Zweites-Leben-[B]-Gold-Rettung bei Tod profitiert jetzt vom Dunkelsiegel-Essenz-Bonus (war die einzige Essenz-Quelle ohne Multiplikator)
+- Refactoring: Essenz-Vergabe in einen gemeinsamen `award_essenz()`-Helper zusammengezogen (war 3× dupliziert), Rarity-Achievement-Check in `rarity_unlock_msgs()` geteilt, Siegel-Checks nutzen durchgängig die `siegel_active()`-Helper
+
 ### v3.3 — Dunkelsiegel
 - **3 stackbare Dunkelsiegel** als optionale Herausforderungen (`[D]` in der Zuflucht): Fluch des Blutes (Gegner +20 % HP, +40 % Essenz), Stille (kein Händler, +60 % Essenz), Verhängnis (Spiegel-Wiederbelebung deaktiviert, +80 % Essenz)
 - Siegel-Auswahl bleibt zwischen Runs aktiv, bis sie abgelegt wird; aktive Siegel werden im Camp und beim Run-Start angezeigt

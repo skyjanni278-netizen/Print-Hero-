@@ -341,14 +341,8 @@ def apply_loot(player, loot_list: list) -> list:
 
             player.inventory["Equipment"].append(equip)
             messages.append(f"  {rbadge}{emoji} {item_key} [{rlabel}] ({stat})")
-            if rarity in ("legendary", "mythic"):
-                from systems.achievements import check_and_unlock
-                msg = check_and_unlock(player, "got_legendary")
-                if msg:
-                    messages.append(f"  {msg}")
-                if rarity == "mythic":
-                    msg = check_and_unlock(player, "got_mythic")
-                    if msg:
-                        messages.append(f"  {msg}")
+            from systems.achievements import rarity_unlock_msgs
+            for msg in rarity_unlock_msgs(player, rarity):
+                messages.append(f"  {msg}")
 
     return messages

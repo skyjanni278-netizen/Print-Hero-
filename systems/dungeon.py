@@ -566,11 +566,10 @@ def run_dungeon(player, meta) -> str:
         console.print(f"  [red]{_esc(bdef['name'])} kann nun herausgefordert werden![/red]")
 
     from config import RUNENESSENZ_DUNGEON
-    from core.save import save_run, add_runenessenz
-    from systems.dunkelsiegel import siegel_essenz_mult, essenz_bonus_tag
-    essenz = int(random.randint(*RUNENESSENZ_DUNGEON) * siegel_essenz_mult(player))
-    add_runenessenz(meta, essenz)
-    console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]{essenz_bonus_tag(player)}  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+    from core.save import save_run
+    from systems.dunkelsiegel import award_essenz
+    console.print()
+    award_essenz(player, meta, random.randint(*RUNENESSENZ_DUNGEON))
 
     dungeon_damage = player.stats.get("damage_taken", 0) - dmg_before
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id,

@@ -111,7 +111,8 @@ def spiegel_price(player, price: int) -> int:
 def check_spiegel_leben(player) -> str:
     if player.hp > 0:
         return ""
-    if "verhaengnis" in getattr(player, "aktive_siegel", []):
+    from systems.dunkelsiegel import siegel_active
+    if siegel_active(player, "verhaengnis"):
         return ""
     if spiegel_active(player, "zweites_leben", "A") and not getattr(player, "spiegel_leben_used", False):
         player.spiegel_leben_used = True

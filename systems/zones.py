@@ -121,6 +121,7 @@ def roll_rank_for_zone(zone_id: str) -> int:
 
 def scale_enemy(mob, player):
     from config import DIFFICULTY_SETTINGS, ENEMY_BASE_HP_MULT, ENEMY_BASE_ATK_MULT
+    from systems.dunkelsiegel import siegel_active
     hp_mult  = ENEMY_BASE_HP_MULT
     atk_mult = ENEMY_BASE_ATK_MULT
     diff = getattr(player, "difficulty", "normal")
@@ -128,7 +129,7 @@ def scale_enemy(mob, player):
         cfg       = DIFFICULTY_SETTINGS[diff]
         hp_mult  *= cfg["hp_mult"]
         atk_mult *= cfg["atk_mult"]
-    if "blut" in getattr(player, "aktive_siegel", []):
+    if siegel_active(player, "blut"):
         hp_mult *= 1.20
     mob.max_hp = max(1, int(mob.max_hp * hp_mult))
     mob.hp     = mob.max_hp

@@ -62,6 +62,19 @@ def check_and_unlock(player, achievement_id: str) -> str | None:
     return None
 
 
+def rarity_unlock_msgs(player, rarity: str) -> list:
+    msgs = []
+    if rarity in ("legendary", "mythic"):
+        m = check_and_unlock(player, "got_legendary")
+        if m:
+            msgs.append(m)
+        if rarity == "mythic":
+            m = check_and_unlock(player, "got_mythic")
+            if m:
+                msgs.append(m)
+    return msgs
+
+
 def check_and_unlock_meta(meta: dict, achievement_id: str) -> str | None:
     unlocked = set(meta.get("achievements", []))
     if achievement_id in unlocked or achievement_id not in ACHIEVEMENTS:
@@ -154,8 +167,8 @@ def check_all(player, context: dict):
         _try("run_won")
         if getattr(player, "spiegel_leben_used", False):
             _try("todesveraechter")
-        from systems.dunkelsiegel import SIEGEL_DEFS
-        if set(SIEGEL_DEFS) <= set(getattr(player, "aktive_siegel", [])):
+        from systems.dunkelsiegel import all_siegel_active
+        if all_siegel_active(player):
             _try("verdammter_held")
 
     elif event == "dungeon_complete":
