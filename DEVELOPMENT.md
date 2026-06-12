@@ -1,8 +1,7 @@
 # DEVELOPMENT.md — Entwickler-Handbuch
 
 Dieses Dokument richtet sich an Entwickler. Für den Überblick über Spielsysteme und
-Projektstruktur siehe **README.md**, für den Entwicklungsplan **ROADMAP.md**, für die
-Item-/Set-Referenz **ITEMS.md**.
+Projektstruktur siehe **README.md**, für die Item-/Set-Referenz **ITEMS.md**.
 
 ---
 
