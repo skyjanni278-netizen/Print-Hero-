@@ -69,8 +69,27 @@
   - Fünf-Zonen-Loot-Kurve umgesetzt, Klassen-Sets gestreckt (Waffe+Schuhe Zone 3, Rüstung+Helm Zone 4)
   - Review-Fixes: Boss-Refight geblockt, Starter-Kettenhemd 4 DEF, Kampf-Achievements sofort nach jedem Kampf
 
-### 🔧 Nächster Schritt: v3.2 — Content-Erweiterung
-Siehe v3.2-Abschnitt unten: 3 neue Monster, 4 neue Events, 10 neue Achievements.
+- **v3.2 Schritt 1 — 3 neue Monster:** Knochengoliat (Zone 2–3, Selbstheilung), Wüstenschakal
+  (Zone 3, 20% Mob-Dodge via `_attack_evaded`), Dunkelmagierin (Zone 5, Energie-Drain + Fluch),
+  Boss-Intros für alle 6 fehlenden Monster
+- **v3.2 Schritt 2 — 4 neue Events:** Verfallene Bibliothek, Gefallener Held, Händler-Auktion
+  (Rivale spawnt bei Niederlage), Zeitkapsel (Item aus `last_run.json`-Snapshot)
+- **v3.2 Schritt 3 — 10 neue Achievements:** Erster Schritt, Spiegel-Meister, Runen-Sammler,
+  Synergist, Unberührt, Todesverächter, Gilden-Gründer, Mythisch, Ewige Legende, Verdammter Held
+  - Neue Meta-Helfer `check_and_unlock_meta()` + `check_meta()` in `systems/achievements.py` —
+    Meta-Achievements funktionieren auch ohne laufenden Run (Spiegel-Kauf im Hub);
+    Trigger-Stellen: Spiegel-Kauf, jeder Runen-Drop (`rune_found_msgs(rid, meta)`),
+    Run-Ende (Sieg + Niederlage), Spielstart (rückwirkende Unlocks für alte Saves)
+  - Neues Meta-Feld `lifetime_stats["classes_won"]` für Ewige Legende
+  - Fallen- und Schrein-Schaden zählen jetzt in `stats["damage_taken"]` (für Unberührt;
+    korrigiert nebenbei die „Schaden erhalten"-Anzeige)
+  - Abweichungen vom ursprünglichen Plan:
+    - Runen-Sammler: „Alle Runen gefunden" statt „10 verschiedene" — es existieren nur 9 Runen
+    - Verdammter Held: definiert, aber Trigger folgt erst mit den Dunkelsiegeln in v3.3
+    - Unberührt zählt Kampf-, Fallen- und Schrein-Schaden; Event-HP-Verluste ausgenommen
+
+### 🔧 Nächster Schritt: v3.2 — Bug-Pass + Docs + Release
+Gezielter Bug-Pass über den neuen v3.2-Code, README/ITEMS aktualisieren, v3.2 taggen.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*

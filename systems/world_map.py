@@ -206,7 +206,7 @@ def run_zone_boss(player, zone_id: str, meta) -> str:
     rid = check_rune_drop(meta, "zone_boss", zone_id)
     if rid:
         console.print()
-        for m in rune_found_msgs(rid):
+        for m in rune_found_msgs(rid, meta):
             console.print(f"  {m}")
 
     pots_used = player.stats.get("potions_used", 0) - pots_before
@@ -349,13 +349,19 @@ def victory_screen(player, meta):
     add_runenessenz(meta, RUNENESSENZ_VICTORY)
     console.print(f"\n  [bold cyan]💠 +{RUNENESSENZ_VICTORY} Runenessenz — Sieg-Bonus![/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
-    from systems.achievements import check_all
+    from systems.achievements import check_all, check_meta
     for m in check_all(player, {"event": "run_won"}):
         console.print(f"  {m}")
 
     sync_achievements(player, meta)
     ls = meta.setdefault("lifetime_stats", {})
     ls["runs_won"] = ls.get("runs_won", 0) + 1
+    classes_won = ls.setdefault("classes_won", [])
+    pclass = getattr(player, "player_class", "warrior")
+    if pclass not in classes_won:
+        classes_won.append(pclass)
+    for m in check_meta(meta):
+        console.print(f"  {m}")
     save_meta(meta)
     delete_run()
 

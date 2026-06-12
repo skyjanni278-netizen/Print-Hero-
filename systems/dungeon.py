@@ -171,6 +171,7 @@ def _shrine_room(player):
         else:
             dmg = random.randint(8, 15)
             player.hp = max(1, player.hp - dmg)
+            player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
             hp_b2 = hp_bar(player.hp, player.max_hp)
             console.print(f"\n  [red]Der Schrein reagiert feindselig! -{dmg} HP[/red]")
             console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}")
@@ -210,12 +211,14 @@ def _trap_room(player):
     elif choice == "a":
         dmg = random.randint(4, 9)
         player.hp = max(1, player.hp - dmg)
+        player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"\n  [red]Du willst ausweichen, aber deine Energie reicht nicht! -{dmg} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
     else:
         dmg = random.randint(8, 18)
         player.hp = max(1, player.hp - dmg)
+        player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"\n  [red]Du läufst mitten in die Falle! -{dmg} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
@@ -341,6 +344,7 @@ def run_dungeon(player, meta) -> str:
     total = len(rooms)
     zone_id = getattr(player, "current_zone", "wald")
     dungeon_name = random.choice(DUNGEON_NAMES.get(zone_id, DUNGEON_NAMES["wald"]))
+    dmg_before = player.stats.get("damage_taken", 0)
 
     if getattr(player, "spiegel", {}).get("kriegserfahrung") == "B":
         player.spiegel_first_fight = True
@@ -414,7 +418,7 @@ def run_dungeon(player, meta) -> str:
             from systems.runen import check_rune_drop, rune_found_msgs
             rid = check_rune_drop(meta, "elite")
             if rid:
-                for m in rune_found_msgs(rid):
+                for m in rune_found_msgs(rid, meta):
                     console.print(f"  {m}")
                 input("  (ENTER)")
 
@@ -521,7 +525,7 @@ def run_dungeon(player, meta) -> str:
                 rid = check_rune_drop(meta, "dungeon_boss")
                 if rid:
                     console.print()
-                    for m in rune_found_msgs(rid):
+                    for m in rune_found_msgs(rid, meta):
                         console.print(f"  {m}")
             pots_used = player.stats.get("potions_used", 0) - pots_before
             for m in check_all(player, {"event": "victory", "enemies": [boss], "potions_used": pots_used}):
@@ -570,7 +574,9 @@ def run_dungeon(player, meta) -> str:
     add_runenessenz(meta, essenz)
     console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
-    for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id}):
+    dungeon_damage = player.stats.get("damage_taken", 0) - dmg_before
+    for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id,
+                                "dungeon_damage": dungeon_damage}):
         console.print(f"  {m}")
 
     input("\n(ENTER)")

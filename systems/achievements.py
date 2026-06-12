@@ -26,6 +26,17 @@ ACHIEVEMENTS = {
     "got_legendary":  {"name": "Legendär",          "emoji": "🟨", "desc": "Legendäres Item gefunden"},
     # ── Meta ───────────────────────────────────────────────────
     "run_won":        {"name": "Bezwinger",         "emoji": "⭐", "desc": "Einen Run siegreich abgeschlossen"},
+    # ── Roguelite (v3.2) ───────────────────────────────────────
+    "erster_schritt": {"name": "Erster Schritt",    "emoji": "👣", "desc": "5 Runs abgeschlossen"},
+    "spiegel_meister":{"name": "Spiegel-Meister",   "emoji": "🪞", "desc": "Alle Spiegel-Upgrades freigeschaltet"},
+    "rune_sammler":   {"name": "Runen-Sammler",     "emoji": "🧿", "desc": "Alle Runen gefunden"},
+    "synergist":      {"name": "Synergist",         "emoji": "🔗", "desc": "2 Segnung-Synergien gleichzeitig aktiv"},
+    "unberuehrt":     {"name": "Unberührt",         "emoji": "💨", "desc": "Dungeon ohne erlittenen Schaden abgeschlossen"},
+    "todesveraechter":{"name": "Todesverächter",    "emoji": "⚰️", "desc": "Zweites Leben genutzt und Run dennoch gewonnen"},
+    "gilden_gruender":{"name": "Gilden-Gründer",    "emoji": "🏕️", "desc": "Alle Zuflucht-NPCs freigeschaltet"},
+    "got_mythic":     {"name": "Mythisch",          "emoji": "🟥", "desc": "Mythic-Item gefunden"},
+    "ewige_legende":  {"name": "Ewige Legende",     "emoji": "🏅", "desc": "Mit allen 3 Klassen einen Run gewonnen"},
+    "verdammter_held":{"name": "Verdammter Held",   "emoji": "😈", "desc": "Run mit allen 3 Dunkelsiegeln gewonnen"},
 }
 
 _ZONE_ACH = {
@@ -37,14 +48,60 @@ _ZONE_ACH = {
 }
 
 
+def _unlock_msg(achievement_id: str) -> str:
+    a = ACHIEVEMENTS[achievement_id]
+    return f"🏆 Errungenschaft freigeschaltet: {a['emoji']} {a['name']} — {a['desc']}"
+
+
 def check_and_unlock(player, achievement_id: str) -> str | None:
     if not hasattr(player, "achievements"):
         player.achievements = set()
     if achievement_id not in player.achievements and achievement_id in ACHIEVEMENTS:
         player.achievements.add(achievement_id)
-        a = ACHIEVEMENTS[achievement_id]
-        return f"🏆 Errungenschaft freigeschaltet: {a['emoji']} {a['name']} — {a['desc']}"
+        return _unlock_msg(achievement_id)
     return None
+
+
+def check_and_unlock_meta(meta: dict, achievement_id: str) -> str | None:
+    unlocked = set(meta.get("achievements", []))
+    if achievement_id in unlocked or achievement_id not in ACHIEVEMENTS:
+        return None
+    unlocked.add(achievement_id)
+    meta["achievements"] = sorted(unlocked)
+    return _unlock_msg(achievement_id)
+
+
+# Achievements aus dem Meta-Stand (ohne laufenden Run prüfbar) —
+# aufrufen wo sich Meta ändert: Spiegel-Kauf, Runen-Drop, Run-Ende.
+def check_meta(meta: dict) -> list:
+    from systems.spiegel import SPIEGEL_DEFS
+    from systems.runen import RUNEN_DEFS
+    msgs = []
+
+    def _try(aid):
+        m = check_and_unlock_meta(meta, aid)
+        if m:
+            msgs.append(m)
+
+    ls      = meta.get("lifetime_stats", {})
+    spiegel = meta.get("spiegel_state", {})
+    runen   = set(meta.get("unlocked_runen", []))
+
+    if ls.get("runs_won", 0) + ls.get("runs_lost", 0) >= 5:
+        _try("erster_schritt")
+    if all(spiegel.get(uid) in ("A", "B") for uid in SPIEGEL_DEFS):
+        _try("spiegel_meister")
+    if runen >= set(RUNEN_DEFS):
+        _try("rune_sammler")
+    if all(rid in runen for rid, d in RUNEN_DEFS.items() if d["kategorie"] == "npc"):
+        _try("gilden_gruender")
+    if {"warrior", "rogue", "mage"} <= set(ls.get("classes_won", [])):
+        _try("ewige_legende")
+
+    if msgs:
+        from core.save import save_meta
+        save_meta(meta)
+    return msgs
 
 
 def check_all(player, context: dict):
@@ -86,6 +143,8 @@ def check_all(player, context: dict):
     elif event == "loot":
         if context.get("got_legendary"):
             _try("got_legendary")
+        if context.get("got_mythic"):
+            _try("got_mythic")
 
     elif event == "gold_check":
         if gold >= 500:
@@ -93,6 +152,8 @@ def check_all(player, context: dict):
 
     elif event == "run_won":
         _try("run_won")
+        if getattr(player, "spiegel_leben_used", False):
+            _try("todesveraechter")
 
     elif event == "dungeon_complete":
         dc      = player.stats.get("dungeons_completed", 0)
@@ -103,6 +164,13 @@ def check_all(player, context: dict):
         ach = _ZONE_ACH.get(zone_id)
         if ach and zone_id in cleared:
             _try(ach)
+        if context.get("dungeon_damage", -1) == 0:
+            _try("unberuehrt")
+
+    elif event == "segnung":
+        from systems.segnungen import get_active_synergien
+        if len(get_active_synergien(player)) >= 2:
+            _try("synergist")
 
     return msgs
 
@@ -117,8 +185,9 @@ def achievements_menu(unlocked: set):
         ("⚔️  Kampf",            ["first_blood", "slayer_10", "slayer_100", "fighter_50", "no_potions", "boss_slayer"]),
         ("📈 Aufstieg",          ["reach_lv5", "reach_lv10", "warrior_legend", "rogue_master", "mage_sage"]),
         ("🗡️  Dungeons & Zonen", ["dungeon_veteran", "wald_cleared", "ruinen_cleared", "wueste_cleared", "vulkan_cleared", "dunkel_cleared"]),
-        ("💰 Wirtschaft",        ["wealthy", "got_legendary"]),
-        ("⭐ Meta",              ["run_won"]),
+        ("💰 Wirtschaft",        ["wealthy", "got_legendary", "got_mythic"]),
+        ("⭐ Meta",              ["run_won", "erster_schritt", "ewige_legende", "todesveraechter", "verdammter_held"]),
+        ("🌀 Roguelite",         ["spiegel_meister", "rune_sammler", "gilden_gruender", "synergist", "unberuehrt"]),
     ]
     for section_name, ids in sections:
         console.print(f"\n  [bold]{section_name}[/bold]")

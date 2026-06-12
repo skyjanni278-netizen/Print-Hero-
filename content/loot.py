@@ -346,5 +346,9 @@ def apply_loot(player, loot_list: list) -> list:
                 msg = check_and_unlock(player, "got_legendary")
                 if msg:
                     messages.append(f"  {msg}")
+                if rarity == "mythic":
+                    msg = check_and_unlock(player, "got_mythic")
+                    if msg:
+                        messages.append(f"  {msg}")
 
     return messages

@@ -5,7 +5,7 @@ from core.save import load_meta, save_meta, load_run, save_run, delete_run, sync
 from systems.hub import hub_menu
 from systems.dungeon import run_dungeon
 from systems.world_map import run_zone_boss, check_all_zones_cleared, victory_screen
-from systems.achievements import check_all, ACHIEVEMENTS
+from systems.achievements import check_all, check_meta, ACHIEVEMENTS
 
 
 def _choose_difficulty():
@@ -118,6 +118,8 @@ def _handle_defeat(player, meta):
     sync_achievements(player, meta)
     ls = meta.setdefault("lifetime_stats", {})
     ls["runs_lost"] = ls.get("runs_lost", 0) + 1
+    for m in check_meta(meta):
+        console.print(f"  {m}")
     save_meta(meta)
     delete_run()
 
@@ -161,6 +163,11 @@ def _run_loop(player, meta):
 
 def main():
     meta = load_meta()
+    retro_msgs = check_meta(meta)
+    if retro_msgs:
+        for m in retro_msgs:
+            console.print(f"  {m}")
+        input("  (ENTER)")
     while True:
         action = hub_menu(meta)
 

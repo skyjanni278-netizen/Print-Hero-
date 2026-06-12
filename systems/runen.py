@@ -68,13 +68,17 @@ def check_rune_drop(meta, source: str, zone_id: str = None):
     return rid
 
 
-def rune_found_msgs(rid: str) -> list:
+def rune_found_msgs(rid: str, meta: dict = None) -> list:
     d = RUNEN_DEFS[rid]
-    return [
+    msgs = [
         f"[bold magenta]🧿 RUNE GEFUNDEN: {d['emoji']} {_esc(d['name'])}![/bold magenta]",
         f"[magenta]{_esc(d['desc'])}[/magenta]",
         "[dim]Dauerhaft freigeschaltet — Übersicht in der Zuflucht unter [[R]].[/dim]",
     ]
+    if meta is not None:
+        from systems.achievements import check_meta
+        msgs.extend(check_meta(meta))
+    return msgs
 
 
 # ── Klassen-Varianten ─────────────────────────────────────────────────────────

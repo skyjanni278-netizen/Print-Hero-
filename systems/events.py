@@ -229,7 +229,7 @@ def _treasure_chest(player, meta=None):
         rid = check_rune_drop(meta, "chest")
         if rid:
             console.print()
-            for m in rune_found_msgs(rid):
+            for m in rune_found_msgs(rid, meta):
                 console.print(f"  {m}")
     input("\n(ENTER)")
 
@@ -626,7 +626,7 @@ def _gefallener_held(player, meta=None):
             rid = check_rune_drop(meta, "grave")
             if rid:
                 console.print()
-                for m in rune_found_msgs(rid):
+                for m in rune_found_msgs(rid, meta):
                     console.print(f"  {m}")
     else:
         console.print("\n  [dim]Du gehst leise weiter. Manche Geschichten enden eben so.[/dim]")

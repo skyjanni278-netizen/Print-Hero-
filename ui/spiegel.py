@@ -50,4 +50,8 @@ def spiegel_menu(meta):
         ok, msg = buy_or_switch(meta, uid, variant)
         color = "green" if ok else "red"
         console.print(f"\n  [{color}]{msg}[/{color}]")
+        if ok:
+            from systems.achievements import check_meta
+            for m in check_meta(meta):
+                console.print(f"  {m}")
         input("  (ENTER)")

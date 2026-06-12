@@ -45,6 +45,9 @@ def choose_segnung_menu(player):
     console.print()
     for m in apply_segnung(player, sid):
         console.print(f"  {m}")
+    from systems.achievements import check_all
+    for m in check_all(player, {"event": "segnung"}):
+        console.print(f"  {m}")
     input("\n  (ENTER)")
 
 

@@ -24,6 +24,7 @@ def _default_meta() -> dict:
             "runs_won":      0,
             "runs_lost":     0,
             "essenz_earned": 0,
+            "classes_won":   [],
         },
     }
 
