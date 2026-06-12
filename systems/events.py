@@ -573,6 +573,9 @@ def _verfallene_bibliothek(player):
             console.print("\n  [magenta]✨ Das Magiebuch leuchtet auf — eine Segnung strömt in dich![/magenta]")
             for m in apply_segnung(player, choices[0]):
                 console.print(f"  {m}")
+            from systems.achievements import check_all
+            for m in check_all(player, {"event": "segnung"}):
+                console.print(f"  {m}")
         else:
             console.print("\n  [dim]Das Buch bleibt dunkel — du trägst bereits alle Segnungen.[/dim]")
     elif choice == "?":
@@ -726,6 +729,15 @@ def _zeitkapsel(player):
         _, rbadge = RARITY_LABEL.get(edef.get("rarity", "common"), ("?", "⬜"))
         console.print("  [cyan]Ein Echo deines letzten Lebens — die Kapsel enthält:[/cyan]")
         console.print(f"  {rbadge}{_esc(edef.get('emoji','⚔️'))} [bold]{_esc(name)}[/bold]")
+        if edef.get("rarity") in ("legendary", "mythic"):
+            from systems.achievements import check_and_unlock
+            msg = check_and_unlock(player, "got_legendary")
+            if msg:
+                console.print(f"  {msg}")
+            if edef.get("rarity") == "mythic":
+                msg = check_and_unlock(player, "got_mythic")
+                if msg:
+                    console.print(f"  {msg}")
     input("\n(ENTER)")
 
 

@@ -590,7 +590,11 @@ def combat(player, enemy_list):
                                 console.print(f"  {m}")
             ability_chance = getattr(e, "boss_ability_chance", 0.30)
             if getattr(e, "rank", 1) == 5 and hasattr(e, "boss_ability") and random.random() < ability_chance:
+                hp_before_ability = player.hp
                 console.print(f"  {e.boss_ability(player)}")
+                ability_dmg = hp_before_ability - player.hp
+                if ability_dmg > 0:
+                    player.stats["damage_taken"] += ability_dmg
             if player.active_segnungen:
                 for m in check_vergeltung(player, e, before_status):
                     console.print(f"  {m}")

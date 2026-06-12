@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Roguelite-RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch 5 Zonen, stirb, werde stärker — und bezwinge das Dunkel-Reich.
 
-**Aktuelle Version: v3.1** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v3.2** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -48,10 +48,11 @@ systems/
   spiegel.py             — Der Spiegel: 7 permanente A/B-Upgrades
   runen.py               — Runen: 9 permanente Unlocks + Drop-Logik
   skilltree.py           — Skill-Auswahl & Skill-Effekte
-  achievements.py        — Achievement-System (20 Errungenschaften)
+  achievements.py        — Achievement-System (30 Errungenschaften)
 saves/
   meta_save.json         — Permanenter Fortschritt (Essenz, Spiegel, Runen)
   run_save.json          — Aktueller Run (bei Tod gelöscht, bei Quit behalten)
+  last_run.json          — Snapshot des letzten beendeten Runs (Zeitkapsel-Event)
 ui/
   pause.py               — Camp-Menü, Inventar, Verkauf, Skills
   segnungen_ui.py        — Segnungswahl (1 aus 3) + Übersicht
@@ -246,7 +247,7 @@ Klassen-Set-Teile droppen seit v3.1 gestreckt: Waffe + Schuhe in der Wüste (Zon
 ---
 
 ### Gegner & Ränge
-**17 Gegnertypen** — Gegner werden mit einem zufälligen **Rang** gespawnt, höhere Zonen bevorzugen höhere Ränge.
+**20 Gegnertypen** — Gegner werden mit einem zufälligen **Rang** gespawnt, höhere Zonen bevorzugen höhere Ränge.
 
 | Rang | Titel | HP-Mult | ATK-Mult | Loot-Rolls |
 |:----:|-------|:-------:|:--------:|:----------:|
@@ -256,7 +257,9 @@ Klassen-Set-Teile droppen seit v3.1 gestreckt: Waffe + Schuhe in der Wüste (Zon
 | 4 | 👑 Champion | ×3,0 | ×2,0 | 4 |
 | 5 | 🔥 Boss | ×5,0 | ×2,8 | 6 |
 
-**Gegner im Spiel:** Schleim, Schattenwolf, Goblin, Zombie, Bandit, Waldtroll, Skelett, Waldgeist, Lich, Sandwurm, Assassin, Dunkelritter, Eismagierin, Steingolem, Giftige Spinne, Flammendämon, Drache
+**Gegner im Spiel:** Schleim, Schattenwolf, Goblin, Zombie, Bandit, Waldtroll, Skelett, Waldgeist, Lich, Sandwurm, Knochengoliat, Wüstenschakal, Assassin, Dunkelritter, Eismagierin, Steingolem, Giftige Spinne, Flammendämon, Drache, Dunkelmagierin
+
+Neu in v3.2: 🦴 **Knochengoliat** (Zone 2–3, heilt sich als Boss), 🐺 **Wüstenschakal** (Zone 3, weicht 20 % der Angriffe aus), 🔮 **Dunkelmagierin** (Zone 5, raubt Energie und verflucht)
 
 ---
 
@@ -303,13 +306,16 @@ Nach **jedem abgeschlossenen Dungeon** wählst du **1 von 3 zufälligen Segnunge
 | Zonen-Boss | 100 % (1× pro Boss) |
 | Dungeon-Boss (Rang 5) | 25 % |
 | Schatztruhen-Event | 15 % |
+| Gefallener Held (Bestatten) | 15 % |
 | Elite-Gegner | 5 % |
 
 ---
 
 ### Achievements
-**20 freischaltbare Errungenschaften** in 5 Sektionen:  
-Kampf · Aufstieg · Dungeons & Zonen · Wirtschaft · Meta
+**30 freischaltbare Errungenschaften** in 6 Sektionen:  
+Kampf · Aufstieg · Dungeons & Zonen · Wirtschaft · Meta · Roguelite
+
+Die Roguelite-Achievements belohnen Metaprogression: alle Spiegel-Upgrades, alle Runen, alle Zuflucht-NPCs, Siege mit allen 3 Klassen, ein Dungeon ohne erlittenen Schaden u. a. — „Verdammter Held" wird erst mit den Dunkelsiegeln (v3.3) freischaltbar.
 
 ---
 
@@ -330,6 +336,17 @@ Zwei Speicherdateien in `saves/`:
 ---
 
 ## 📋 Changelog
+
+### v3.2 — Content-Erweiterung
+- **3 neue Monster:** 🦴 Knochengoliat (Zone 2–3, hohe HP, heilt sich + Blutung als Boss), 🐺 Wüstenschakal (Zone 3, weicht 20 % der Spieler-Angriffe aus, Hetzjagd-Doppelschlag), 🔮 Dunkelmagierin (Zone 5, 25 % Energie-Drain bei Angriffen, Flüche als Boss) — Boss-Intros für alle Gegnertypen ergänzt
+- **4 neue Events:** 📚 Verfallene Bibliothek (ATK/XP/Segnung oder Risiko-Buch), 🪦 Gefallener Held (Epic-Item gegen −10 max HP, Bestatten mit Runen-Chance), 🔨 Händler-Auktion (verlierst du, lauert dir der Rivale auf — besiege ihn und das Item gehört dir), ⏳ Zeitkapsel (enthält ein Item aus deinem letzten Run)
+- **10 neue Achievements** (Sektion „Roguelite" + Meta): Erster Schritt, Spiegel-Meister, Runen-Sammler, Synergist, Unberührt, Todesverächter, Gilden-Gründer, Mythisch, Ewige Legende, Verdammter Held (freischaltbar ab v3.3)
+- Meta-Achievements funktionieren ohne laufenden Run (Spiegel-Kauf, Runen-Drops, Run-Ende) und werden für bestehende Spielstände rückwirkend beim Start vergeben
+- `last_run.json`: Beendete Runs bleiben als Snapshot erhalten (Quelle für die Zeitkapsel)
+- Bugfix: Schaden aus Boss-Fähigkeiten (z. B. Bandit-Doppelschlag) zählt jetzt in „Schaden erhalten" — vorher unsichtbar für Statistik und „Unberührt"
+- Bugfix: Fallen- und Schrein-Schaden zählen jetzt in „Schaden erhalten"
+- Bugfix: Segnung aus dem Magiebuch-Event prüft jetzt das Synergist-Achievement
+- Bugfix: Legendary/Mythic-Items aus der Zeitkapsel schalten die Rarity-Achievements frei
 
 ### v3.1 — Equipment-Rebalancing
 - **Fünf-Zonen-Loot-Kurve:** Rarity-Schwerpunkt steigt pro Zone (Wald = Common … Dunkel-Reich = Legendary/Mythic) — Zone 5 bietet wieder echte Überraschungen

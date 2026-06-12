@@ -4,8 +4,8 @@
 
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
-**Letzte abgeschlossene Version:** v3.1 — Equipment-Rebalancing  
-**Nächster Schritt:** v3.2 — Content-Erweiterung
+**Letzte abgeschlossene Version:** v3.2 — Content-Erweiterung  
+**Nächster Schritt:** v3.3 — Dunkelsiegel
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
@@ -88,8 +88,25 @@
     - Verdammter Held: definiert, aber Trigger folgt erst mit den Dunkelsiegeln in v3.3
     - Unberührt zählt Kampf-, Fallen- und Schrein-Schaden; Event-HP-Verluste ausgenommen
 
-### 🔧 Nächster Schritt: v3.2 — Bug-Pass + Docs + Release
-Gezielter Bug-Pass über den neuen v3.2-Code, README/ITEMS aktualisieren, v3.2 taggen.
+- **v3.2 Bug-Pass + Release:**
+  - Bugfix: Boss-Ability-Schaden (z. B. Bandit-Doppelschlag, Schakal-Hetzjagd) wird jetzt
+    zentral in `core/combat.py` per HP-Snapshot in `stats["damage_taken"]` gezählt —
+    vorher fehlte er in der Statistik und hätte „Unberührt" verfälscht
+  - Bugfix: Magiebuch-Segnung (Verfallene Bibliothek) prüft jetzt das Synergist-Achievement
+  - Bugfix: Legendary/Mythic aus der Zeitkapsel schaltet got_legendary/got_mythic frei
+  - Geprüft, kein Fix nötig: Status-Stacks neuer Monster respektieren die Immunitäts-Checks
+    (laufen zentral im Status-Tick); Energie-Drain kann Energie nicht negativ machen;
+    Auktions-Bietlogik terminiert immer (Rival-Budget-Cap)
+  - Beobachtung (kein Fix): Boss-Ability-Angriffe umgehen Block/Schilde/Dodge des Spielers —
+    bestehendes Design aller Monster seit v1, nicht v3.2-spezifisch
+  - Beobachtung (kein Fix): toter Code in `_haendler_auktion` — der CLASS_WEAPON_MAP-Lookup
+    greift nie, da generische Katalognamen bereits aus den Kandidaten gefiltert sind
+  - README auf v3.2 (Changelog, 20 Gegnertypen, 30 Achievements, Grab-Drop-Quelle,
+    last_run.json); ITEMS.md unverändert (v3.2 fügt keine Items hinzu)
+
+### 🔧 Nächster Schritt: v3.3 — Dunkelsiegel
+Siehe v3.3-Abschnitt unten: 3 stackbare Schwierigkeits-Siegel mit Essenz-Boni,
+Cosmetic-Unlock, Trigger für das vordefinierte Achievement „Verdammter Held".
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
@@ -594,5 +611,5 @@ systems/meta_save.py      aktive Siegel für laufenden Run speichern
 | **v2.3** | QoL: Autosave, Upgrade/Item, Kampf-Log, Death-Screen | ✅ released |
 | **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | ✅ released |
 | **v3.1** | Equipment-Rebalancing + Mythic-Tier | ✅ released |
-| **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | 🔲 geplant |
+| **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | ✅ released |
 | **v3.3** | Dunkelsiegel + Cosmetics | 🔲 geplant |
