@@ -45,6 +45,14 @@ def _new_run(meta):
         player.max_hp = max(1, player.max_hp + hp_delta)
         player.hp     = player.max_hp
 
+    from systems.dunkelsiegel import apply_siegel
+    siegel_msgs = apply_siegel(player, meta)
+    if siegel_msgs:
+        console.print("\n  [bold red]💀 Dunkelsiegel aktiv:[/bold red]")
+        for m in siegel_msgs:
+            console.print(f"  {m}")
+        input("  (ENTER)")
+
     from systems.spiegel import apply_spiegel_effects
     spiegel_msgs = apply_spiegel_effects(player, meta)
     if spiegel_msgs:

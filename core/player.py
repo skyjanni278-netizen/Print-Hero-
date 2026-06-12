@@ -71,6 +71,7 @@ class Character:
         self.schmied_gratis_upgrade = False
         self.run_xp_mult            = 1.0
         self.auction_grudge         = None
+        self.aktive_siegel          = []
 
         self.current_zone = "wald"
         self.schwarzmarkt_available = True
@@ -539,6 +540,7 @@ class Character:
             "schmied_gratis_upgrade": self.schmied_gratis_upgrade,
             "run_xp_mult":            self.run_xp_mult,
             "auction_grudge":         self.auction_grudge,
+            "aktive_siegel":          self.aktive_siegel,
         }
 
     @classmethod
@@ -601,6 +603,7 @@ class Character:
         player.schmied_gratis_upgrade  = data.get("schmied_gratis_upgrade", False)
         player.run_xp_mult             = data.get("run_xp_mult", 1.0)
         player.auction_grudge          = data.get("auction_grudge")
+        player.aktive_siegel           = data.get("aktive_siegel", [])
         _default_zp = {
             zid: {"dungeons_completed": 0, "boss_defeated": False}
             for zid in ["wald", "ruinen", "wueste", "vulkan", "dunkelreich"]

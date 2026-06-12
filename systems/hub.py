@@ -20,9 +20,12 @@ def hub_menu(meta) -> str:
     """
     from systems.achievements import ACHIEVEMENTS, achievements_menu
     from systems.runen import RUNEN_DEFS, rune_unlocked
+    from systems.dunkelsiegel import COSMETIC_ID
     while True:
         clear_screen()
         print_header("🏕️  Die Zuflucht")
+        if COSMETIC_ID in meta.get("cosmetics", []):
+            console.print("  [bold magenta]👑💀 Die Dunkelkrone thront über deiner Zuflucht — Sieger aller drei Siegel.[/bold magenta]")
         ls  = meta.get("lifetime_stats", {})
         ach = len(meta.get("achievements", []))
         runen_count = len(meta.get("unlocked_runen", []))
@@ -37,6 +40,9 @@ def hub_menu(meta) -> str:
             console.print("  [[N]] [bold green]Neuen Run starten[/bold green]")
         console.print("  [[S]] 🪞 Der Spiegel [dim](permanente Upgrades)[/dim]")
         console.print("  [[R]] 🧿 Runen [dim](gefundene Unlocks)[/dim]")
+        n_siegel = len(meta.get("next_run_siegel", []))
+        siegel_tag = f" [red]({n_siegel} aktiv)[/red]" if n_siegel else ""
+        console.print(f"  [[D]] 💀 Dunkelsiegel [dim](Herausforderungen)[/dim]{siegel_tag}")
         if rune_unlocked(meta, "orakelwissen"):
             console.print("  [[O]] 🔮 Orakel befragen [dim](nächster Zonen-Boss)[/dim]")
         console.print("  [[E]] Errungenschaften")
@@ -59,6 +65,9 @@ def hub_menu(meta) -> str:
         elif choice == "r":
             from ui.runen_ui import runen_overview
             runen_overview(meta)
+        elif choice == "d":
+            from systems.dunkelsiegel import siegel_menu
+            siegel_menu(meta)
         elif choice == "o" and rune_unlocked(meta, "orakelwissen"):
             from ui.runen_ui import orakel_menu
             orakel_menu(meta)

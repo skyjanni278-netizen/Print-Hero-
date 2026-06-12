@@ -19,6 +19,8 @@ def _default_meta() -> dict:
         "spiegel_state":  {},   # v3.0 Phase 3
         "unlocked_runen": [],   # v3.0 Phase 4
         "boss_runen_dropped": [],   # Zonen-Bosse, die ihre Rune bereits vergeben haben
+        "next_run_siegel": [],  # v3.3: Dunkelsiegel-Auswahl für künftige Runs
+        "cosmetics":       [],  # v3.3: freigeschaltete Hub-Cosmetics
         "lifetime_stats": {
             "runs_started":  0,
             "runs_won":      0,

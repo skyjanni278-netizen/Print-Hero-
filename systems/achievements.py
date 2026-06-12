@@ -154,6 +154,9 @@ def check_all(player, context: dict):
         _try("run_won")
         if getattr(player, "spiegel_leben_used", False):
             _try("todesveraechter")
+        from systems.dunkelsiegel import SIEGEL_DEFS
+        if set(SIEGEL_DEFS) <= set(getattr(player, "aktive_siegel", [])):
+            _try("verdammter_held")
 
     elif event == "dungeon_complete":
         dc      = player.stats.get("dungeons_completed", 0)

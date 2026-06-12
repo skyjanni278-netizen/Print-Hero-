@@ -570,9 +570,10 @@ def run_dungeon(player, meta) -> str:
 
     from config import RUNENESSENZ_DUNGEON
     from core.save import save_run, add_runenessenz
-    essenz = random.randint(*RUNENESSENZ_DUNGEON)
+    from systems.dunkelsiegel import siegel_essenz_mult, essenz_bonus_tag
+    essenz = int(random.randint(*RUNENESSENZ_DUNGEON) * siegel_essenz_mult(player))
     add_runenessenz(meta, essenz)
-    console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]  [dim](Gesamt: {meta['runenessenz']})[/dim]")
+    console.print(f"\n  [bold cyan]💠 +{essenz} Runenessenz[/bold cyan]{essenz_bonus_tag(player)}  [dim](Gesamt: {meta['runenessenz']})[/dim]")
 
     dungeon_damage = player.stats.get("damage_taken", 0) - dmg_before
     for m in check_all(player, {"event": "dungeon_complete", "zone_id": zone_id,

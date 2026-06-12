@@ -24,7 +24,9 @@ def camp_menu(player, meta=None) -> str:
         class_emoji = CLASS_DEFS.get(pclass, {}).get("emoji", "")
         class_name  = CLASS_DEFS.get(pclass, {}).get("name", "")
         hp_b = _hp_bar(player.hp, player.max_hp, width=14)
-        console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}")
+        siegel_count = len(getattr(player, "aktive_siegel", []))
+        siegel_tag   = f"  |  [red]💀 {siegel_count} Siegel[/red]" if siegel_count else ""
+        console.print(f"  {_esc(class_emoji)} [bold]{_esc(player.name)}[/bold]  {_esc(class_name)}  |  LVL {player.level}  |  {_esc(diff_label)}{siegel_tag}")
         essenz_tag = f"   💠 {meta.get('runenessenz', 0)} Essenz" if meta is not None else ""
         console.print(f"  HP  {hp_b} {player.hp}/{player.max_hp}   💰 {player.inventory['Gold']} Gold{essenz_tag}")
         console.print(f"  [cyan]ATK {player.get_total_attack():<5}[/cyan]  [yellow]DEF {player.get_total_armor()}[/yellow]   XP {player.xp}/{player.xp_to_level_up}  (LVL {player.level})")
@@ -66,7 +68,8 @@ def camp_menu(player, meta=None) -> str:
         console.print(f"  🎒 {used_slots}/{MAX_INVENTORY_SLOTS} Slots  💊 {total_consumables} Items  🗺️ {_esc(zone_line)}")
         console.print("─" * 50)
         console.print(f"  [[I]] Inventar & Ausrüsten   [[F]] Fertigkeiten ({player.skill_points} Pkt)")
-        console.print(f"  [[U]] Equipment aufwerten    [[E]] Errungenschaften ({len(player.achievements)}/20)")
+        from systems.achievements import ACHIEVEMENTS
+        console.print(f"  [[U]] Equipment aufwerten    [[E]] Errungenschaften ({len(player.achievements)}/{len(ACHIEVEMENTS)})")
         console.print(f"  [[V]] Inventar verkaufen     [[T]] Statistiken")
         console.print(f"  [[K]] Händler besuchen       [[Z]] Weltkarte / Zone wählen")
         console.print(f"  [[C]] Handwerk (Crafting)    [[G]] Segnungen ({len(getattr(player, 'active_segnungen', []))})")
@@ -84,7 +87,11 @@ def camp_menu(player, meta=None) -> str:
         elif choice == 'v':
             sell_menu(player)
         elif choice == 'k':
-            shop_menu(player)
+            if "stille" in getattr(player, "aktive_siegel", []):
+                console.print("\n  [red]💀 Siegel der Stille: Kein Händler wagt sich in deine Nähe.[/red]")
+                input("  (ENTER)")
+            else:
+                shop_menu(player)
         elif choice == 'c':
             craft_menu(player)
         elif choice == 'z':

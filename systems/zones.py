@@ -128,6 +128,8 @@ def scale_enemy(mob, player):
         cfg       = DIFFICULTY_SETTINGS[diff]
         hp_mult  *= cfg["hp_mult"]
         atk_mult *= cfg["atk_mult"]
+    if "blut" in getattr(player, "aktive_siegel", []):
+        hp_mult *= 1.20
     mob.max_hp = max(1, int(mob.max_hp * hp_mult))
     mob.hp     = mob.max_hp
     mob.attack = max(1, int(mob.attack * atk_mult))

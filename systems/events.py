@@ -769,6 +769,8 @@ def trigger_event(player, meta=None):
     events = _EVENTS
     if getattr(player, "spiegel", {}).get("haendlerglueck") == "A":
         events = [(f, w * 2 if f is _wandering_merchant else w) for f, w in _EVENTS]
+    if "stille" in getattr(player, "aktive_siegel", []):
+        events = [(f, w) for f, w in events if f is not _wandering_merchant]
     funcs, weights = zip(*events)
     chosen = random.choices(funcs, weights=weights, k=1)[0]
     if chosen in _META_EVENTS:
