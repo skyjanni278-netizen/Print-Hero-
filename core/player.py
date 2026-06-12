@@ -417,6 +417,16 @@ class Character:
             return f"🔥 {self.name} erleidet {BURN_DAMAGE} Verbrennungsschaden! ({self.burn_stacks} Stacks verbleibend)"
         return ""
 
+    # Einziger Eintrittspunkt für Nicht-Kampf-Schaden (Events, Fallen, Schreine) —
+    # zählt damage_taken für Statistik und das Unberührt-Achievement.
+    def take_damage(self, dmg: int, min_hp: int = 0) -> int:
+        before = self.hp
+        self.hp = max(min_hp, self.hp - dmg)
+        lost = before - self.hp
+        if lost > 0:
+            self.stats["damage_taken"] += lost
+        return lost
+
     @property
     def dodge_chance(self) -> float:
         specials = self.get_set_specials()

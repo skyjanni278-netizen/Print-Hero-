@@ -177,7 +177,7 @@ def _abandoned_shrine(player):
         if player.hp <= 10:
             console.print("  [red]Du hast zu wenig HP für ein Opfer![/red]")
         else:
-            player.hp -= 10
+            player.take_damage(10)
             hp_b = hp_bar(player.hp, player.max_hp)
             player.next_fight_xp_mult = max(player.next_fight_xp_mult, 1.25)
             console.print(f"  [red]Du opferst 10 HP. Der Schrein leuchtet auf![/red]")
@@ -205,7 +205,7 @@ def _poison_trap(player):
         console.print("  [green]Du bemerkst eine Falle im Boden und weichst geschickt aus![/green]")
     else:
         dmg = random.randint(5, 12)
-        player.hp = max(1, player.hp - dmg)
+        player.take_damage(dmg, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"  [red]Du trittst in eine vergiftete Falle! -{dmg} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
@@ -272,7 +272,7 @@ def _captured_soldier(player):
     choice = input("\nDeine Wahl: ").lower()
     if choice == "b":
         cost = 5
-        player.hp = max(1, player.hp - cost)
+        player.take_damage(cost, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"\n  [red]Du kämpfst das Gitter auf. -{cost} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
@@ -375,7 +375,7 @@ def _bloody_altar(player):
         console.print("\n  [dim]Du wendest dich vom Altar ab.[/dim]")
         input("(ENTER)")
         return
-    player.hp -= cost
+    player.take_damage(cost)
     hp_b2 = hp_bar(player.hp, player.max_hp)
     console.print(f"\n  [red]Du hast {cost} HP geopfert. Der Altar leuchtet blutrot auf.[/red]")
     console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}")
@@ -416,7 +416,7 @@ def _whispering_ghost(player):
         console.print("  +30% XP im nächsten Kampf![/yellow]")
     else:
         dmg = random.randint(5, 12)
-        player.hp = max(1, player.hp - dmg)
+        player.take_damage(dmg, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print("  [red]Der Geist ist feindselig! Er reißt Lebensenergie aus dir heraus.[/red]")
         console.print(f"  [red]-{dmg} HP[/red]   HP {hp_b} {player.hp}/{player.max_hp}")
@@ -431,7 +431,7 @@ def _magic_chest(player):
     console.print("  [dim]Runenschrift zieht sich über das Holz — gut oder böse, schwer zu sagen.[/dim]\n")
     if random.random() < 0.30:
         dmg = random.randint(10, 20)
-        player.hp = max(1, player.hp - dmg)
+        player.take_damage(dmg, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print("  [red]Die Truhe explodiert beim Öffnen! Dunkle Magie schlägt dich zurück.[/red]")
         console.print(f"  [red]-{dmg} HP[/red]   HP {hp_b} {player.hp}/{player.max_hp}\n")
@@ -591,7 +591,7 @@ def _verfallene_bibliothek(player):
             console.print(f"\n  [yellow]Zwischen den Seiten: eine vergessene Börse. +{gold} Gold![/yellow]")
         else:
             dmg = random.randint(5, 12)
-            player.hp = max(1, player.hp - dmg)
+            player.take_damage(dmg, min_hp=1)
             hp_b = hp_bar(player.hp, player.max_hp)
             console.print(f"\n  [red]Die Schriftzeichen brennen sich in deinen Geist! -{dmg} HP[/red]")
             console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")

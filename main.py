@@ -114,10 +114,11 @@ def _handle_defeat(player, meta):
 
     if getattr(player, "spiegel", {}).get("zweites_leben") == "B":
         from core.save import add_runenessenz
-        gold_bonus = int(player.inventory.get("Gold", 0) * 0.20)
+        from systems.dunkelsiegel import siegel_essenz_mult, essenz_bonus_tag
+        gold_bonus = int(player.inventory.get("Gold", 0) * 0.20 * siegel_essenz_mult(player))
         if gold_bonus > 0:
             add_runenessenz(meta, gold_bonus)
-            console.print(f"\n  [bold cyan]🪞🕊️ Zweites Leben: 20% deines Goldes gerettet — +{gold_bonus} Runenessenz![/bold cyan]")
+            console.print(f"\n  [bold cyan]🪞🕊️ Zweites Leben: 20% deines Goldes gerettet — +{gold_bonus} Runenessenz![/bold cyan]{essenz_bonus_tag(player)}")
 
     console.print(f"\n  Errungenschaften: [cyan]{len(getattr(player, 'achievements', set()))}/{len(ACHIEVEMENTS)}[/cyan]")
     console.print(f"  💠 Runenessenz gesamt: [bold cyan]{meta.get('runenessenz', 0)}[/bold cyan]  [dim](bleibt erhalten)[/dim]")

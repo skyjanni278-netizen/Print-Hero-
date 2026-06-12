@@ -170,8 +170,7 @@ def _shrine_room(player):
                 console.print(f"  {m}")
         else:
             dmg = random.randint(8, 15)
-            player.hp = max(1, player.hp - dmg)
-            player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
+            player.take_damage(dmg, min_hp=1)
             hp_b2 = hp_bar(player.hp, player.max_hp)
             console.print(f"\n  [red]Der Schrein reagiert feindselig! -{dmg} HP[/red]")
             console.print(f"  HP {hp_b2} {player.hp}/{player.max_hp}")
@@ -210,15 +209,13 @@ def _trap_room(player):
         console.print(f"  ⚡ {en_b} {player.energy}/{player.max_energy}")
     elif choice == "a":
         dmg = random.randint(4, 9)
-        player.hp = max(1, player.hp - dmg)
-        player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
+        player.take_damage(dmg, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"\n  [red]Du willst ausweichen, aber deine Energie reicht nicht! -{dmg} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
     else:
         dmg = random.randint(8, 18)
-        player.hp = max(1, player.hp - dmg)
-        player.stats["damage_taken"] = player.stats.get("damage_taken", 0) + dmg
+        player.take_damage(dmg, min_hp=1)
         hp_b = hp_bar(player.hp, player.max_hp)
         console.print(f"\n  [red]Du läufst mitten in die Falle! -{dmg} HP[/red]")
         console.print(f"  HP {hp_b} {player.hp}/{player.max_hp}")
