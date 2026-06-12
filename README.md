@@ -3,7 +3,7 @@
 > Ein rundenbasiertes Terminal-Roguelite-RPG in Python.  
 > Wähle deine Klasse, kämpfe dich durch 5 Zonen, stirb, werde stärker — und bezwinge das Dunkel-Reich.
 
-**Aktuelle Version: v3.2** | Python 3.10+ | Dependency: `rich`
+**Aktuelle Version: v3.3** | Python 3.10+ | Dependency: `rich`
 
 ---
 
@@ -47,6 +47,7 @@ systems/
   segnungen.py           — Segnungs-Pool (30), Synergien, Kampf-Hooks
   spiegel.py             — Der Spiegel: 7 permanente A/B-Upgrades
   runen.py               — Runen: 9 permanente Unlocks + Drop-Logik
+  dunkelsiegel.py        — Dunkelsiegel: 3 stackbare Schwierigkeits-Siegel
   skilltree.py           — Skill-Auswahl & Skill-Effekte
   achievements.py        — Achievement-System (30 Errungenschaften)
 saves/
@@ -311,11 +312,24 @@ Nach **jedem abgeschlossenen Dungeon** wählst du **1 von 3 zufälligen Segnunge
 
 ---
 
+### Dunkelsiegel
+Optionale Schwierigkeitsmodifikatoren über `[D]` in der Zuflucht — **stackbar**, gelten für künftige Runs und bleiben aktiv, bis sie abgelegt werden:
+
+| Siegel | Malus | Runenessenz-Bonus |
+|--------|-------|:-----------------:|
+| 💀 Siegel I — Fluch des Blutes | Gegner +20 % HP | +40 % |
+| 💀 Siegel II — Stille | Kein Händler im Camp, kein Wandernder Händler | +60 % |
+| 💀 Siegel III — Verhängnis | Zweites Leben (Spiegel) rettet dich nicht | +80 % |
+
+Alle 3 aktiv = **+180 % Runenessenz**. Sieg mit allen drei Siegeln schaltet die **👑💀 Dunkelkrone** in der Zuflucht frei — und das Achievement „Verdammter Held".
+
+---
+
 ### Achievements
 **30 freischaltbare Errungenschaften** in 6 Sektionen:  
 Kampf · Aufstieg · Dungeons & Zonen · Wirtschaft · Meta · Roguelite
 
-Die Roguelite-Achievements belohnen Metaprogression: alle Spiegel-Upgrades, alle Runen, alle Zuflucht-NPCs, Siege mit allen 3 Klassen, ein Dungeon ohne erlittenen Schaden u. a. — „Verdammter Held" wird erst mit den Dunkelsiegeln (v3.3) freischaltbar.
+Die Roguelite-Achievements belohnen Metaprogression: alle Spiegel-Upgrades, alle Runen, alle Zuflucht-NPCs, Siege mit allen 3 Klassen, ein Dungeon ohne erlittenen Schaden, ein Sieg mit allen 3 Dunkelsiegeln u. a.
 
 ---
 
@@ -336,6 +350,14 @@ Zwei Speicherdateien in `saves/`:
 ---
 
 ## 📋 Changelog
+
+### v3.3 — Dunkelsiegel
+- **3 stackbare Dunkelsiegel** als optionale Herausforderungen (`[D]` in der Zuflucht): Fluch des Blutes (Gegner +20 % HP, +40 % Essenz), Stille (kein Händler, +60 % Essenz), Verhängnis (Spiegel-Wiederbelebung deaktiviert, +80 % Essenz)
+- Siegel-Auswahl bleibt zwischen Runs aktiv, bis sie abgelegt wird; aktive Siegel werden im Camp und beim Run-Start angezeigt
+- Essenz-Bonus wirkt auf alle Vergabe-Stellen (Dungeon, Zonen-Boss, Sieg-Bonus) und wird in der Belohnungszeile ausgewiesen
+- **👑💀 Dunkelkrone:** Cosmetic in der Zuflucht für einen Sieg mit allen drei Siegeln — schaltet zugleich „Verdammter Held" frei
+- Das Orakel berücksichtigt das Blut-Siegel bei der Boss-Vorschau (liest den Run-Stand)
+- Bugfix: Achievement-Zähler im Camp-Menü war auf „/20" hartkodiert
 
 ### v3.2 — Content-Erweiterung
 - **3 neue Monster:** 🦴 Knochengoliat (Zone 2–3, hohe HP, heilt sich + Blutung als Boss), 🐺 Wüstenschakal (Zone 3, weicht 20 % der Spieler-Angriffe aus, Hetzjagd-Doppelschlag), 🔮 Dunkelmagierin (Zone 5, 25 % Energie-Drain bei Angriffen, Flüche als Boss) — Boss-Intros für alle Gegnertypen ergänzt

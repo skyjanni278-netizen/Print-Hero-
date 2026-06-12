@@ -4,8 +4,8 @@
 
 ## 📍 Aktueller Stand *(wird nach jedem Schritt aktualisiert)*
 
-**Letzte abgeschlossene Version:** v3.2 — Content-Erweiterung  
-**Nächster Schritt:** v3.3 — Dunkelsiegel
+**Letzte abgeschlossene Version:** v3.3 — Dunkelsiegel  
+**Nächster Schritt:** *offen — Roadmap-Plan ist vollständig umgesetzt*
 
 ### ✅ Was ist fertig
 - v2.2: 8 Bugs gefixt, mage_double_arcane implementiert, Set-Beschreibung korrigiert
@@ -104,9 +104,23 @@
   - README auf v3.2 (Changelog, 20 Gegnertypen, 30 Achievements, Grab-Drop-Quelle,
     last_run.json); ITEMS.md unverändert (v3.2 fügt keine Items hinzu)
 
-### 🔧 Nächster Schritt: v3.3 — Dunkelsiegel
-Siehe v3.3-Abschnitt unten: 3 stackbare Schwierigkeits-Siegel mit Essenz-Boni,
-Cosmetic-Unlock, Trigger für das vordefinierte Achievement „Verdammter Held".
+- **v3.3 Dunkelsiegel (komplett):**
+  - `systems/dunkelsiegel.py`: SIEGEL_DEFS (blut/stille/verhaengnis), `siegel_menu()` ([D] im Hub,
+    Toggle bleibt zwischen Runs aktiv), `apply_siegel()` beim Run-Start, `siegel_essenz_mult()`
+  - Effekte: Blut +20% Gegner-HP in `scale_enemy()`, Stille blockt Camp-Shop + Wandernden Händler,
+    Verhängnis deaktiviert die Spiegel-Wiederbelebung; Essenz-Bonus an allen 3 Vergabe-Stellen
+  - Dunkelkrone-Cosmetic (`meta["cosmetics"]`) + „Verdammter Held" bei Sieg mit allen 3 Siegeln
+  - Neue Save-Felder: `meta["next_run_siegel"]`, `meta["cosmetics"]`, `player.aktive_siegel`
+  - Fix: Achievement-Zähler im Camp-Menü war auf /20 hartkodiert
+  - Bug-Pass, kein Fix nötig: Orakel zeigt Blut-Siegel korrekt (liest run_save inkl. Siegel);
+    alle Gegner laufen durch `scale_enemy` (einzige Fabrik); Phönixfeder ist Heilung, kein Revive
+  - Bewusste Abgrenzungen (dokumentiert in DEVELOPMENT.md): Stille lässt Dungeon-Händler-Event
+    und Händler-Auktion zu; Verhängnis lässt Zweite-Chance-Segnung und Zweites-Leben-[B] intakt;
+    die Gold-Rettung bei Tod wird nicht vom Essenz-Bonus multipliziert (keine Run-Belohnung)
+
+### 🔧 Nächster Schritt: offen
+Der Plan v2.3 → v3.3 ist vollständig umgesetzt. Kandidaten für die Zukunft:
+mehr Cosmetics, weitere Siegel-Stufen, neue Zonen oder ein Endlos-Modus.
 
 ### 📋 Offene Entscheidungen
 *Keine — alle Designfragen für v3.0 sind geklärt.*
@@ -612,4 +626,4 @@ systems/meta_save.py      aktive Siegel für laufenden Run speichern
 | **v3.0** | Roguelite: Foundation + Segnungen + Spiegel + Runen | ✅ released |
 | **v3.1** | Equipment-Rebalancing + Mythic-Tier | ✅ released |
 | **v3.2** | Content: 3 Monster, 4 Events, 10 Achievements | ✅ released |
-| **v3.3** | Dunkelsiegel + Cosmetics | 🔲 geplant |
+| **v3.3** | Dunkelsiegel + Cosmetics | ✅ released |

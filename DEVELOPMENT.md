@@ -130,6 +130,20 @@ Zwei Dateien in `saves/`:
 - Startkit-/NPC-Flows laufen beim Run-Start in `main.py` `_new_run()`
   (Reihenfolge: Variante → Spiegel → Startkit → Essenz-Shop → Schmied-Flag).
 
+### Dunkelsiegel (systems/dunkelsiegel.py)
+- Siegel-IDs (`blut`, `stille`, `verhaengnis`) leben in `meta["next_run_siegel"]`
+  (Auswahl für künftige Runs) und `player.aktive_siegel` (laufender Run, serialisiert) —
+  nie umbenennen.
+- `apply_siegel(player, meta)` läuft beim Run-Start in `main.py` `_new_run()` und kopiert
+  die Auswahl als Run-Snapshot; alle Hooks lesen `player.aktive_siegel`, nie das Meta.
+- Effekt-Hooks: Blut in `scale_enemy()` (zones.py), Stille in `camp_menu()` (ui/pause.py)
+  + `trigger_event()` (events.py), Verhängnis in `check_spiegel_leben()` (spiegel.py).
+- Essenz-Bonus IMMER über `siegel_essenz_mult(player)` auf den Basisbetrag anwenden,
+  bevor `add_runenessenz()` aufgerufen wird (Anzeige-Tag: `essenz_bonus_tag(player)`).
+- Bewusste Abgrenzungen: Stille blockt nur Camp-Shop + Wandernden Händler (Dungeon-Händler
+  und Auktion bleiben); Verhängnis blockt nur die Spiegel-Wiederbelebung [A] —
+  Zweite-Chance-Segnung und Zweites-Leben-[B] (Gold-Rettung) funktionieren weiter.
+
 ### Kampf & Energie
 - Passive Waffeneffekte sind **nur in `core/combat.py`** implementiert
   (`_apply_weapon_passive()`), nicht in `player.attack_target()`.
